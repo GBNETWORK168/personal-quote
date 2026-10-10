@@ -128,3 +128,4 @@ details.grp .gc b{color:#1c7ad1}
 .prod{scroll-margin-top:90px}
 
 .tag.sexno{background:#fff1e0;color:#b45309}
+.mfold{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px dashed #cbd5e1;background:#f6f8fb;border-radius:12px;padding:10px 12px;margin:6px 0 12px;font-size:14px;color:#4a5a6e}

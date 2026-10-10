@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.5 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.6 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -281,6 +281,17 @@ function render(){
   let h = st.dropped.length ? `<div class="warn">條件改變，已自動取消不符的勾選：${st.dropped.join('、')}</div>` : '';
   st.dropped = [];
   // 常用優先：獨立醒目區塊
+  // 有勾主約 → 其他未勾主約收起（只留已勾的）；全部取消勾選 → 恢復顯示全部
+  const fold = st.mains.length > 0 && !st.mshow;
+  const nAllMain = pri.length + rest.length + mOk.length;
+  if (fold){
+    const priP = pri.filter(x => st.mains.includes(x.c));
+    h += `<div class="favbox"><div class="subhd favhd">✅ 已勾主約（${st.mains.length}）：${st.mains.join('、')}</div>` + priP.map(x=>x.h).join('')
+      + [...rest.filter(p=>st.mains.includes(p.code)).map(p=>v1Item(p)), ...mOk.filter(x=>st.mains.includes(x.c.code)).map(x=>catItem(x.c, x.e))].join('') + `</div>`;
+    h += `<div class="mfold">📁 其他 ${nAllMain - st.mains.length} 個主約已收起 <button type="button" class="mini" data-mshow="1">顯示全部主約</button></div>`;
+    $('#list').innerHTML = h;
+  } else {
+  if (st.mains.length) h += `<div class="mfold">已顯示全部主約 <button type="button" class="mini" data-mshow="0">收起未勾選主約</button></div>`;
   h += pri.length ? `<div class="favbox"><div class="subhd favhd">⭐ 常用優先（${pri.length}）：${pri.map(x=>lbl(x.c, x.sx)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + `</div>` : '';
   // 其他主約：依類型分組，預設收合（有勾選或手動打開的組才展開）
   const groups = [];
@@ -293,6 +304,7 @@ function render(){
     const open = picked > 0 || st.gopen[g.cat];
     return `<details class="grp" data-g="${g.cat}" ${open?'open':''}><summary><span>${g.cat}</span><span class="gc">${g.items.length} 項${nv&&nv<g.items.length?`（可試算 ${nv}）`:nv?'':'（費率整理中）'}${picked?`｜<b>已勾 ${picked}</b>`:''}</span></summary>${open ? g.items.map(i=>i.h()).join('') : ''}</details>`; }).join('') || '<div class="empty">此年齡沒有其他主約。</div>';
   $('#list').innerHTML = h;
+  }
   const noM = no.map(p => `<div class="nl"><b>${p.code}</b> ${p.name}<br>${ageRangeText(p)}</div>`).join('') + mNo.map(x => `<div class="nl"><b>${x.c.code}</b> ${x.c.name}<br>${x.e.why}</div>`).join('');
   $('#nl').innerHTML = noM; $('#nolist').style.display = noM ? '' : 'none';
   $('#nolistcnt').textContent = `（${no.length + mNo.length}）`;
@@ -392,6 +404,7 @@ function toggle(key, on){
     if (on && !st.mains.includes(code)) st.mains.push(code);
     if (!on) st.mains = st.mains.filter(c=>c!==code);
     if (on && P.some(p=>p.code===code)) st.open = null;
+    if (on) st.mshow = false;                      // 新勾主約 → 其他主約收起
   } else {
     if (on){ const s = riderState(code, st.mains, riderCodes()); if (!s.ok) return; st.riders[code] = s.hosts[0]; }   // 預設第一張可附加主約，可在附約上改選
     else delete st.riders[code];
@@ -408,6 +421,8 @@ document.addEventListener('click', e => {
   if (qk){ const c = qk.dataset.quick; toggle('m:'+c, !st.mains.includes(c)); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const ph = e.target.closest('.ph');
   if (ph){ const c = ph.parentNode.dataset.c; if (st.mains.includes(c) && P.some(p=>p.code===c)){ st.fold[c] = !st.fold[c]; render(); return; } st.open = st.open===c ? null : c; render(); return; }
+  const ms = e.target.closest('[data-mshow]');
+  if (ms){ st.mshow = ms.dataset.mshow === '1'; render(); return; }
   const ga = e.target.closest('[data-gall]');
   if (ga){ e.preventDefault(); document.querySelectorAll('#list details.grp').forEach(d => st.gopen[d.dataset.g] = ga.dataset.gall==='1'); render(); return; }
   const k = e.target.closest('[data-k]');
