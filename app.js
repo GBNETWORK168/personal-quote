@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.4 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.5 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -44,7 +44,7 @@ function quote(p, q){
   if (!terms.includes(q.term)) errs.push(`此年齡不可選 ${q.term} 年期（可選：${terms.map(t=>t==0?'躉繳':t+'年').join('、')||'無'}）`);
   const [mn, mx, step] = limits(p, q.age, q.occ, q.hsv);
   const S = q.sum;
-  if (!(S >= mn - 1e-9)) errs.push(`保額低於最低 ${mn.toLocaleString()} ${UNIT[p.unit]}` + (p.minHSV && !q.hsv ? `（勾選「同時附加 HSV 系列住院附約」可投保 ${p.minHSV} 萬）` : ''));
+  if (!(S >= mn - 1e-9)) errs.push(`保額低於最低 ${mn.toLocaleString()} ${UNIT[p.unit]}` + (p.minHSV && !q.hsv ? `（HSV 附約附加於本主約時可投保 ${p.minHSV} 萬）` : ''));
   else if (p.minHSV && q.hsv && S > p.minHSV + 1e-9 && S < p.min - 1e-9) errs.push(`附加 HSV 時可投保 ${p.minHSV} 萬整；超過 ${p.minHSV} 萬須達最低 ${p.min} 萬`);
   if (!(S <= mx + 1e-9)) errs.push(`保額超過上限 ${mx.toLocaleString()} ${UNIT[p.unit]}`);
   if (Math.abs(Math.round(S/step)*step - S) > 1e-6) errs.push(`保額需以 ${step} ${UNIT[p.unit]} 為單位`);
@@ -160,7 +160,7 @@ function defaultsFor(p){
   const s = st.sel[p.code] || {};
   const plan = p.plans ? (s.plan || 'HAC1') : p.code;
   const terms = termsFor(p, st.age, plan);
-  const hsv = !!s.hsv;
+  const hsv = !!p.minHSV && hsvOn(p.code);   // 只有 HSV 實際附加於此主約才算
   const [mn, mx] = limits(p, st.age, st.occ, hsv);
   let term = terms.includes(s.term) ? s.term : terms[terms.length-1];
   let sum = s.sum != null ? s.sum : (p.unit==='day' ? Math.min(Math.max(1000,mn),mx) : mn);
@@ -196,7 +196,7 @@ function catItem(c, e, rs){
   if (!isM){
     if (on){
       const hs = (rs && rs.hosts) || [];
-      sub = `<div class="host">附加於：${hs.length>1 ? `<select data-host="${c.code}">${hs.map(h=>`<option ${h===st.riders[c.code]?'selected':''}>${h}</option>`).join('')}</select>` : `<b>${st.riders[c.code]}</b>`}｜保費待試算${riderWarn(c.code)}</div>`;
+      sub = `<div class="host">附加於：${hs.length>1 ? `<select data-host="${c.code}">${hs.map(h=>`<option ${h===st.riders[c.code]?'selected':''}>${h}</option>`).join('')}</select>` : `<b>${st.riders[c.code]}</b>`}${c.code==='HSV' && hs.length>1 ? '<small>（可改掛任一主約；掛 XWS5 時 XWS5 最低 5 萬）</small>' : ''}｜保費待試算${riderWarn(c.code)}</div>`;
     } else if (rs && !rs.ok) sub = `<div class="why">🔒 ${rs.why}</div>`;
   } else if (on) sub = `<div class="host">✓ 已勾選｜保費待試算（費率整理中）</div>`;
   else if (sexNo) sub = `<div class="why">⚠ 性別不符：${c.sex===1?'男性':'女性'}專屬商品，目前被保險人為${st.sex==1?'男':'女'}性，可點開看內容，不能勾選投保</div>`;
@@ -251,6 +251,7 @@ function grouped(items, fn){
 
 function render(){
   prune();
+  syncHsv();
   $('#age').value = st.age;
   document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', +b.dataset.v === st.sex));
   $('#occ').value = st.occ;
@@ -317,7 +318,12 @@ function panel(p){
     h += `<div class="fl">實支實付保險金啟動日</div><div class="chips">${[75,80].map(a=>{const code=(a==75?'HAC':'HAD')+pl; const can=termsFor(p,st.age,code).length>0; return `<button class="chip${start==a?' on':''}" data-k="plan" data-p="${p.code}" data-v="${code}" ${can?'':'disabled'}>${a} 歲（${a==75?'HAC':'HAD'}${pl}）${can?'':'－年齡不符'}</button>`}).join('')}</div>`;
   }
   h += `<div class="fl">繳費年期</div><div class="chips">${s.terms.map(t=>`<button class="chip${t===s.term?' on':''}" data-k="term" data-p="${p.code}" data-v="${t}">${t==0?'躉繳':t==1?'一年期':t+' 年'}</button>`).join('')}</div>`;
-  if (p.minHSV) h += `<label class="chk"><input type="checkbox" data-hsv="${p.code}" ${s.hsv?'checked':''}> 同時附加 HSV 系列住院附約（HSV／HSV1／HSV2／HSV3）→ 最低保額可降為 ${p.minHSV} 萬${'HSV' in st.riders?'（已勾 HSV 附約）':''}</label>`;
+  if (p.minHSV){
+    const hh = st.riders.HSV, canHere = st.mains.includes(p.code);
+    if (s.hsv) h += `<div class="note">✓ HSV 已附加於 ${p.code} → 最低保額可為 ${p.minHSV} 萬（整）</div>`;
+    else if (hh) h += `<div class="note">HSV 目前附加於 ${hh}（${p.code} 最低 ${p.min} 萬）。${canHere?`<button class="chip" data-hsvto="${p.code}">改掛 ${p.code} → 可 ${p.minHSV} 萬</button>`:''}</div>`;
+    else h += `<div class="note">若 HSV 附約附加於 ${p.code}，最低保額可降為 ${p.minHSV} 萬；HSV 也可掛 OLA6 等其他主約（此時 ${p.code} 仍最低 ${p.min} 萬）。${canHere?`<button class="chip" data-hsvto="${p.code}">勾 HSV 並掛 ${p.code}</button>`:''}</div>`;
+  }
   if (p.unit !== 'unit'){
     h += `<div class="fl">${p.unit==='day'?'住院醫療日額':'保額'}（${mn===mx?'固定':mn.toLocaleString()+'–'+mx.toLocaleString()}，${p.unit==='day'?'以百元為單位':'每 '+step+' '+UNIT[p.unit]}）</div>
       <div class="sumrow"><button class="pm" data-k="sumd" data-p="${p.code}" data-v="-1">−</button><input data-sum="${p.code}" type="number" inputmode="decimal" step="${step}" value="${s.sum}" ${mn===mx?'readonly':''}><span class="unit">${UNIT[p.unit]}</span><button class="pm" data-k="sumd" data-p="${p.code}" data-v="1">＋</button></div>`;
@@ -370,8 +376,15 @@ function cartText(){
   return `【富邦保費試算】${st.age}歲${st.sex==1?'男':'女'}\n` + it.map(x=>`${x.sub?'　└':'・'}${x.code} ${x.name}｜${x.desc}｜${x.pending?'保費待試算':x.err?'設定不符':x.mode+' '+fmt(x.paid)+' 元'}`).join('\n') + `\n首年實繳合計：${fmt(tot)} 元${pend?`（不含 ${pend} 項待試算）`:''}\n※僅供參考，以公司正式建議書為準`;
 }
 
-function setHsvLink(on){ // 勾／取消 HSV 附約時，同步 XWS5「搭 HSV 最低 5 萬」
-  for (const p of P.filter(x=>x.minHSV)){ const s = st.sel[p.code] || (st.sel[p.code] = {}); s.hsv = on; if (on && (s.sum == null || s.sum === p.min)) s.sum = p.minHSV; if (!on && s.sum != null && s.sum < p.min) s.sum = p.min; }
+// HSV 附約實際附加在哪張主約上；XWS5「最低 5 萬」只在 HSV 掛在 XWS5 時成立
+function hsvOn(code){ return Object.entries(st.riders).some(([r, h]) => r === 'HSV' && h === code); }
+function syncHsv(){
+  for (const p of P.filter(x=>x.minHSV)){
+    const s = st.sel[p.code] || (st.sel[p.code] = {}), on = hsvOn(p.code), was = !!s.hsv;
+    s.hsv = on;
+    if (on && !was && (s.sum == null || s.sum === p.min)) s.sum = p.minHSV;
+    if (!on && s.sum != null && s.sum < p.min) s.sum = p.min;
+  }
 }
 function toggle(key, on){
   const [t, code] = key.split(':');
@@ -380,9 +393,8 @@ function toggle(key, on){
     if (!on) st.mains = st.mains.filter(c=>c!==code);
     if (on && P.some(p=>p.code===code)) st.open = null;
   } else {
-    if (on){ const s = riderState(code, st.mains, riderCodes()); if (!s.ok) return; st.riders[code] = (/^HS[VY]$/.test(code) && s.hosts.includes('XWS5')) ? 'XWS5' : s.hosts[0]; }
+    if (on){ const s = riderState(code, st.mains, riderCodes()); if (!s.ok) return; st.riders[code] = s.hosts[0]; }   // 預設第一張可附加主約，可在附約上改選
     else delete st.riders[code];
-    if (code === 'HSV') setHsvLink(on);
   }
 }
 
@@ -411,7 +423,10 @@ document.addEventListener('click', e => {
   const jp = e.target.closest('[data-jump]');
   if (jp){ document.getElementById(jp.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'}); return; }
   if (e.target.id==='cartopen'){ $('#cart').classList.toggle('open'); e.target.textContent = $('#cart').classList.contains('open') ? '明細 ▼' : '明細 ▲'; return; }
-  if (e.target.id==='clear'){ st.mains=[]; st.riders={}; setHsvLink(false); render(); return; }
+  if (e.target.id==='clear'){ st.mains=[]; st.riders={}; render(); return; }
+  const ht = e.target.closest('[data-hsvto]');
+  if (ht){ const m = ht.dataset.hsvto, rs = riderState('HSV', st.mains, riderCodes().filter(x=>x!=='HSV'));
+    if (riderOk('HSV') && rs.ok && rs.hosts.includes(m)) st.riders.HSV = m; else alert('HSV 目前無法附加於 '+m+'：'+(rs.why||'年齡／條件不符')); render(); return; }
   if (e.target.id==='copy'){ const t=cartText(); (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('已複製'),()=>prompt('請複製以下文字',t)); return; }
 });
 document.addEventListener('change', e => {
@@ -419,7 +434,6 @@ document.addEventListener('change', e => {
   if (d.pick){ toggle(d.pick, t.checked); render(); return; }
   if (d.host){ st.riders[d.host] = t.value; render(); return; }
   if (d.sum){ st.sel[d.sum].sum = parseFloat(t.value)||0; render(); return; }
-  if (d.hsv){ const s = st.sel[d.hsv], p = P.find(x=>x.code===d.hsv); s.hsv = t.checked; if (s.hsv && s.sum === p.min) s.sum = p.minHSV; if (!s.hsv && s.sum < p.min) s.sum = p.min; render(); return; }
   if (d.pd){ st.sel[d.pd].payDisc = t.checked; render(); return; }
   if (t.id==='age'){ st.age = Math.max(0, Math.min(85, parseInt(t.value)||0)); render(); }
   if (t.id==='page'){ const v = t.value.trim(); st.pAge = v==='' ? null : Math.max(0, Math.min(99, parseInt(v)||0)); render(); }
