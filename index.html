@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>富邦個人險快速報價 v1.1（主約／附約）</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>富邦個人險快速報價</h1>
+  <div class="sub">v1.1｜主約・附約篩選＋醫療／長照主約試算｜僅供內部試算，以公司正式建議書為準</div>
+</header>
+<main>
+  <section class="card" id="step1">
+    <h2>① 被保險人</h2>
+    <div class="row">
+      <label>保險年齡
+        <div class="agebox">
+          <button type="button" class="pm" data-d="-1">−</button>
+          <input id="age" type="number" inputmode="numeric" min="0" max="85" value="30">
+          <button type="button" class="pm" data-d="1">＋</button>
+        </div>
+      </label>
+      <label>性別
+        <div class="seg" id="sex">
+          <button type="button" data-v="1" class="on">男</button>
+          <button type="button" data-v="2">女</button>
+        </div>
+      </label>
+    </div>
+    <div class="row">
+      <label>職業類別
+        <select id="occ">
+          <option value="1">第 1 類</option><option value="2">第 2 類</option><option value="3">第 3 類</option>
+          <option value="4">第 4 類</option><option value="5">第 5 類</option><option value="6">第 6 類</option>
+        </select>
+      </label>
+      <label>或輸入生日換算
+        <input id="bd" type="date">
+      </label>
+    </div>
+    <div class="row">
+      <label>要保人（父母）年齡 <small>選填，親子型豁免 WPA／WPF1 用</small>
+        <input id="page" type="number" inputmode="numeric" min="0" max="99" placeholder="未填">
+      </label>
+    </div>
+    <div class="hint" id="agehint">保險年齡＝足歲，未滿一歲零數超過六個月加算一歲。</div>
+  </section>
+
+  <section class="card" id="step2">
+    <h2>② 可投保商品 <span id="cnt" class="cnt"></span></h2>
+    <div class="tiles">
+      <button type="button" class="tile" data-jump="secMain"><span class="tl">可投保主約</span><span class="tn"><b id="sumMain">0</b> 項</span><span class="ts" id="subMain"></span></button>
+      <button type="button" class="tile rider" data-jump="secRider"><span class="tl">可投保附約</span><span class="tn"><b id="sumRider">0</b> 項</span><span class="ts" id="subRider"></span></button>
+    </div>
+    <div class="hint">點商品可看「這是甚麼」：投保年齡、保額規定、附加條件、主要給付。</div>
+  </section>
+
+  <section class="card" id="secMain">
+    <h2>可投保主約</h2>
+    <div id="list"></div>
+    <details id="nolist"><summary>此條件不可投保的主約 <span id="nolistcnt"></span></summary><div id="nl"></div></details>
+  </section>
+
+  <section class="card" id="secRider">
+    <h2>可投保附約</h2>
+    <div class="hint">附約須附加在主約上，實際能否附加還要看主約種類與「附加條件」。附約費率整理中，暫不提供保費試算。</div>
+    <div id="rlist"></div>
+    <details id="rnolist"><summary>此條件不可投保的附約 <span id="rnolistcnt"></span></summary><div id="rnl"></div></details>
+  </section>
+</main>
+
+<div id="cart" class="cart hidden">
+  <div class="cartbar" id="cartbar"><span id="cartsum"></span><button type="button" id="cartopen">組合明細 ▲</button></div>
+  <div class="cartbody" id="cartbody"></div>
+</div>
+
+<footer>
+  可試算主約的費率取自各商品建議書試算表（Excel）並逐格比對 PDF 費率表；其餘主約與附約目前只收錄投保規則（年齡／性別／職業）與給付項目，費率整理中；投保年齡、保額上下限取自投保規則；折扣取自保費規定。<br>
+  本工具僅供業務員快速試算，實際保費、核保、給付以公司正式建議書、保單條款及核保結果為準。<br>
+  <span id="ver"></span>
+</footer>
+<script src="data.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
