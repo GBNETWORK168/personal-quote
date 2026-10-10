@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.2 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.3 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -91,14 +91,63 @@ function catElig(c, age, sex, occ, pAge){
 }
 function agesText(c){ return c.ages.map(x => `${x.t} ${x.a}–${x.b}歲`).join('、'); }
 
-window.QuoteEngine = {quote, limits, termsFor, eligible, catElig, PRI};
+// ---------- 主約 → 附約 可附加關係（依各附約投保規則「附加條件」整理；硬性擋下 ok:false，其餘以提醒 warn 呈現） ----------
+function mInfo(code){
+  const p = P.find(x => x.code === code);
+  if (p) return {code, name:p.name, cat:p.cat, cover:p.cover, whole:/終身/.test(p.cover), single:p.modes.length===1 && p.modes[0]==='躉繳',
+    cancer:false, ci:/重疾|重大傷病/.test(p.cat), acc:false, fx:false, noRider:false, v1:true};
+  const c = CAT.find(x => x.code === code);
+  if (!c) return null;
+  return {code, name:c.name, cat:c.cat, cover:c.cover, whole:/終身/.test(c.cover), single:false, cancer:/防癌/.test(c.cat), ci:/重疾|重大傷病/.test(c.cat),
+    acc:/傷害/.test(c.cat), fx:c.code==='FDC', noRider:/不可附加附約/.test(c.other||'') ? '此主約不可附加附約' : c.code==='SDKA' ? 'SDKA 僅可附加 AOR、CLR' : false, v1:false};
+}
+const SDGS = ['SDG','SDH','SDJ','SDN'];
+// 附約 r 能否附加在主約 m 上
+function riderOnMain(r, m){
+  if (m.noRider) return {ok:false, why:`${m.code}：${m.noRider}`};
+  const fxR = /^FD[EFG]$/.test(r);
+  if (fxR && !m.fx) return {ok:false, why:'僅可附加同幣別外幣主約（如 FDC）'};
+  if (!fxR && m.fx) return {ok:false, why:'外幣主約只能附加同幣別外幣附約'};
+  const W = () => (r==='CWR4'||r==='PCC5') ? (m.whole && !m.cancer) : true;
+  switch (r){
+    case 'HLR2': return m.code==='HIY1' ? {ok:true} : {ok:false, why:'限附加於 HIY1 金享福保本'};
+    case 'ADN': return m.code==='LTP' ? {ok:true} : {ok:false, why:'限附加於 LTP 憶心相守'};
+    case 'CWR4': case 'PCC5': return W() ? {ok:true} : {ok:false, why:'僅可附加終身型主約（不含癌症險）'};
+    case 'SDL': return m.whole && !m.ci ? {ok:true} : {ok:false, why:'僅可附加終身型主約（不含重大傷病）'};
+    case 'SWZ': return !m.ci && !m.cancer ? {ok:true} : {ok:false, why:'不可附加重疾／重大傷病／癌症主約'};
+    case 'LTU': return m.whole ? {ok:true} : m.code==='HAC' ? {ok:true, warn:'HAC 至 95 歲不夠長，須選 HAD（至 100 歲）'} : {ok:false, why:'主約保障期間不可短於 LTU（99 歲屆滿）→ 需終身型主約'};
+    case 'ADG': return !m.acc || ['AJC1','AJI'].includes(m.code) ? {ok:true} : {ok:false, why:'不得附加於傷害險主約（AJC1、AJI 除外）'};
+    case 'WPH': case 'WP': case 'WPA': case 'WPF1': return m.single ? {ok:false, why:'不可附加躉繳主約'} : {ok:true};
+  }
+  return {ok:true};
+}
+// 附約 r 在目前勾選下的狀態：{ok, why, hosts:[可附加的已勾主約]}
+function riderState(r, mains, riders){
+  if (!mains.length) return {ok:false, why:'請先勾選主約'};
+  const res = mains.map(code => ({code, r:riderOnMain(r, mInfo(code))}));
+  const hosts = res.filter(x => x.r.ok).map(x => x.code);
+  if (!hosts.length) return {ok:false, why:res.map(x => x.r.why).filter((v,i,a)=>a.indexOf(v)===i).join('；')};
+  const has = c => riders.includes(c);
+  if (r==='TMR' && !has('ADG')) return {ok:false, why:'須同時勾選 ADG', hosts};
+  if ((r==='CMR'||r==='CNR') && !mains.some(c => SDGS.includes(c)) && !['CWR4','PCC5','HSV','HSY'].some(has)) return {ok:false, why:'須搭 SDG／SDH／SDJ／SDN 主約，或同時勾 CWR4／PCC5／HSV／HSY', hosts};
+  if (r==='FDE' && has('FDF')) return {ok:false, why:'不可與 FDF 同附一主約', hosts};
+  if (r==='FDF' && has('FDE')) return {ok:false, why:'不可與 FDE 同附一主約', hosts};
+  if (r!=='WPH' && /^WP/.test(r) && has('WPH')) return {ok:false, why:'已勾 WPH（不可再附加其他豁免附約）', hosts};
+  if (r==='WPH' && riders.some(x => x!=='WPH' && /^WP/.test(x))) return {ok:false, why:'已勾其他豁免附約，WPH 不可再併附', hosts};
+  const warns = res.filter(x => x.r.ok && x.r.warn).map(x => x.r.warn);
+  return {ok:true, hosts, warns};
+}
+
+window.QuoteEngine = {quote, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo};
 if (typeof document === 'undefined') return;
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
-const st = {age:30, sex:1, occ:1, pAge:null, open:null, sel:{}, cart:[]};
-try { Object.assign(st, JSON.parse(localStorage.getItem('fbq1')||'{}'), {open:null}); } catch(e){}
-const save = () => localStorage.setItem('fbq1', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,cart:st.cart}));
+const st = {age:30, sex:1, occ:1, pAge:null, open:null, sel:{}, mains:[], riders:{}, dropped:[], gopen:{}, fold:{}};
+try { const o = JSON.parse(localStorage.getItem('fbq2')||'{}'); Object.assign(st, o, {open:null, dropped:[], fold:{}}); st.gopen = st.gopen || {}; } catch(e){}
+const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,mains:st.mains,riders:st.riders,sel:st.sel,gopen:st.gopen}));
+const riderCodes = () => Object.keys(st.riders);
+const termTxt = t => t==0?'躉繳':t==1?'一年期':t+'年';
 
 function insAge(bd){
   const b = new Date(bd), t = new Date();
@@ -118,13 +167,54 @@ function defaultsFor(p){
   const mode = p.modes.includes(s.mode) ? s.mode : p.modes[0];
   return Object.assign({plan, term, sum, mode, hsv, payDisc: s.payDisc !== false}, {terms});
 }
+const qOf = p => { const s = defaultsFor(p); return {s, r:quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s))}; };
 
-function catItem(c, e){
-  const key = 'c:'+c.code, open = st.open === key;
+// 合格判斷（主約／附約共用）
+function mainOk(code){ const p = P.find(x=>x.code===code); if (p) return eligible(p, st.age); const c = CAT.find(x=>x.code===code); return !!c && c.kind==='main' && !!catElig(c, st.age, st.sex, st.occ, st.pAge).ok; }
+function riderOk(code){ const c = CAT.find(x=>x.code===code); return !!c && c.kind!=='main' && !!catElig(c, st.age, st.sex, st.occ, st.pAge).ok; }
+// 條件改變後清掉不合格的勾選；再清掉失去可附加主約的附約
+function prune(){
+  const drop = [];
+  st.mains = st.mains.filter(c => mainOk(c) || (drop.push(c), false));
+  for (let pass = 0; pass < 3; pass++) for (const r of riderCodes()){
+    const s = riderOk(r) ? riderState(r, st.mains, riderCodes().filter(x=>x!==r)) : {ok:false};
+    if (!s.ok){ delete st.riders[r]; drop.push(r); }
+    else if (!s.hosts.includes(st.riders[r])) st.riders[r] = s.hosts[0];
+  }
+  if (drop.length) st.dropped = drop;
+}
+
+const box = (key, on, dis, title) => `<label class="pk${dis?' dis':''}" title="${title||''}"><input type="checkbox" data-pick="${key}" ${on?'checked':''} ${dis?'disabled':''}><span></span></label>`;
+
+function catItem(c, e, rs){
+  const isM = c.kind === 'main', key = (isM?'m:':'r:')+c.code, on = isM ? st.mains.includes(c.code) : c.code in st.riders;
+  const open = st.open === c.code;
+  const dis = !isM && !on && !(rs && rs.ok);
   const tag = (PRI(c.code) < 99 ? `<span class="tag pri">優先 ${PRI(c.code)}</span>` : '') + (e.ok==='cond' ? '<span class="tag cond">看要保人年齡</span>' : e.child ? '<span class="tag cond">子女身分</span>' : '');
-  return `<div class="prod pend${open?' open':''}" data-c="${key}">
-    <div class="ph"><span class="code ${c.kind}">${c.code}</span><span class="nm">${c.name}${tag}<span class="meta">${e.ok===true?e.terms.join('／')+'｜':''}${c.cover}｜<em>費率整理中</em></span></span><span class="arrow">${open?'▲':'▼'}</span></div>
+  let sub = '';
+  if (!isM){
+    if (on){
+      const hs = (rs && rs.hosts) || [];
+      sub = `<div class="host">附加於：${hs.length>1 ? `<select data-host="${c.code}">${hs.map(h=>`<option ${h===st.riders[c.code]?'selected':''}>${h}</option>`).join('')}</select>` : `<b>${st.riders[c.code]}</b>`}｜保費待試算${riderWarn(c.code)}</div>`;
+    } else if (rs && !rs.ok) sub = `<div class="why">🔒 ${rs.why}</div>`;
+  } else if (on) sub = `<div class="host">✓ 已勾選｜保費待試算（費率整理中）</div>`;
+  return `<div class="prod pend${open?' open':''}${on?' picked':''}${dis?' locked':''}" data-c="${c.code}">
+    <div class="ph">${box(key, on, dis, dis&&rs?rs.why:'')}<span class="code ${c.kind}">${c.code}</span><span class="nm">${c.name}${tag}<span class="meta">${e.ok===true?e.terms.join('／')+'｜':''}${c.cover}｜<em>費率整理中</em></span></span><span class="arrow">${open?'▲':'ⓘ'}</span></div>${sub}
     <div class="pb">${open ? catPanel(c, e) : ''}</div></div>`;
+}
+function riderWarn(r){
+  const h = st.riders[r], p = P.find(x=>x.code===h), s = p && st.sel[h];
+  const w = [];
+  if (r==='ADH' && p && p.unit==='wan' && s) w.push(`ADH ≦ 主約保額 5 倍＝${(s.sum*5).toLocaleString()} 萬（且 10–200 萬）`);
+  if (r==='SDL') w.push(`≦50 萬不受主約額度限制；超過 50 萬須 ≦ 主約可附加額度${p&&p.unit==='wan'&&s&&/XWS5|OLA6/.test(h)?`（${h} ${s.sum} 萬 ×1）`:''}`);
+  if (['SJR1','HTA','HKR5','SWZ'].includes(r)) w.push('附約年期不得超過主約');
+  if (r==='WP' && p && s && ![10,15,20,25,30].includes(s.term)) w.push(`WP 需主約繳費 10／15／20／25／30 年（目前 ${termTxt(s.term)}）`);
+  if (r==='LTU') w.push('LTU 保額：附長照終身型主約 ≦主約保額 2 倍，其他主約 保額×10 ≦ 主約可附加額度');
+  if (r==='HSV' || r==='HSY' || r==='HSW') w.push('實支實付型附約同一被保險人有張數限制（含同業），請確認');
+  if (r==='WPF1' && 'WPA' in st.riders) w.push('WPF1 規則寫與 WPA 僅可擇一，請確認');
+  const rs = riderState(r, st.mains, riderCodes().filter(x=>x!==r));
+  if (rs.warns) w.push(...rs.warns);
+  return w.length ? `<span class="w">⚠ ${w.join('；')}</span>` : '';
 }
 function catPanel(c, e){
   const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : '';
@@ -132,9 +222,8 @@ function catPanel(c, e){
   h += `<table class="info">${row('投保年齡', c.ages.map(x=>`${x.t}：${x.a}–${x.b} 歲`).join('<br>'))}${row('保障期間', c.cover)}${row('保額規定', c.sum)}${row(c.kind==='main'?'附加附約':'附加條件', c.attach)}${row('其他', [c.other, c.note].filter(Boolean).join('<br>'))}${row('職業限制', c.occx.length?`第 ${c.occx.join('、')} 類不可附加`:'')}</table>`;
   if (e.ok === false) h += `<div class="err">⛔ ${e.why}</div>`;
   if (c.ben.length) h += `<div class="ben"><b>主要給付項目</b>（金額依條款／商品內容說明）<div class="chips">${c.ben.map(b=>`<span class="chip">${b}</span>`).join('')}</div></div>`;
-  h += `<div class="stub">💡 保費試算：此商品費率資料整理中（尚未從費率表抽取並驗證），請先以公司建議書系統試算。可先「加入組合」記下，保費標示為待試算。</div>`;
+  h += `<div class="stub">💡 保費試算：此商品費率資料整理中，請先以公司建議書系統試算。勾選後會列入組合，保費標示「待試算」、不計入合計。</div>`;
   h += `<div class="note">依據：${c.rule}（投保規則）</div>`;
-  h += `<button class="add" data-cadd="${c.code}" ${e.ok===false?'disabled':''}>＋ 加入組合（保費待試算）</button>`;
   return h;
 }
 
@@ -143,9 +232,13 @@ function v1Item(p){
   const [mn,mx] = limits(p, st.age, st.occ);
   const lim = p.unit==='unit' ? '1 單位' : (mn===mx ? `限 ${mn.toLocaleString()} ${UNIT[p.unit]}` : `${mn.toLocaleString()}–${mx.toLocaleString()} ${UNIT[p.unit]}`) + (p.minHSV ? `（搭 HSV 最低 ${p.minHSV} 萬）` : '');
   const tag = FAV(p.code) ? '<span class="tag fav">常用</span>' : '';
-  return `<div class="prod${st.open===p.code?' open':''}" data-c="${p.code}">
-    <div class="ph"><span class="code main">${p.code}</span><span class="nm">${p.name}${tag}<span class="meta">${ts.map(t=>t==0?'躉繳':t==1?'一年期':t+'年').join('／')}｜${lim}｜保障 ${p.cover}</span></span><span class="arrow">${st.open===p.code?'▲':'▼'}</span></div>
-    <div class="pb">${st.open===p.code ? panel(p) : ''}</div></div>`;
+  const on = st.mains.includes(p.code), open = on ? !st.fold[p.code] : st.open===p.code;
+  let sub = '';
+  if (on){ const {s, r} = qOf(p); sub = r.errs ? `<div class="why">⛔ 設定不符，未計入合計</div>` : `<div class="host">✓ ${termTxt(s.term)}｜${p.unit==='unit'?'1單位':s.sum.toLocaleString()+UNIT[p.unit]}｜${s.mode} <b>NT$ ${fmt(r.paid)}</b></div>`; }
+  const nm = p.code==='OLA6' ? `${p.name}<span class="tag ola">OLA 系列</span>` : p.name;
+  return `<div class="prod${open?' open':''}${on?' picked':''}" data-c="${p.code}" id="p-${p.code}">
+    <div class="ph">${box('m:'+p.code, on)}<span class="code main">${p.code}</span><span class="nm">${nm}${tag}<span class="meta">${ts.map(termTxt).join('／')}｜${lim}｜保障 ${p.cover}</span></span><span class="arrow">${open?'▲':'ⓘ'}</span></div>${sub}
+    <div class="pb">${open ? panel(p) : ''}</div></div>`;
 }
 function grouped(items, fn){
   let h = '', cat = '';
@@ -154,57 +247,77 @@ function grouped(items, fn){
 }
 
 function render(){
+  prune();
   $('#age').value = st.age;
   document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', +b.dataset.v === st.sex));
   $('#occ').value = st.occ;
   $('#page').value = st.pAge == null ? '' : st.pAge;
-  // 主約：v1 可試算
   const ok = P.filter(p => eligible(p, st.age)), no = P.filter(p => !eligible(p, st.age));
   const pOk = ok.filter(p => PRI(p.code) < 99), rest = ok.filter(p => PRI(p.code) === 99);
-  // 目錄：其他主約、附約、豁免
   const ev = CAT.map(c => ({c, e:catElig(c, st.age, st.sex, st.occ, st.pAge)}));
-  const mAll = ev.filter(x => x.c.kind==='main' && x.e.ok), mPri = mAll.filter(x => PRI(x.c.code) < 99).sort((a,b)=>PRI(a.c.code)-PRI(b.c.code)), mOk = mAll.filter(x => PRI(x.c.code) === 99), mNo = ev.filter(x => x.c.kind==='main' && !x.e.ok);
+  const mAll = ev.filter(x => x.c.kind==='main' && x.e.ok), mPri = mAll.filter(x => PRI(x.c.code) < 99), mOk = mAll.filter(x => PRI(x.c.code) === 99), mNo = ev.filter(x => x.c.kind==='main' && !x.e.ok);
   const rOk = ev.filter(x => x.c.kind!=='main' && x.e.ok), rNo = ev.filter(x => x.c.kind!=='main' && !x.e.ok);
-  const nMain = ok.length + mAll.length, nRider = rOk.length;
+  const rc = riderCodes();
+  rOk.forEach(x => x.rs = riderState(x.c.code, st.mains, rc.filter(y=>y!==x.c.code)));
+  const nAttach = rOk.filter(x => x.rs.ok).length;
   $('#cnt').textContent = `${st.age} 歲${st.sex==1?'男':'女'}｜職業第 ${st.occ} 類`;
-  $('#sumMain').textContent = nMain; $('#sumRider').textContent = nRider;
+  $('#sumMain').textContent = ok.length + mAll.length; $('#sumRider').textContent = rOk.length;
   $('#subMain').textContent = `可試算 ${ok.length}｜費率整理中 ${mAll.length}`;
-  $('#subRider').textContent = `全部費率整理中`;
+  $('#subRider').textContent = st.mains.length ? `已勾主約可搭 ${nAttach} 項` : '先勾主約，才能勾附約';
+  // 常用快選（step2）
+  const quick = ['XWS5','OLA6'].map(c => P.find(p=>p.code===c)).filter(Boolean);
+  $('#quick').innerHTML = '⭐ 常用快選：' + quick.map(p => { const el = eligible(p, st.age), on = st.mains.includes(p.code);
+    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el?'':'disabled'}>${on?'☑':'☐'} ${p.code==='OLA6'?'OLA6 金來寶（OLA）':'XWS5 新平準終身'}${el?'':'（年齡不符）'}</button>`; }).join('');
   // 主約區
   const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p)})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)}))].sort((a,b)=>a.k-b.k);
-  const lbl = c => c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c;
-  let h = pri.length ? `<div class="subhd favhd">⭐ 常用優先（${pri.length}）：${pri.map(x=>lbl(x.c)).join(' → ')}</div>` + pri.map(x=>x.h).join('') : '';
-  h += `<div class="subhd">✅ 其他可立即試算（${rest.length}）</div>` + (grouped(rest, v1Item) || '<div class="empty">此年齡沒有其他可試算的主約。</div>');
-  h += `<div class="subhd pendhd">🕒 費率整理中，可先看商品內容（${mOk.length}）</div>` + (grouped(mOk, x => catItem(x.c, x.e)) || '<div class="empty">無</div>');
+  const lbl = c => c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='OLA6' ? 'OLA6（OLA）' : c;
+  let h = st.dropped.length ? `<div class="warn">條件改變，已自動取消不符的勾選：${st.dropped.join('、')}</div>` : '';
+  st.dropped = [];
+  // 常用優先：獨立醒目區塊
+  h += pri.length ? `<div class="favbox"><div class="subhd favhd">⭐ 常用優先（${pri.length}）：${pri.map(x=>lbl(x.c)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + `</div>` : '';
+  // 其他主約：依類型分組，預設收合（有勾選或手動打開的組才展開）
+  const groups = [];
+  for (const it of [...rest.map(p=>({cat:p.cat, h:()=>v1Item(p), code:p.code, v1:true})), ...mOk.map(x=>({cat:x.c.cat, h:()=>catItem(x.c, x.e), code:x.c.code}))]){
+    let g = groups.find(g=>g.cat===it.cat); if (!g) groups.push(g = {cat:it.cat, items:[]}); g.items.push(it);
+  }
+  const nOther = rest.length + mOk.length;
+  h += `<div class="subhd othhd">📂 其他主約（${nOther}）依類型分組，點類別展開 <button type="button" class="mini" data-gall="1">全部展開</button><button type="button" class="mini" data-gall="0">全部收合</button></div>`;
+  h += groups.map(g => { const picked = g.items.filter(i=>st.mains.includes(i.code)).length, nv = g.items.filter(i=>i.v1).length;
+    const open = picked > 0 || st.gopen[g.cat];
+    return `<details class="grp" data-g="${g.cat}" ${open?'open':''}><summary><span>${g.cat}</span><span class="gc">${g.items.length} 項${nv&&nv<g.items.length?`（可試算 ${nv}）`:nv?'':'（費率整理中）'}${picked?`｜<b>已勾 ${picked}</b>`:''}</span></summary>${open ? g.items.map(i=>i.h()).join('') : ''}</details>`; }).join('') || '<div class="empty">此年齡沒有其他主約。</div>';
   $('#list').innerHTML = h;
   const noM = no.map(p => `<div class="nl"><b>${p.code}</b> ${p.name}<br>${ageRangeText(p)}</div>`).join('') + mNo.map(x => `<div class="nl"><b>${x.c.code}</b> ${x.c.name}<br>${x.e.why}</div>`).join('');
   $('#nl').innerHTML = noM; $('#nolist').style.display = noM ? '' : 'none';
   $('#nolistcnt').textContent = `（${no.length + mNo.length}）`;
-  // 附約區
-  $('#rlist').innerHTML = grouped(rOk, x => catItem(x.c, x.e)) || '<div class="empty">此條件沒有可附加的附約。</div>';
+  // 附約區：可搭的排前面
+  $('#rhint').innerHTML = st.mains.length ? `已勾主約：<b>${st.mains.join('、')}</b>。可附加的附約可直接勾選；🔒 為此組合不能附加（原因寫在下方）。附約費率整理中，保費待試算。` : '👆 先在上面勾選主約，這裡會打開可附加的附約。';
+  const rs1 = rOk.filter(x => x.rs.ok || x.c.code in st.riders), rs2 = rOk.filter(x => !(x.rs.ok || x.c.code in st.riders));
+  $('#rlist').innerHTML = (grouped(rs1, x => catItem(x.c, x.e, x.rs)) || (st.mains.length ? '<div class="empty">已勾主約沒有可附加的附約。</div>' : ''))
+    + (rs2.length ? `<div class="subhd pendhd">🔒 此組合不能附加（${rs2.length}）</div>` + grouped(rs2, x => catItem(x.c, x.e, x.rs)) : '');
   const noR = rNo.map(x => `<div class="nl"><b>${x.c.code}</b> ${x.c.name}<br>${x.e.why}</div>`).join('');
   $('#rnl').innerHTML = noR; $('#rnolist').style.display = noR ? '' : 'none';
   $('#rnolistcnt').textContent = `（${rNo.length}）`;
-  renderCart();
+  renderCart(); save();
 }
 
 function panel(p){
-  const s = defaultsFor(p); st.sel[p.code] = s;
+  const s = defaultsFor(p); st.sel[p.code] = Object.assign({}, s, {terms:undefined});
   const [mn, mx, step] = limits(p, st.age, st.occ, s.hsv);
   let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${p.name}（${p.code}）｜主約｜${p.cat}｜保障 ${p.cover}｜投保年齡 ${ageRangeText(p)}</div>`;
+  if (!st.mains.includes(p.code)) h += `<div class="note">☐ 勾選左側方框即加入組合，並可勾選可附加的附約。</div>`;
   if (p.plans){
     const pl = s.plan.slice(3), start = s.plan.startsWith('HAD') ? 80 : 75;
-    h += `<div class="fl">計劃別</div><div class="chips">${[1,2,3].map(i=>`<button class="chip${pl==i?' on':''}" data-k="plan" data-v="${start==75?'HAC':'HAD'}${i}">計劃 ${i}</button>`).join('')}</div>`;
-    h += `<div class="fl">實支實付保險金啟動日</div><div class="chips">${[75,80].map(a=>{const code=(a==75?'HAC':'HAD')+pl; const can=termsFor(p,st.age,code).length>0; return `<button class="chip${start==a?' on':''}" data-k="plan" data-v="${code}" ${can?'':'disabled'}>${a} 歲（${a==75?'HAC':'HAD'}${pl}）${can?'':'－年齡不符'}</button>`}).join('')}</div>`;
+    h += `<div class="fl">計劃別</div><div class="chips">${[1,2,3].map(i=>`<button class="chip${pl==i?' on':''}" data-k="plan" data-p="${p.code}" data-v="${start==75?'HAC':'HAD'}${i}">計劃 ${i}</button>`).join('')}</div>`;
+    h += `<div class="fl">實支實付保險金啟動日</div><div class="chips">${[75,80].map(a=>{const code=(a==75?'HAC':'HAD')+pl; const can=termsFor(p,st.age,code).length>0; return `<button class="chip${start==a?' on':''}" data-k="plan" data-p="${p.code}" data-v="${code}" ${can?'':'disabled'}>${a} 歲（${a==75?'HAC':'HAD'}${pl}）${can?'':'－年齡不符'}</button>`}).join('')}</div>`;
   }
-  h += `<div class="fl">繳費年期</div><div class="chips">${s.terms.map(t=>`<button class="chip${t===s.term?' on':''}" data-k="term" data-v="${t}">${t==0?'躉繳':t==1?'一年期':t+' 年'}</button>`).join('')}</div>`;
-  if (p.minHSV) h += `<label class="chk"><input type="checkbox" id="hsv" ${s.hsv?'checked':''}> 同時附加 HSV 系列住院附約（HSV／HSV1／HSV2／HSV3）→ 最低保額可降為 ${p.minHSV} 萬</label>`;
+  h += `<div class="fl">繳費年期</div><div class="chips">${s.terms.map(t=>`<button class="chip${t===s.term?' on':''}" data-k="term" data-p="${p.code}" data-v="${t}">${t==0?'躉繳':t==1?'一年期':t+' 年'}</button>`).join('')}</div>`;
+  if (p.minHSV) h += `<label class="chk"><input type="checkbox" data-hsv="${p.code}" ${s.hsv?'checked':''}> 同時附加 HSV 系列住院附約（HSV／HSV1／HSV2／HSV3）→ 最低保額可降為 ${p.minHSV} 萬${'HSV' in st.riders?'（已勾 HSV 附約）':''}</label>`;
   if (p.unit !== 'unit'){
     h += `<div class="fl">${p.unit==='day'?'住院醫療日額':'保額'}（${mn===mx?'固定':mn.toLocaleString()+'–'+mx.toLocaleString()}，${p.unit==='day'?'以百元為單位':'每 '+step+' '+UNIT[p.unit]}）</div>
-      <div class="sumrow"><button class="pm" data-k="sumd" data-v="-1">−</button><input id="sum" type="number" inputmode="decimal" step="${step}" value="${s.sum}" ${mn===mx?'readonly':''}><span class="unit">${UNIT[p.unit]}</span><button class="pm" data-k="sumd" data-v="1">＋</button></div>`;
+      <div class="sumrow"><button class="pm" data-k="sumd" data-p="${p.code}" data-v="-1">−</button><input data-sum="${p.code}" type="number" inputmode="decimal" step="${step}" value="${s.sum}" ${mn===mx?'readonly':''}><span class="unit">${UNIT[p.unit]}</span><button class="pm" data-k="sumd" data-p="${p.code}" data-v="1">＋</button></div>`;
   }
-  if (p.modes.length > 1) h += `<div class="fl">繳別</div><div class="chips">${p.modes.map(m=>`<button class="chip${m===s.mode?' on':''}" data-k="mode" data-v="${m}">${m}</button>`).join('')}</div>`;
-  if (p.pay) h += `<label class="chk"><input type="checkbox" id="pd" ${s.payDisc?'checked':''}> 繳費方式折扣 ${p.pay*100}%（首期匯款／轉帳／富邦信用卡；續期轉帳／富邦信用卡／自行繳費）</label>`;
+  if (p.modes.length > 1) h += `<div class="fl">繳別</div><div class="chips">${p.modes.map(m=>`<button class="chip${m===s.mode?' on':''}" data-k="mode" data-p="${p.code}" data-v="${m}">${m}</button>`).join('')}</div>`;
+  if (p.pay) h += `<label class="chk"><input type="checkbox" data-pd="${p.code}" ${s.payDisc?'checked':''}> 繳費方式折扣 ${p.pay*100}%（首期匯款／轉帳／富邦信用卡；續期轉帳／富邦信用卡／自行繳費）</label>`;
   const r = quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s));
   if (r.errs) h += `<div class="err">⛔ ${r.errs.join('<br>⛔ ')}</div>`;
   else {
@@ -220,68 +333,94 @@ function panel(p){
   if (p.keyfmt==='yrt') h += `<div class="note">一年期自然費率：上方為首年保費，續保依續保年齡費率計收。</div>`;
   h += `<div class="ben"><b>主要給付項目</b>（金額依條款／商品內容說明）<div class="chips">${p.ben.map(b=>`<span class="chip">${b}</span>`).join('')}</div></div>`;
   h += `<div class="note">保障期間：${p.cover}｜建議書 ${p.ver}｜費率來源：${p.src.split('/').pop()}</div>`;
-  h += `<button class="add" data-k="add" ${r.errs?'disabled':''}>＋ 加入組合</button>`;
   return h;
 }
 
+// ---------- 組合（勾選即組合） ----------
+function bundle(){
+  const items = [];
+  for (const code of st.mains){
+    const p = P.find(x=>x.code===code);
+    if (p){ const {s, r} = qOf(p);
+      const desc = (p.plans?`計劃${s.plan.slice(3)}(${s.plan.startsWith('HAD')?80:75}歲啟動)｜`:'') + termTxt(s.term)+(s.term>1?'期':'') + (p.unit==='unit'?'｜1單位':`｜${(+s.sum).toLocaleString()}${UNIT[p.unit]}`) + (p.minHSV && s.hsv ? '｜搭 HSV' : '');
+      items.push({kind:'主約', code:p.plans?s.plan:code, name:p.name, desc, mode:s.mode, paid:r.errs?null:r.paid, firstYear:r.errs?0:r.firstYear, err:!!r.errs});
+    } else { const c = CAT.find(x=>x.code===code); items.push({kind:'主約', code, name:c.name, desc:c.cat, pending:true}); }
+    for (const [rc, host] of Object.entries(st.riders)) if (host === code){ const c = CAT.find(x=>x.code===rc); items.push({kind:KIND[c.kind], code:rc, name:c.name, desc:`附加於 ${host}`, pending:true, sub:true}); }
+  }
+  return items;
+}
 function renderCart(){
-  const c = $('#cart');
-  if (!st.cart.length){ c.classList.add('hidden'); return; }
+  const c = $('#cart'), it = bundle();
+  if (!it.length){ c.classList.add('hidden'); return; }
   c.classList.remove('hidden');
-  const tot = st.cart.reduce((a,x)=>a+(x.firstYear||0),0), pend = st.cart.filter(x=>x.pending).length;
-  $('#cartsum').textContent = `組合 ${st.cart.length} 項｜首年實繳 NT$ ${fmt(tot)}${pend?`（另 ${pend} 項待試算）`:''}`;
-  $('#cartbody').innerHTML = st.cart.map((x,i)=>`<div class="ci"><div>${x.code} ${x.name}<small>${x.desc}</small></div><div style="text-align:right">${x.pending?'待試算':fmt(x.paid)}<small>${x.mode||''}</small><button data-rm="${i}">刪除</button></div></div>`).join('')
-    + `<div style="display:flex;gap:8px;margin-top:10px"><button id="copy">複製文字（貼 LINE）</button><button id="clear">清空</button></div>`;
+  const tot = it.reduce((a,x)=>a+(x.firstYear||0),0), pend = it.filter(x=>x.pending).length, err = it.filter(x=>x.err).length;
+  const nM = it.filter(x=>x.kind==='主約').length;
+  $('#cartsum').innerHTML = `主約 ${nM}｜附約 ${it.length-nM}｜首年實繳 <b>NT$ ${fmt(tot)}</b>${pend?`<small>另 ${pend} 項待試算</small>`:''}${err?`<small class="e">${err} 項設定不符未計</small>`:''}`;
+  $('#cartbody').innerHTML = it.map(x=>`<div class="ci${x.sub?' sub':''}"><div>${x.sub?'└ ':''}${x.code} ${x.name}<small>${x.kind}｜${x.desc}</small></div><div style="text-align:right">${x.pending?'待試算':x.err?'⛔ 設定不符':fmt(x.paid)}<small>${x.pending||x.err?'':x.mode}</small></div></div>`).join('')
+    + `<div style="display:flex;gap:8px;margin-top:10px"><button id="copy">複製文字（貼 LINE）</button><button id="clear">全部取消勾選</button></div>`;
+}
+function cartText(){
+  const it = bundle(), tot = it.reduce((a,x)=>a+(x.firstYear||0),0), pend = it.filter(x=>x.pending).length;
+  return `【富邦保費試算】${st.age}歲${st.sex==1?'男':'女'}\n` + it.map(x=>`${x.sub?'　└':'・'}${x.code} ${x.name}｜${x.desc}｜${x.pending?'保費待試算':x.err?'設定不符':x.mode+' '+fmt(x.paid)+' 元'}`).join('\n') + `\n首年實繳合計：${fmt(tot)} 元${pend?`（不含 ${pend} 項待試算）`:''}\n※僅供參考，以公司正式建議書為準`;
 }
 
-function cartText(){
-  const tot = st.cart.reduce((a,x)=>a+(x.firstYear||0),0), pend = st.cart.filter(x=>x.pending).length;
-  return `【富邦保費試算】${st.age}歲${st.sex==1?'男':'女'}\n` + st.cart.map(x=>x.pending?`・${x.code} ${x.name}｜${x.desc}｜保費待試算`:`・${x.code} ${x.name}｜${x.desc}｜${x.mode} ${fmt(x.paid)} 元`).join('\n') + `\n首年實繳合計：${fmt(tot)} 元${pend?`（不含 ${pend} 項待試算）`:''}\n※僅供參考，以公司正式建議書為準`;
+function setHsvLink(on){ // 勾／取消 HSV 附約時，同步 XWS5「搭 HSV 最低 5 萬」
+  for (const p of P.filter(x=>x.minHSV)){ const s = st.sel[p.code] || (st.sel[p.code] = {}); s.hsv = on; if (on && (s.sum == null || s.sum === p.min)) s.sum = p.minHSV; if (!on && s.sum != null && s.sum < p.min) s.sum = p.min; }
+}
+function toggle(key, on){
+  const [t, code] = key.split(':');
+  if (t === 'm'){
+    if (on && !st.mains.includes(code)) st.mains.push(code);
+    if (!on) st.mains = st.mains.filter(c=>c!==code);
+    if (on && P.some(p=>p.code===code)) st.open = null;
+  } else {
+    if (on){ const s = riderState(code, st.mains, riderCodes()); if (!s.ok) return; st.riders[code] = (/^HS[VY]$/.test(code) && s.hosts.includes('XWS5')) ? 'XWS5' : s.hosts[0]; }
+    else delete st.riders[code];
+    if (code === 'HSV') setHsvLink(on);
+  }
 }
 
 document.addEventListener('click', e => {
   const pm = e.target.closest('#step1 .pm');
-  if (pm){ st.age = Math.max(0, Math.min(85, st.age + +pm.dataset.d)); save(); render(); return; }
+  if (pm){ st.age = Math.max(0, Math.min(85, st.age + +pm.dataset.d)); render(); return; }
   const sx = e.target.closest('#sex button');
-  if (sx){ st.sex = +sx.dataset.v; save(); render(); return; }
+  if (sx){ st.sex = +sx.dataset.v; render(); return; }
+  if (e.target.closest('.pk')) return;            // 勾選框交給 change 事件
+  const qk = e.target.closest('[data-quick]');
+  if (qk){ const c = qk.dataset.quick; toggle('m:'+c, !st.mains.includes(c)); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const ph = e.target.closest('.ph');
-  if (ph){ const c = ph.parentNode.dataset.c; st.open = st.open===c ? null : c; render(); return; }
+  if (ph){ const c = ph.parentNode.dataset.c; if (st.mains.includes(c) && P.some(p=>p.code===c)){ st.fold[c] = !st.fold[c]; render(); return; } st.open = st.open===c ? null : c; render(); return; }
+  const ga = e.target.closest('[data-gall]');
+  if (ga){ e.preventDefault(); document.querySelectorAll('#list details.grp').forEach(d => st.gopen[d.dataset.g] = ga.dataset.gall==='1'); render(); return; }
   const k = e.target.closest('[data-k]');
   if (k){
-    const p = P.find(x => x.code === st.open); if (!p) return; const s = st.sel[p.code];
+    const p = P.find(x => x.code === k.dataset.p); if (!p) return; const s = st.sel[p.code];
     const v = k.dataset.v;
-    if (k.dataset.k==='plan'){ s.plan = v; }
+    if (k.dataset.k==='plan') s.plan = v;
     else if (k.dataset.k==='term') s.term = +v;
     else if (k.dataset.k==='mode') s.mode = v;
     else if (k.dataset.k==='sumd'){ const [mn,mx,step]=limits(p,st.age,st.occ,s.hsv); s.sum = Math.round((Math.min(mx,Math.max(mn,(+s.sum||0)+ +v*step)))*100)/100; }
-    else if (k.dataset.k==='add'){
-      const r = quote(p, Object.assign({age:st.age,sex:st.sex,occ:st.occ}, s));
-      if (!r.errs){
-        const desc = (p.plans?`計劃${s.plan.slice(3)}(${s.plan.startsWith('HAD')?80:75}歲啟動)｜`:'') + (s.term==0?'躉繳':s.term==1?'一年期':s.term+'年期') + (p.unit==='unit'?'｜1單位':`｜${s.sum.toLocaleString()}${UNIT[p.unit]}`) + (p.minHSV && s.hsv ? '｜須搭 HSV' : '');
-        st.cart.push({code:p.plans?s.plan:p.code, name:p.name, desc, mode:s.mode, paid:r.paid, firstYear:r.firstYear}); save();
-      }
-    }
     render(); return;
   }
-  const ca = e.target.closest('[data-cadd]');
-  if (ca){ const c = CAT.find(x=>x.code===ca.dataset.cadd); st.cart.push({code:c.code, name:c.name, desc:KIND[c.kind]+'｜'+c.cat, pending:true}); save(); renderCart(); ca.textContent='✓ 已加入組合'; return; }
   const jp = e.target.closest('[data-jump]');
   if (jp){ document.getElementById(jp.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'}); return; }
-  const rm = e.target.closest('[data-rm]');
-  if (rm){ st.cart.splice(+rm.dataset.rm,1); save(); renderCart(); return; }
-  if (e.target.id==='cartopen'){ $('#cart').classList.toggle('open'); return; }
-  if (e.target.id==='clear'){ st.cart=[]; save(); renderCart(); return; }
+  if (e.target.id==='cartopen'){ $('#cart').classList.toggle('open'); e.target.textContent = $('#cart').classList.contains('open') ? '明細 ▼' : '明細 ▲'; return; }
+  if (e.target.id==='clear'){ st.mains=[]; st.riders={}; setHsvLink(false); render(); return; }
   if (e.target.id==='copy'){ const t=cartText(); (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('已複製'),()=>prompt('請複製以下文字',t)); return; }
 });
 document.addEventListener('change', e => {
-  if (e.target.id==='age'){ st.age = Math.max(0, Math.min(85, parseInt(e.target.value)||0)); save(); render(); }
-  if (e.target.id==='page'){ const v = e.target.value.trim(); st.pAge = v==='' ? null : Math.max(0, Math.min(99, parseInt(v)||0)); save(); render(); }
-  if (e.target.id==='occ'){ st.occ = +e.target.value; save(); render(); }
-  if (e.target.id==='bd' && e.target.value){ st.age = insAge(e.target.value); $('#agehint').textContent = `生日 ${e.target.value} → 今日保險年齡 ${st.age} 歲`; save(); render(); }
-  if (e.target.id==='sum'){ st.sel[st.open].sum = parseFloat(e.target.value)||0; render(); }
-  if (e.target.id==='hsv'){ const s = st.sel[st.open]; s.hsv = e.target.checked; if (s.hsv && s.sum === 10) s.sum = 5; if (!s.hsv && s.sum < 10) s.sum = 10; render(); }
-  if (e.target.id==='pd'){ st.sel[st.open].payDisc = e.target.checked; render(); }
+  const t = e.target, d = t.dataset;
+  if (d.pick){ toggle(d.pick, t.checked); render(); return; }
+  if (d.host){ st.riders[d.host] = t.value; render(); return; }
+  if (d.sum){ st.sel[d.sum].sum = parseFloat(t.value)||0; render(); return; }
+  if (d.hsv){ const s = st.sel[d.hsv], p = P.find(x=>x.code===d.hsv); s.hsv = t.checked; if (s.hsv && s.sum === p.min) s.sum = p.minHSV; if (!s.hsv && s.sum < p.min) s.sum = p.min; render(); return; }
+  if (d.pd){ st.sel[d.pd].payDisc = t.checked; render(); return; }
+  if (t.id==='age'){ st.age = Math.max(0, Math.min(85, parseInt(t.value)||0)); render(); }
+  if (t.id==='page'){ const v = t.value.trim(); st.pAge = v==='' ? null : Math.max(0, Math.min(99, parseInt(v)||0)); render(); }
+  if (t.id==='occ'){ st.occ = +t.value; render(); }
+  if (t.id==='bd' && t.value){ st.age = insAge(t.value); $('#agehint').textContent = `生日 ${t.value} → 今日保險年齡 ${st.age} 歲`; render(); }
 });
+document.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.grp')) return; const was = !!st.gopen[d.dataset.g]; if (was === d.open) return; st.gopen[d.dataset.g] = d.open; if (d.open && !d.querySelector('.prod')) render(); else save(); }, true);
 $('#ver').textContent = '可試算主約：' + P.map(p=>p.code).join('、') + '｜費率整理中：' + CAT.map(c=>c.code).join('、');
 render();
 })();
