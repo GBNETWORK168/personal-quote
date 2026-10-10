@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.6 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.7 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -237,7 +237,7 @@ function v1Item(p){
   const tag = FAV(p.code) ? '<span class="tag fav">常用</span>' : '';
   const on = st.mains.includes(p.code), open = on ? !st.fold[p.code] : st.open===p.code;
   let sub = '';
-  if (on){ const {s, r} = qOf(p); sub = r.errs ? `<div class="why">⛔ 設定不符，未計入合計</div>` : `<div class="host">✓ ${termTxt(s.term)}｜${p.unit==='unit'?'1單位':s.sum.toLocaleString()+UNIT[p.unit]}｜${s.mode} <b>NT$ ${fmt(r.paid)}</b></div>`; }
+  if (on){ const {s, r} = qOf(p); sub = r.errs ? `<div class="why">⛔ 設定不符，未計入合計${p.minHSV && !s.hsv && (+s.sum||0) < p.min ? ` <button class="chip hsvq" data-hsv5="${p.code}">⚡ 勾 HSV → ${p.minHSV} 萬</button>` : ''}</div>` : `<div class="host">✓ ${termTxt(s.term)}｜${p.unit==='unit'?'1單位':s.sum.toLocaleString()+UNIT[p.unit]}｜${s.mode} <b>NT$ ${fmt(r.paid)}</b></div>`; }
   const nm = p.code==='OLA6' ? `${p.name}<span class="tag ola">OLA 系列</span>` : p.name;
   return `<div class="prod${open?' open':''}${on?' picked':''}" data-c="${p.code}" id="p-${p.code}">
     <div class="ph">${box('m:'+p.code, on)}<span class="code main">${p.code}</span><span class="nm">${nm}${tag}<span class="meta">${ts.map(termTxt).join('／')}｜${lim}｜保障 ${p.cover}</span></span><span class="arrow">${open?'▲':'ⓘ'}</span></div>${sub}
@@ -319,6 +319,29 @@ function render(){
   renderCart(); save();
 }
 
+// XWS5 想做 5 萬 → 保額欄下方立即出現「勾 HSV（掛 XWS5）」；保額 < 最低保額且未搭 HSV 時醒目提示
+function hsvBox(p, s){
+  const on = hsvOn(p.code), hh = st.riders.HSV, low = (+s.sum||0) < p.min - 1e-9;
+  const can = riderOk('HSV');
+  const hot = low && !on;
+  let lbl;
+  if (on) lbl = `<b>HSV 已附加於 ${p.code}</b> → 最低保額 ${p.minHSV} 萬（整）可投保；取消勾選則回到最低 ${p.min} 萬`;
+  else if (hh) lbl = `<b>改掛 HSV 到 ${p.code}</b>（目前掛 ${hh}）→ ${p.code} 可投保 ${p.minHSV} 萬`;
+  else lbl = `<b>附加 HSV 住院醫療附約（掛 ${p.code}）</b> → ${p.code} 最低保額可降到 ${p.minHSV} 萬`;
+  if (hot) lbl = `⚡ ${p.code} ${(+s.sum).toLocaleString()} 萬低於最低 ${p.min} 萬：` + lbl;
+  if (!can) return `<div class="hsvbox dis">HSV 此年齡／條件不可附加（${p.code} 最低 ${p.min} 萬）</div>`;
+  return `<label class="hsvbox${hot?' hot':''}${on?' on':''}"><input type="checkbox" data-hsvx="${p.code}" ${on?'checked':''}><span>${lbl}${!on?`<small>HSV 也可改掛 OLA6 等其他主約，但只有掛 ${p.code} 才能 ${p.minHSV} 萬</small>`:''}</span></label>`
+    + (!on && !low ? `<div class="chips"><button class="chip" data-hsv5="${p.code}">⚡ 直接做 ${p.minHSV} 萬（自動勾 HSV）</button></div>` : '');
+}
+function attachHsv(code, sum5){
+  const p = P.find(x=>x.code===code); if (!p) return;
+  if (!st.mains.includes(code)){ st.mains.push(code); st.mshow = false; }
+  const rs = riderState('HSV', st.mains, riderCodes().filter(x=>x!=='HSV'));
+  if (!(riderOk('HSV') && rs.ok && rs.hosts.includes(code))){ alert('HSV 目前無法附加於 '+code+'：'+(rs.why||'年齡／條件不符')); return; }
+  st.riders.HSV = code;
+  const s = st.sel[code] || (st.sel[code] = {});
+  if (sum5 || s.sum == null || s.sum < p.min || s.sum === p.min){ s.sum = p.minHSV; s.hsv = true; }
+}
 function panel(p){
   const s = defaultsFor(p); st.sel[p.code] = Object.assign({}, s, {terms:undefined});
   const [mn, mx, step] = limits(p, st.age, st.occ, s.hsv);
@@ -330,16 +353,11 @@ function panel(p){
     h += `<div class="fl">實支實付保險金啟動日</div><div class="chips">${[75,80].map(a=>{const code=(a==75?'HAC':'HAD')+pl; const can=termsFor(p,st.age,code).length>0; return `<button class="chip${start==a?' on':''}" data-k="plan" data-p="${p.code}" data-v="${code}" ${can?'':'disabled'}>${a} 歲（${a==75?'HAC':'HAD'}${pl}）${can?'':'－年齡不符'}</button>`}).join('')}</div>`;
   }
   h += `<div class="fl">繳費年期</div><div class="chips">${s.terms.map(t=>`<button class="chip${t===s.term?' on':''}" data-k="term" data-p="${p.code}" data-v="${t}">${t==0?'躉繳':t==1?'一年期':t+' 年'}</button>`).join('')}</div>`;
-  if (p.minHSV){
-    const hh = st.riders.HSV, canHere = st.mains.includes(p.code);
-    if (s.hsv) h += `<div class="note">✓ HSV 已附加於 ${p.code} → 最低保額可為 ${p.minHSV} 萬（整）</div>`;
-    else if (hh) h += `<div class="note">HSV 目前附加於 ${hh}（${p.code} 最低 ${p.min} 萬）。${canHere?`<button class="chip" data-hsvto="${p.code}">改掛 ${p.code} → 可 ${p.minHSV} 萬</button>`:''}</div>`;
-    else h += `<div class="note">若 HSV 附約附加於 ${p.code}，最低保額可降為 ${p.minHSV} 萬；HSV 也可掛 OLA6 等其他主約（此時 ${p.code} 仍最低 ${p.min} 萬）。${canHere?`<button class="chip" data-hsvto="${p.code}">勾 HSV 並掛 ${p.code}</button>`:''}</div>`;
-  }
   if (p.unit !== 'unit'){
     h += `<div class="fl">${p.unit==='day'?'住院醫療日額':'保額'}（${mn===mx?'固定':mn.toLocaleString()+'–'+mx.toLocaleString()}，${p.unit==='day'?'以百元為單位':'每 '+step+' '+UNIT[p.unit]}）</div>
       <div class="sumrow"><button class="pm" data-k="sumd" data-p="${p.code}" data-v="-1">−</button><input data-sum="${p.code}" type="number" inputmode="decimal" step="${step}" value="${s.sum}" ${mn===mx?'readonly':''}><span class="unit">${UNIT[p.unit]}</span><button class="pm" data-k="sumd" data-p="${p.code}" data-v="1">＋</button></div>`;
   }
+  if (p.minHSV) h += hsvBox(p, s);
   if (p.modes.length > 1) h += `<div class="fl">繳別</div><div class="chips">${p.modes.map(m=>`<button class="chip${m===s.mode?' on':''}" data-k="mode" data-p="${p.code}" data-v="${m}">${m}</button>`).join('')}</div>`;
   if (p.pay) h += `<label class="chk"><input type="checkbox" data-pd="${p.code}" ${s.payDisc?'checked':''}> 繳費方式折扣 ${p.pay*100}%（首期匯款／轉帳／富邦信用卡；續期轉帳／富邦信用卡／自行繳費）</label>`;
   const r = quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s));
@@ -395,7 +413,7 @@ function syncHsv(){
     const s = st.sel[p.code] || (st.sel[p.code] = {}), on = hsvOn(p.code), was = !!s.hsv;
     s.hsv = on;
     if (on && !was && (s.sum == null || s.sum === p.min)) s.sum = p.minHSV;
-    if (!on && s.sum != null && s.sum < p.min) s.sum = p.min;
+    if (!on && was && s.sum != null && s.sum < p.min) s.sum = p.min;   // 剛取消 HSV 才拉回最低；使用者自己打 5 萬則保留並提示勾 HSV
   }
 }
 function toggle(key, on){
@@ -432,13 +450,17 @@ document.addEventListener('click', e => {
     if (k.dataset.k==='plan') s.plan = v;
     else if (k.dataset.k==='term') s.term = +v;
     else if (k.dataset.k==='mode') s.mode = v;
-    else if (k.dataset.k==='sumd'){ const [mn,mx,step]=limits(p,st.age,st.occ,s.hsv); s.sum = Math.round((Math.min(mx,Math.max(mn,(+s.sum||0)+ +v*step)))*100)/100; }
+    else if (k.dataset.k==='sumd'){ const [mn,mx,step]=limits(p,st.age,st.occ,s.hsv); const cur=+s.sum||0;
+      if (p.minHSV && !s.hsv && +v<0 && cur <= mn + 1e-9) s.sum = p.minHSV;   // XWS5 在 10 萬再按 − → 跳 5 萬並立即提示勾 HSV
+      else s.sum = Math.round((Math.min(mx,Math.max(mn,cur+ +v*step)))*100)/100; }
     render(); return;
   }
   const jp = e.target.closest('[data-jump]');
   if (jp){ document.getElementById(jp.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'}); return; }
   if (e.target.id==='cartopen'){ $('#cart').classList.toggle('open'); e.target.textContent = $('#cart').classList.contains('open') ? '明細 ▼' : '明細 ▲'; return; }
   if (e.target.id==='clear'){ st.mains=[]; st.riders={}; render(); return; }
+  const h5 = e.target.closest('[data-hsv5]');
+  if (h5){ attachHsv(h5.dataset.hsv5, true); render(); return; }
   const ht = e.target.closest('[data-hsvto]');
   if (ht){ const m = ht.dataset.hsvto, rs = riderState('HSV', st.mains, riderCodes().filter(x=>x!=='HSV'));
     if (riderOk('HSV') && rs.ok && rs.hosts.includes(m)) st.riders.HSV = m; else alert('HSV 目前無法附加於 '+m+'：'+(rs.why||'年齡／條件不符')); render(); return; }
@@ -447,6 +469,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const t = e.target, d = t.dataset;
   if (d.pick){ toggle(d.pick, t.checked); render(); return; }
+  if (d.hsvx){ if (t.checked) attachHsv(d.hsvx, false); else if (st.riders.HSV === d.hsvx) delete st.riders.HSV; render(); return; }
   if (d.host){ st.riders[d.host] = t.value; render(); return; }
   if (d.sum){ st.sel[d.sum].sum = parseFloat(t.value)||0; render(); return; }
   if (d.pd){ st.sel[d.pd].payDisc = t.checked; render(); return; }
