@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.3 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.4 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -66,7 +66,7 @@ function quote(p, q){
   const warn = p.warn && p.warn[`${q.term}|${q.sex}|${q.age}`];
   return {rate, units, annual, modal, paid, bp, dl, firstYear, n, warn};
 }
-// ---------- 常用優先排序：1 XWS5 → 2 OLA／OLA6 → 3 SDG → 4 男女癌（CLZ 男／CLX 女） ----------
+// ---------- 常用優先排序：1 XWS5 → 2 OLA／OLA6 → 3 SDG → 4 男女癌（CLZ／CLX 男女平權皆列出；性別不符標示） ----------
 const PRI = code => /^XWS5/.test(code) ? 1 : /^OLA/.test(code) ? 2 : code === 'SDG' ? 3 : (code === 'CLZ' || code === 'CLX') ? 4 : 99;
 const FAV = code => PRI(code) <= 2;   // 標「常用」
 // ---------- 主約／附約目錄（尚未收錄費率者：只做投保年齡／性別／職業篩選＋商品說明） ----------
@@ -189,8 +189,9 @@ const box = (key, on, dis, title) => `<label class="pk${dis?' dis':''}" title="$
 function catItem(c, e, rs){
   const isM = c.kind === 'main', key = (isM?'m:':'r:')+c.code, on = isM ? st.mains.includes(c.code) : c.code in st.riders;
   const open = st.open === c.code;
-  const dis = !isM && !on && !(rs && rs.ok);
-  const tag = (PRI(c.code) < 99 ? `<span class="tag pri">優先 ${PRI(c.code)}</span>` : '') + (e.ok==='cond' ? '<span class="tag cond">看要保人年齡</span>' : e.child ? '<span class="tag cond">子女身分</span>' : '');
+  const sexNo = !!e.sexMis;
+  const dis = (!isM && !on && !(rs && rs.ok)) || (isM && sexNo && !on);
+  const tag = (PRI(c.code) < 99 ? `<span class="tag pri">優先 ${PRI(c.code)}</span>` : '') + (sexNo ? `<span class="tag sexno">⚠ 性別不符（${c.sex===1?'限男性':'限女性'}）</span>` : '') + (e.ok==='cond' ? '<span class="tag cond">看要保人年齡</span>' : e.child ? '<span class="tag cond">子女身分</span>' : '');
   let sub = '';
   if (!isM){
     if (on){
@@ -198,8 +199,9 @@ function catItem(c, e, rs){
       sub = `<div class="host">附加於：${hs.length>1 ? `<select data-host="${c.code}">${hs.map(h=>`<option ${h===st.riders[c.code]?'selected':''}>${h}</option>`).join('')}</select>` : `<b>${st.riders[c.code]}</b>`}｜保費待試算${riderWarn(c.code)}</div>`;
     } else if (rs && !rs.ok) sub = `<div class="why">🔒 ${rs.why}</div>`;
   } else if (on) sub = `<div class="host">✓ 已勾選｜保費待試算（費率整理中）</div>`;
+  else if (sexNo) sub = `<div class="why">⚠ 性別不符：${c.sex===1?'男性':'女性'}專屬商品，目前被保險人為${st.sex==1?'男':'女'}性，可點開看內容，不能勾選投保</div>`;
   return `<div class="prod pend${open?' open':''}${on?' picked':''}${dis?' locked':''}" data-c="${c.code}">
-    <div class="ph">${box(key, on, dis, dis&&rs?rs.why:'')}<span class="code ${c.kind}">${c.code}</span><span class="nm">${c.name}${tag}<span class="meta">${e.ok===true?e.terms.join('／')+'｜':''}${c.cover}｜<em>費率整理中</em></span></span><span class="arrow">${open?'▲':'ⓘ'}</span></div>${sub}
+    <div class="ph">${box(key, on, dis, sexNo?'性別不符':dis&&rs?rs.why:'')}<span class="code ${c.kind}">${c.code}</span><span class="nm">${c.name}${tag}<span class="meta">${e.ok===true||e.sexMis?e.terms.join('／')+'｜':''}${c.cover}｜<em>費率整理中</em></span></span><span class="arrow">${open?'▲':'ⓘ'}</span></div>${sub}
     <div class="pb">${open ? catPanel(c, e) : ''}</div></div>`;
 }
 function riderWarn(r){
@@ -220,7 +222,8 @@ function catPanel(c, e){
   const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : '';
   let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${c.name}（${c.code}）｜${KIND[c.kind]}｜${c.cat}</div>`;
   h += `<table class="info">${row('投保年齡', c.ages.map(x=>`${x.t}：${x.a}–${x.b} 歲`).join('<br>'))}${row('保障期間', c.cover)}${row('保額規定', c.sum)}${row(c.kind==='main'?'附加附約':'附加條件', c.attach)}${row('其他', [c.other, c.note].filter(Boolean).join('<br>'))}${row('職業限制', c.occx.length?`第 ${c.occx.join('、')} 類不可附加`:'')}</table>`;
-  if (e.ok === false) h += `<div class="err">⛔ ${e.why}</div>`;
+  if (e.sexMis) h += `<div class="err">⚠ 性別不符：${e.why}（目前被保險人為${st.sex==1?'男':'女'}性）。男女平權列出供比較／說明，實際投保須符合性別。</div>`;
+  else if (e.ok === false) h += `<div class="err">⛔ ${e.why}</div>`;
   if (c.ben.length) h += `<div class="ben"><b>主要給付項目</b>（金額依條款／商品內容說明）<div class="chips">${c.ben.map(b=>`<span class="chip">${b}</span>`).join('')}</div></div>`;
   h += `<div class="stub">💡 保費試算：此商品費率資料整理中，請先以公司建議書系統試算。勾選後會列入組合，保費標示「待試算」、不計入合計。</div>`;
   h += `<div class="note">依據：${c.rule}（投保規則）</div>`;
@@ -255,7 +258,10 @@ function render(){
   const ok = P.filter(p => eligible(p, st.age)), no = P.filter(p => !eligible(p, st.age));
   const pOk = ok.filter(p => PRI(p.code) < 99), rest = ok.filter(p => PRI(p.code) === 99);
   const ev = CAT.map(c => ({c, e:catElig(c, st.age, st.sex, st.occ, st.pAge)}));
-  const mAll = ev.filter(x => x.c.kind==='main' && x.e.ok), mPri = mAll.filter(x => PRI(x.c.code) < 99), mOk = mAll.filter(x => PRI(x.c.code) === 99), mNo = ev.filter(x => x.c.kind==='main' && !x.e.ok);
+  const mAll = ev.filter(x => x.c.kind==='main' && x.e.ok), mPri = mAll.filter(x => PRI(x.c.code) < 99), mOk = mAll.filter(x => PRI(x.c.code) === 99), mNo0 = ev.filter(x => x.c.kind==='main' && !x.e.ok);
+  // 男女平權：常用優先的性別專屬主約（CLZ／CLX）若只因性別不符，仍列在常用優先、標「性別不符」
+  const mSex = mNo0.filter(x => PRI(x.c.code) < 99 && x.c.sex && x.c.sex !== st.sex).map(x => { const e2 = catElig(Object.assign({}, x.c, {sex:0}), st.age, st.sex, st.occ, st.pAge); return e2.ok ? {c:x.c, e:Object.assign({}, e2, {ok:false, sexMis:true, why:x.e.why})} : null; }).filter(Boolean);
+  const mNo = mNo0.filter(x => !mSex.some(y => y.c.code === x.c.code));
   const rOk = ev.filter(x => x.c.kind!=='main' && x.e.ok), rNo = ev.filter(x => x.c.kind!=='main' && !x.e.ok);
   const rc = riderCodes();
   rOk.forEach(x => x.rs = riderState(x.c.code, st.mains, rc.filter(y=>y!==x.c.code)));
@@ -269,12 +275,12 @@ function render(){
   $('#quick').innerHTML = '⭐ 常用快選：' + quick.map(p => { const el = eligible(p, st.age), on = st.mains.includes(p.code);
     return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el?'':'disabled'}>${on?'☑':'☐'} ${p.code==='OLA6'?'OLA6 金來寶（OLA）':'XWS5 新平準終身'}${el?'':'（年齡不符）'}</button>`; }).join('');
   // 主約區
-  const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p)})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)}))].sort((a,b)=>a.k-b.k);
-  const lbl = c => c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='OLA6' ? 'OLA6（OLA）' : c;
+  const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p)})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || (a.c==='CLZ'?-1:1));
+  const lbl = (c, sx) => (c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='OLA6' ? 'OLA6（OLA）' : c) + (sx ? '（性別不符）' : '');
   let h = st.dropped.length ? `<div class="warn">條件改變，已自動取消不符的勾選：${st.dropped.join('、')}</div>` : '';
   st.dropped = [];
   // 常用優先：獨立醒目區塊
-  h += pri.length ? `<div class="favbox"><div class="subhd favhd">⭐ 常用優先（${pri.length}）：${pri.map(x=>lbl(x.c)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + `</div>` : '';
+  h += pri.length ? `<div class="favbox"><div class="subhd favhd">⭐ 常用優先（${pri.length}）：${pri.map(x=>lbl(x.c, x.sx)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + `</div>` : '';
   // 其他主約：依類型分組，預設收合（有勾選或手動打開的組才展開）
   const groups = [];
   for (const it of [...rest.map(p=>({cat:p.cat, h:()=>v1Item(p), code:p.code, v1:true})), ...mOk.map(x=>({cat:x.c.cat, h:()=>catItem(x.c, x.e), code:x.c.code}))]){

@@ -126,3 +126,5 @@ details.grp>summary span:first-child{flex:1}
 details.grp .gc{font-weight:400;font-size:12px;color:#7a8696}
 details.grp .gc b{color:#1c7ad1}
 .prod{scroll-margin-top:90px}
+
+.tag.sexno{background:#fff1e0;color:#b45309}
