@@ -289,22 +289,43 @@ function rQuote(code, q){
 const LIFECO = {XWS5:1, OLA6:1, XDY:1, LTS:100, SDG:1, SDH:1, SDJ:1, SDKA:1, SWB5:1, SWD1:1, SWW:1};
 const MEDDAY = ['HJK','HKR5','HLR2','SJR1'];   // 以元／日投保之住院醫療附約（HSV／HSY／HSW 計劃型不在此計算）
 function medRiderCap(lifeWan){ return lifeWan < 30 ? 4000 : lifeWan <= 100 ? 5000 : lifeWan <= 200 ? 6000 : 8000; }
-function medCheck(lifeWan, riderDays, mainDays){
-  const cap = medRiderCap(lifeWan), errs = [];
+// 特定身分（投保規定 115.09.30 一、(二)3.(4)）：kid＝孩童／學生、home＝家管／退休人士／無業／待業；仍需符合 (3) 一般身分 → 取兩者較小
+// 孩童／學生 0～5 歲(含)：附約 ≦4,000、主約＋附約 ≦4,000；6 歲以上：壽險 ≦200 萬 4,000／6,000、＞200 萬 6,000／6,000
+// 家管／退休／無業／待業：壽險 ≦200 萬 4,000／4,000、＞200 萬 6,000／6,000
+// ※ 孩童／學生比照父母或兄弟姊妹有效保單同額（par）：附約 ≦4,000、主約＋附約 ≦6,000
+function specCaps(spec, age, lifeWan){
+  if (!spec || !spec.on || !spec.id) return null;
+  let r, t, lbl;
+  if (spec.id === 'kid'){
+    if (spec.par){ r = 4000; t = 6000; lbl = '孩童／學生（比照父母／兄弟姊妹保單）'; }
+    else if (age <= 5){ r = 4000; t = 4000; lbl = '孩童／學生 0～5 歲'; }
+    else if (lifeWan <= 200){ r = 4000; t = 6000; lbl = '孩童／學生 6 歲以上、壽險 ≦200 萬'; }
+    else { r = 6000; t = 6000; lbl = '孩童／學生 6 歲以上、壽險 ＞200 萬'; }
+  } else {
+    if (lifeWan <= 200){ r = 4000; t = 4000; lbl = '家管／退休／無業／待業、壽險 ≦200 萬'; }
+    else { r = 6000; t = 6000; lbl = '家管／退休／無業／待業、壽險 ＞200 萬'; }
+  }
+  return {r, t, lbl};
+}
+function medCheck(lifeWan, riderDays, mainDays, spec, age){
+  const gcap = medRiderCap(lifeWan), sp = specCaps(spec, age, lifeWan), errs = [], merrs = [];
+  const cap = sp ? Math.min(gcap, sp.r) : gcap, tcap = sp ? Math.min(8000, sp.t) : 8000;
   const rt = riderDays.reduce((a,x)=>a+x[1],0), mt = mainDays.reduce((a,x)=>a+x[1],0);
   const band = lifeWan < 30 ? '＜30 萬' : lifeWan <= 100 ? '30～100 萬' : lifeWan <= 200 ? '101～200 萬' : '＞200 萬';
-  if (rt > cap) errs.push(`通則：累計人壽保險保額 ${lifeWan.toLocaleString()} 萬（${band}）→ 醫療險附約住院日額累計 ≦${cap.toLocaleString()} 元；目前 ${riderDays.map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${rt.toLocaleString()} 元`);
-  if (rt + mt > 8000) errs.push(`通則：醫療險主約＋附約累計住院日額 ≦8,000 元；目前 ${[...mainDays, ...riderDays].map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${(rt+mt).toLocaleString()} 元`);
-  return {cap, errs, rt, mt};
+  const who = sp ? `特定身分 ${sp.lbl}` : `累計人壽保險保額 ${lifeWan.toLocaleString()} 萬（${band}）`;
+  if (rt > cap) errs.push(`通則：${who}${sp?`（壽險 ${lifeWan.toLocaleString()} 萬）`:''} → 醫療險附約住院日額累計 ≦${cap.toLocaleString()} 元；目前 ${riderDays.map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${rt.toLocaleString()} 元`);
+  if (rt && rt + mt > tcap) errs.push(`通則：${sp?who+' → ':''}醫療險主約＋附約累計住院日額 ≦${tcap.toLocaleString()} 元；目前 ${[...mainDays, ...riderDays].map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${(rt+mt).toLocaleString()} 元`);
+  if (mt > tcap) merrs.push(`通則：${sp?who+' → ':''}醫療險主約＋附約累計住院日額 ≦${tcap.toLocaleString()} 元；目前醫療主約 ${mainDays.map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${mt.toLocaleString()} 元`);
+  return {cap, tcap, gcap, sp, errs, merrs, rt, mt};
 }
-window.QuoteEngine = {quote, medCheck, medRiderCap, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
+window.QuoteEngine = {quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
 if (typeof document === 'undefined') return;
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
-const st = {age:30, sex:1, occ:1, pAge:null, pSex:1, open:null, sel:{}, rsel:{}, mains:[], riders:{}, dropped:[], gopen:{}, fold:{}};
-try { const o = JSON.parse(localStorage.getItem('fbq2')||'{}'); Object.assign(st, o, {open:null, dropped:[], fold:{}}); st.gopen = st.gopen || {}; st.rsel = st.rsel || {}; st.pSex = st.pSex || 1; } catch(e){}
-const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,pSex:st.pSex,lifeEx:st.lifeEx,mains:st.mains,riders:st.riders,sel:st.sel,rsel:st.rsel,gopen:st.gopen}));
+const st = {spec:{on:false, id:null, par:false}, age:30, sex:1, occ:1, pAge:null, pSex:1, open:null, sel:{}, rsel:{}, mains:[], riders:{}, dropped:[], gopen:{}, fold:{}};
+try { const o = JSON.parse(localStorage.getItem('fbq2')||'{}'); Object.assign(st, o, {open:null, dropped:[], fold:{}}); st.gopen = st.gopen || {}; st.rsel = st.rsel || {}; st.pSex = st.pSex || 1; st.spec = st.spec || {on:false, id:null, par:false}; } catch(e){}
+const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,pSex:st.pSex,lifeEx:st.lifeEx,spec:st.spec,mains:st.mains,riders:st.riders,sel:st.sel,rsel:st.rsel,gopen:st.gopen}));
 const riderCodes = () => Object.keys(st.riders);
 const termTxt = t => t==0?'躉繳':t==1?'一年期':t+'年';
 // 通則醫療日額檢查（UI）：累計人壽保險保額＝已勾主約（LIFECO）＋①區「既有有效壽險保額」
@@ -316,8 +337,8 @@ function lifeWan(){
 function medState(){
   const rd = [], md = [];
   for (const [rc] of Object.entries(st.riders)) if (MEDDAY.includes(rc)){ const d = rDefaults(rc); if (d && d.q.sum) rd.push([rc, +d.q.sum]); }
-  for (const c of st.mains){ const p = P.find(x=>x.code===c); if (p && p.unit==='day' && /醫療/.test(p.cat)){ const s = defaultsFor(p); md.push([c, +s.sum]); } }
-  const L = lifeWan(); const m = medCheck(L.w, rd, md); m.life = L; return m;
+  for (const c of st.mains){ const p = P.find(x=>x.code===c); if (p && isMedMain(p)){ const s = defaultsFor(p); md.push([c, +s.sum]); } }
+  const L = lifeWan(); const m = medCheck(L.w, rd, md, st.spec, st.age); m.life = L; return m;
 }
 
 function insAge(bd){
@@ -338,7 +359,14 @@ function defaultsFor(p){
   const mode = p.modes.includes(s.mode) ? s.mode : p.modes[0];
   return Object.assign({plan, term, sum, mode, hsv, payDisc: s.payDisc !== false}, {terms});
 }
-const qOf = p => { const s = defaultsFor(p); return {s, r:quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s))}; };
+const isMedMain = p => p.unit==='day' && /醫療/.test(p.cat);
+let _medG = false;
+function mainMed(p, r){   // 醫療主約日額本身已超過（特定身分）主約＋附約上限 → 硬性擋
+  if (r.errs || _medG || !isMedMain(p) || !st.mains.includes(p.code)) return r;
+  _medG = true; try { const m = medState(); if (m.merrs.length) return {errs:m.merrs}; } finally { _medG = false; }
+  return r;
+}
+const qOf = p => { const s = defaultsFor(p); return {s, r:mainMed(p, quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s)))}; };
 
 // 合格判斷（主約／附約共用）
 function mainOk(code){ const p = P.find(x=>x.code===code); if (p) return pEl(p).ok; const c = CAT.find(x=>x.code===code); return !!c && c.kind==='main' && !!catElig(c, st.age, st.sex, st.occ, st.pAge).ok; }
@@ -507,7 +535,15 @@ function render(){
   $('#occ').value = st.occ;
   $('#page').value = st.pAge == null ? '' : st.pAge;
   if ($('#lifeex')) $('#lifeex').value = st.lifeEx == null ? '' : st.lifeEx;
-  const ms = medState(); if ($('#medcap')) $('#medcap').innerHTML = `通則醫療附約日額上限：累計壽險保額 <b>${ms.life.w.toLocaleString()} 萬</b>${ms.life.parts.length?'（'+ms.life.parts.join('＋')+'）':''} → 醫療險附約日額累計 ≦<b>${ms.cap.toLocaleString()}</b> 元${ms.rt?`｜已勾 ${ms.rt.toLocaleString()} 元`:''}`;
+  const sp = st.spec || {};
+  $('#specon').checked = !!sp.on; $('#specbox').hidden = !sp.on;
+  document.querySelectorAll('#specid button').forEach(b => b.classList.toggle('on', b.dataset.v === sp.id));
+  $('#specparw').hidden = sp.id !== 'kid'; $('#specpar').checked = !!sp.par;
+  const ms = medState();
+  $('#spechint').innerHTML = !sp.on ? '' : !sp.id ? '請選身分類型' : (ms.sp ? `目前適用：<b>${ms.sp.lbl}</b>（依①區年齡 ${st.age} 歲、累計壽險 ${ms.life.w.toLocaleString()} 萬）→ 附約 ≦${ms.sp.r.toLocaleString()}、主約＋附約 ≦${ms.sp.t.toLocaleString()} 元；仍需符合一般身分上限，取較小者。` : '')
+    + (sp.on && sp.id==='kid' && st.age<=5 && ms.life.w>1000 ? '<br>⚠️ 0～5 歲孩童累計壽險上限 1,000 萬' : '')
+    + (sp.on && sp.id ? `<br>※ 投保規定 115.09.30 一、(二)3.(4)。${sp.id==='kid'?'若可提出父母相關收入、財力證明，可另行評估（仍需符合一般身分上限）。':'家管／退休人士可提出本人、配偶或父母收入／財力證明另行評估；無業、待業者不適用。'}` : '');
+  if ($('#medcap')) $('#medcap').innerHTML = `通則醫療附約日額上限${ms.sp?'（特定身分）':''}：累計壽險保額 <b>${ms.life.w.toLocaleString()} 萬</b>${ms.life.parts.length?'（'+ms.life.parts.join('＋')+'）':''} → 醫療險附約日額累計 ≦<b>${ms.cap.toLocaleString()}</b> 元、主約＋附約 ≦<b>${ms.tcap.toLocaleString()}</b> 元${ms.rt||ms.mt?`｜已勾 附約 ${ms.rt.toLocaleString()}${ms.mt?'＋主約 '+ms.mt.toLocaleString():''} 元`:''}`;
   document.querySelectorAll('#psex button').forEach(b => b.classList.toggle('on', +b.dataset.v === (st.pSex||1)));
   const ok = P.filter(p => { const e = pEl(p); return e.ok || (e.sexMis && PRI(p.code) < 99); }), no = P.filter(p => !ok.includes(p));
   const pOk = ok.filter(p => PRI(p.code) < 99), rest = ok.filter(p => PRI(p.code) === 99);
@@ -613,7 +649,7 @@ function panel(p){
   if (p.minHSV) h += hsvBox(p, s);
   if (p.modes.length > 1) h += `<div class="fl">繳別</div><div class="chips">${p.modes.map(m=>`<button class="chip${m===s.mode?' on':''}" data-k="mode" data-p="${p.code}" data-v="${m}">${m}</button>`).join('')}</div>`;
   if (p.pay) h += `<label class="chk"><input type="checkbox" data-pd="${p.code}" ${s.payDisc?'checked':''}> 繳費方式折扣 ${p.pay*100}%（首期匯款／轉帳／富邦信用卡；續期轉帳／富邦信用卡／自行繳費）</label>`;
-  const r = quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s));
+  const r = mainMed(p, quote(p, Object.assign({age:st.age, sex:st.sex, occ:st.occ}, s)));
   if (r.errs) h += `<div class="err">⛔ ${r.errs.join('<br>⛔ ')}</div>`;
   else {
     const CU = p.cur==='USD' ? 'US$' : 'NT$';
@@ -692,6 +728,7 @@ function toggle(key, on){
 }
 
 document.addEventListener('click', e => {
+  { const sb = e.target.closest && e.target.closest('#specid button'); if (sb){ st.spec.id = sb.dataset.v; if (sb.dataset.v !== 'kid') st.spec.par = false; render(); return; } }
   const pm = e.target.closest('#step1 .pm');
   if (pm){ st.age = Math.max(0, Math.min(85, st.age + +pm.dataset.d)); render(); return; }
   const sx = e.target.closest('#sex button');
@@ -746,6 +783,8 @@ document.addEventListener('change', e => {
   if (t.id==='age'){ st.age = Math.max(0, Math.min(85, parseInt(t.value)||0)); render(); }
   if (t.id==='page'){ const v = t.value.trim(); st.pAge = v==='' ? null : Math.max(0, Math.min(99, parseInt(v)||0)); render(); }
   if (t.id==='occ'){ st.occ = +t.value; render(); }
+  if (t.id==='specon'){ st.spec.on = t.checked; render(); return; }
+  if (t.id==='specpar'){ st.spec.par = t.checked; render(); return; }
   if (t.id==='lifeex'){ const v = t.value.trim(); st.lifeEx = v==='' ? null : Math.max(0, parseFloat(v)||0); render(); }
   if (t.id==='bd' && t.value){ st.age = insAge(t.value); $('#agehint').textContent = `生日 ${t.value} → 今日保險年齡 ${st.age} 歲`; render(); }
 });
