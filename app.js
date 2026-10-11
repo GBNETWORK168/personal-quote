@@ -360,11 +360,13 @@ if (typeof document === 'undefined') return;
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
-const st = {spec:{on:false, id:null, par:false}, age:30, sex:1, occ:1, pAge:null, pSex:1, open:null, sel:{}, rsel:{}, mains:[], riders:{}, dropped:[], gopen:{}, fold:{}};
+const st = {spec:{on:false, id:null, par:false}, age:30, sex:1, occ:1, pAge:null, pSex:1, open:null, sel:{}, rsel:{}, mains:[], riders:{}, dropped:[], gopen:{}, fold:{}, multi:false};
 try { const o = JSON.parse(localStorage.getItem('fbq2')||'{}'); Object.assign(st, o, {open:null, dropped:[], fold:{}}); st.gopen = st.gopen || {}; st.rsel = st.rsel || {}; st.pSex = st.pSex || 1; st.spec = st.spec || {on:false, id:null, par:false}; } catch(e){}
+// v1.17 預設單張主約模式；舊資料已有兩張以上主約 → 自動開啟第二張模式
+if ((st.mains||[]).length > 1) st.multi = true;
 // v1.12：附約逐張主約附加 st.riders＝{附約:[主約…]}、st.rsel 以 '附約@主約' 為鍵（舊版 {附約:主約} 自動轉換）
 for (const [c, h] of Object.entries(st.riders || {})){ if (!Array.isArray(h)){ st.riders[c] = h ? [h] : []; if (h && st.rsel[c] && !st.rsel[c+'@'+h]) st.rsel[c+'@'+h] = st.rsel[c]; } }
-const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,pSex:st.pSex,lifeEx:st.lifeEx,spec:st.spec,mains:st.mains,riders:st.riders,sel:st.sel,rsel:st.rsel,gopen:st.gopen}));
+const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,pSex:st.pSex,lifeEx:st.lifeEx,spec:st.spec,mains:st.mains,riders:st.riders,sel:st.sel,rsel:st.rsel,gopen:st.gopen,multi:!!st.multi}));
 const riderCodes = () => Object.keys(st.riders);
 const attached = c => st.riders[c] || [];
 const instList = () => Object.entries(st.riders).flatMap(([c, hs]) => hs.map(h => [c, h]));
@@ -387,6 +389,7 @@ function renum(code){   // 同商品各張重新編號為 CODE、CODE#2…（附
   const rs = {}; for (const k of Object.keys(st.rsel)){ const [c, h] = k.split('@'); if (h && mp[h]){ rs[c+'@'+mp[h]] = st.rsel[k]; delete st.rsel[k]; } } Object.assign(st.rsel, rs);
 }
 function addDup(code){   // 同商品再投保一張
+  st.multi = true;
   const p = P.find(x => x.code === code); if (!p) return null;
   if (!st.mains.includes(code)) { st.mains.push(code); return code; }
   const n = sibs(code).length; if (n >= DUPMAX(code)) { alert(`${code} 本工具最多 ${DUPMAX(code)} 張`); return null; }
@@ -549,8 +552,8 @@ function rctl(code, host){
 
 // v1.16 已勾主約編號（像建議書購物車「1. XWS5」「2. OLA6」），顏色依順序
 const mIdx = id => st.mains.indexOf(id);
-const mno = id => { const i = mIdx(id); return i < 0 ? '' : `<span class="mno m${i%4}">${i+1}</span>`; };
-const mlab = id => { const i = mIdx(id); return i < 0 ? lab(id) : `${i+1}. ${lab(id)}`; };
+const mno = id => { const i = mIdx(id); return i < 0 || st.mains.length < 2 ? '' : `<span class="mno m${i%4}">${i+1}</span>`; };
+const mlab = id => { const i = mIdx(id); return i < 0 || st.mains.length < 2 ? lab(id) : `${i+1}. ${lab(id)}`; };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const instH = (code, h) => `<div class="inst m${mIdx(h)%4}"><div class="ih">└ 掛 ${mno(h)}<b>${lab(h)}</b>${RR[code] ? '' : '｜保費待試算'}${riderWarn(code, h)}</div>${RR[code] ? rctl(code, h) : ''}</div>`;
 const box = (key, on, dis, title) => `<label class="pk${dis?' dis':''}" title="${title||''}"><input type="checkbox" data-pick="${key}" ${on?'checked':''} ${dis?'disabled':''}><span></span></label>`;
@@ -633,7 +636,7 @@ function v1Item(p, id){
   const tag = (FAV(p.code) ? '<span class="tag fav">常用</span>' : PRI(p.code) < 99 ? `<span class="tag pri">優先 ${PRI(p.code)}</span>` : '') + (sexNo ? `<span class="tag sexno">⚠ 性別不符（${p.sex===1?'限男性':'限女性'}）</span>` : '') + (p.cur==='USD' ? '<span class="tag cond">美元</span>' : '');
   const on = st.mains.includes(id), open = on ? !st.fold[id] : st.open===p.code;
   let sub = '';
-  const nS = sibs(p.code).length, canDup = on && nS < DUPMAX(p.code) && id === sibs(p.code)[nS-1];
+  const nS = sibs(p.code).length, canDup = st.multi && on && nS < DUPMAX(p.code) && id === sibs(p.code)[nS-1];
   const dupBtn = canDup ? `<div class="dupr"><button type="button" class="chip dup" data-mdup="${p.code}">➕ 同商品再投保一張 ${p.code}（第${nS+1}張，附約各自掛）</button></div>` : '';
   if (on){ const {s, r} = qOf(p, id); sub = r.errs ? `<div class="why">⛔ 設定不符，未計入合計${p.minHSV && !s.hsv && (+s.sum||0) < p.min ? ` <button class="chip hsvq" data-hsv5="${id}">⚡ 勾 HSV → ${p.minHSV} 萬</button>` : ''}</div>` : `<div class="host">✓ ${termLbl(p,s.term)}｜${p.unit==='unit'?'1單位':s.sum.toLocaleString()+UNIT[p.unit]}｜${s.mode} <b>${p.cur==='USD'?'US$':'NT$'} ${fmt(r.paid)}</b></div>`; }
   else if (sexNo) sub = `<div class="why">⚠ 性別不符：${p.sex===1?'男性':'女性'}專屬商品，目前被保險人為${st.sex==1?'男':'女'}性，可點開看內容與費率，不能勾選投保</div>`;
@@ -691,7 +694,8 @@ function render(){
   const quick = ['XWS5','OLA6','CLZ','CLX'].map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
   const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症'};
   $('#quick').innerHTML = '⭐ 常用快選：' + (quick.length ? '' : '<span class="hint">此年齡／性別沒有可投保的主推商品</span>') + quick.map(p => { const e = pEl(p), el = !!e.ok, on = st.mains.includes(p.code);
-    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('');
+    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (st.multi && on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('') + (st.mains.length && !st.multi ? '<button type="button" class="qk need2" data-multi="1">➕ 需要第二張主約</button>' : '');
+  $('#multihint').hidden = !st.multi;
   // 主約區
   const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p), sx:!!pEl(p).sexMis})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || (a.c==='CLZ'?-1:1));
   const lbl = (c, sx) => (c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='OLA6' ? 'OLA6（OLA）' : c) + (sx ? '（性別不符）' : '');
@@ -714,15 +718,23 @@ function render(){
     let cat = '';
     h += hit.map(x => { let o = ''; if (x.k === 99 && x.cat !== cat){ cat = x.cat; o += `<div class="cat">${cat}</div>`; } return o + x.h(); }).join('') || `<div class="empty">沒有符合「${esc(Q)}」的可投保主約${no.concat(mNo).length ? '（可看下方「此條件不可投保」）' : ''}。</div>`;
     $('#list').innerHTML = h;
+  } else if (fold && !st.multi){
+    // v1.17 單張主約模式：只顯示已勾的這一張，其他主約全部收起；要第二張再按「需要第二張主約」
+    const one = st.mains.map(id => { const p = pOf(id); if (p) return v1Item(p, id); const c = CAT.find(x => x.code === base(id)); return c ? catItem(c, catElig(c, st.age, st.sex, st.occ, st.pAge)) : ''; }).join('');
+    h += `<div class="favbox one"><div class="subhd favhd">✅ 已選主約：${st.mains.map(lab).join('、')}</div>` + one + `</div>`;
+    h += `<div class="need2box"><button type="button" class="need2big" data-multi="1">➕ 需要第二張主約</button><span>（例如再加一張 XWS5／OLA6，或 SDG、癌症險，附約各自掛）</span></div>`;
+    h += `<div class="mfold">📁 其他主約已收起 <button type="button" class="mini" data-mshow="1">換主約／看全部</button></div>`;
+    $('#list').innerHTML = h;
   } else if (fold){
     // v1.13：收起時「常用優先」仍全部保留（方便加第二張主約，如 XWS5＋SDG），只收起非優先的其他主約
     const othP = [...rest.filter(p=>st.mains.includes(p.code)).map(p=>v1Item(p)), ...mOk.filter(x=>st.mains.includes(x.c.code)).map(x=>catItem(x.c, x.e))];
-    h += `<div class="favbox"><div class="subhd favhd">✅ 已勾主約（${st.mains.length}）：${st.mains.map(mlab).join('、')}｜⭐ 常用優先：${pri.map(x=>lbl(x.c, x.sx)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + othP.join('') + `</div>`;
+    h += `<div class="multibar">➕ 第二張主約：從下面勾選（同商品可按「再投保一張」）</div><div class="favbox"><div class="subhd favhd">✅ 已勾主約（${st.mains.length}）：${st.mains.map(mlab).join('、')}｜⭐ 常用優先：${pri.map(x=>lbl(x.c, x.sx)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + othP.join('') + `</div>`;
     const nHid = nAllMain - pri.length - othP.length;
     h += `<div class="mfold">📁 其他 ${nHid} 個主約已收起 <button type="button" class="mini" data-mshow="1">顯示全部主約</button></div>`;
+    h += `<div class="mfold">第二張主約模式 <button type="button" class="mini" data-multi="0">只要一張主約</button></div>`;
     $('#list').innerHTML = h;
   } else {
-  if (st.mains.length) h += `<div class="mfold">已顯示全部主約 <button type="button" class="mini" data-mshow="0">收起未勾選主約</button></div>`;
+  if (st.mains.length) h += `<div class="mfold">已顯示全部主約${st.multi ? '' : '（目前只要一張：勾別的會換掉）'} <button type="button" class="mini" data-mshow="0">收起未勾選主約</button></div>`;
   h += pri.length ? `<div class="favbox"><div class="subhd favhd">⭐ 常用優先（${pri.length}）：${pri.map(x=>lbl(x.c, x.sx)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + `</div>` : '';
   // 其他主約：依類型分組，預設收合（有勾選或手動打開的組才展開）
   const groups = [];
@@ -742,7 +754,7 @@ function render(){
   $('#nolistcnt').textContent = `（${noF.length + mNoF.length}${qOn ? '，符合關鍵字' : ''}）`;
   if (qOn && !nQm && noM) $('#nolist').open = true;
   // 附約區：可搭的排前面
-  $('#rhint').innerHTML = st.mains.length ? `已勾主約：<b>${st.mains.map(mlab).join('、')}</b>${st.mains.some(x=>inum(x)>1)?'（同商品兩張：附約各自掛在對應那張主約下）':''}。可附加的附約可直接勾選，勾了就能選保額／計劃並即時算保費（繳別跟著主約）；🔒 為此組合不能附加（原因寫在下方）。` : '👆 先在上面勾選主約，這裡會打開可附加的附約。';
+  $('#rhint').innerHTML = st.mains.length ? `已勾主約：<b>${st.mains.map(mlab).join('、')}</b>${st.mains.length>1?'（兩張主約：附約各自掛在對應那張主約下）':''}。可附加的附約可直接勾選，勾了就能選保額／計劃並即時算保費（繳別跟著主約）；🔒 為此組合不能附加（原因寫在下方）。` : '👆 先在上面勾選主約，這裡會打開可附加的附約。';
   // v1.16：兩張以上主約時可「只看可掛某張主約的附約」（勾選即掛那張）
   if (!(st.mains.length > 1 && st.mains.includes(st.rfocus))) st.rfocus = null;
   const F = st.rfocus;
@@ -858,7 +870,7 @@ function bundle(){
 function groupsOf(it){ return st.mains.map((id, g) => { const xs = it.filter(x => x.g === g); return {id, g, xs, main:xs.find(x => !x.sub), sub:xs.reduce((a,x)=>a+(x.firstYear||0),0), usd:xs.reduce((a,x)=>a+(x.usd||0),0)}; }); }
 const amtTxt = x => x.pending ? '待試算' : x.err ? '⛔ 設定不符' : (x.cur==='USD'?'US$ ':'')+fmt(x.paid);
 function mtree(it){
-  if (!st.mains.length) return '';
+  if (st.mains.length < 2) return '';   // v1.17 單張主約不顯示投保組合卡片
   const G = groupsOf(it), n = G.length;
   return `<div class="mtree"><div class="mth">📋 投保組合（每張主約各自掛附約）${n>1?'<span>點主約卡＝只看可掛那張的附約</span>':''}</div>`
     + G.map(G1 => { const {id, g, xs, main} = G1, rs = xs.filter(x => x.sub), on = st.rfocus === id;
@@ -899,6 +911,12 @@ function syncHsv(){
 function toggle(key, on){
   const [t, code] = key.split(':');
   if (t === 'm'){
+    if (on && !st.multi && st.mains.length && !st.mains.includes(code)){   // v1.17 單張模式：勾另一個主約＝換掉目前主約，附約能搬就搬
+      const old = st.mains[0], rcs = instList().filter(([rc, h]) => h === old).map(([rc]) => rc);
+      toggle('m:'+old, false); st.mains.push(code);
+      for (const rc of rcs){ const rs = riderState(rc, st.mains, instKeys()); if (rs.ok && rs.hosts.includes(code)) addInst(rc, code); }
+      st.mshow = false; if (P.some(p=>p.code===base(code))) st.open = null; return;
+    }
     if (on && !st.mains.includes(code)) st.mains.push(code);
     if (!on){ st.mains = st.mains.filter(c=>c!==code); for (const [rc, h] of instList()) if (h === code) delInst(rc, h); delete st.sel[code]; renum(base(code)); }
     if (on && P.some(p=>p.code===base(code))) st.open = null;
@@ -922,6 +940,14 @@ document.addEventListener('click', e => {
   if (rf){ st.rfocus = rf.dataset.rfocus || null; render(); if (st.rfocus){ const r = $('#rlist'); if (r && r.getBoundingClientRect().top > innerHeight * 0.8) r.scrollIntoView({behavior:'smooth', block:'start'}); } return; }
   const gt = e.target.closest('[data-goto]');
   if (gt){ const el = document.getElementById('p-'+gt.dataset.goto.replace('#','_')); if (el){ $('#cart').classList.remove('open'); $('#cartopen').textContent = '明細 ▲'; el.scrollIntoView({behavior:'smooth', block:'start'}); } return; }
+  const mu = e.target.closest('[data-multi]');
+  if (mu){
+    if (mu.dataset.multi === '1'){ st.multi = true; st.mshow = false; render(); const l = $('#secMain'); if (l) l.scrollIntoView({behavior:'smooth', block:'start'}); return; }
+    const extra = st.mains.slice(1);
+    if (extra.length && !confirm(`回到只要一張主約，會取消：${extra.map(lab).join('、')}（及掛在上面的附約）。確定？`)) return;
+    for (const id of extra) toggle('m:'+id, false);
+    st.multi = false; st.rfocus = null; render(); return;
+  }
   const md = e.target.closest('[data-mdup]');
   if (md){ const id = addDup(md.dataset.mdup); render(); if (id){ const el = document.getElementById('p-'+id.replace('#','_')); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); } return; }
   const qk = e.target.closest('[data-quick]');
@@ -954,7 +980,7 @@ document.addEventListener('click', e => {
   const jp = e.target.closest('[data-jump]');
   if (jp){ document.getElementById(jp.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'}); return; }
   if (e.target.id==='cartopen'){ $('#cart').classList.toggle('open'); e.target.textContent = $('#cart').classList.contains('open') ? '明細 ▼' : '明細 ▲'; return; }
-  if (e.target.id==='clear'){ st.mains=[]; st.riders={}; for (const k of Object.keys(st.sel)) if (k.includes('#')) delete st.sel[k]; render(); return; }
+  if (e.target.id==='clear'){ st.mains=[]; st.riders={}; st.multi=false; st.rfocus=null; for (const k of Object.keys(st.sel)) if (k.includes('#')) delete st.sel[k]; render(); return; }
   const h5 = e.target.closest('[data-hsv5]');
   if (h5){ attachHsv(h5.dataset.hsv5, true); render(); return; }
   const ht = e.target.closest('[data-hsvto]');
