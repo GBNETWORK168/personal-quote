@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.10 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.13 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -621,9 +621,9 @@ function render(){
   $('#subMain').textContent = mAll.length ? `可試算 ${ok.length}｜費率整理中 ${mAll.length}` : `全部可試算 ${ok.length}`;
   $('#subRider').textContent = st.mains.length ? `已勾主約可搭 ${nAttach} 項` : '先勾主約，才能勾附約';
   // 常用快選（step2）
-  const quick = ['XWS5','OLA6'].map(c => P.find(p=>p.code===c)).filter(Boolean);
+  const quick = ['XWS5','OLA6','SDG'].map(c => P.find(p=>p.code===c)).filter(Boolean);
   $('#quick').innerHTML = '⭐ 常用快選：' + quick.map(p => { const el = eligible(p, st.age), on = st.mains.includes(p.code);
-    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el?'':'disabled'}>${on?'☑':'☐'} ${p.code==='OLA6'?'OLA6 金來寶（OLA）':'XWS5 新平準終身'}${el?'':'（年齡不符）'}</button>`; }).join('');
+    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el?'':'disabled'}>${on?'☑':'☐'} ${p.code==='OLA6'?'OLA6 金來寶（OLA）':p.code==='SDG'?'SDG 醫保安心重大傷病':'XWS5 新平準終身'}${el?'':'（年齡不符）'}</button>`; }).join('');
   // 主約區
   const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p), sx:!!pEl(p).sexMis})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || (a.c==='CLZ'?-1:1));
   const lbl = (c, sx) => (c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='OLA6' ? 'OLA6（OLA）' : c) + (sx ? '（性別不符）' : '');
@@ -634,10 +634,11 @@ function render(){
   const fold = st.mains.length > 0 && !st.mshow;
   const nAllMain = pri.length + rest.length + mOk.length;
   if (fold){
-    const priP = pri.filter(x => st.mains.includes(x.c));
-    h += `<div class="favbox"><div class="subhd favhd">✅ 已勾主約（${st.mains.length}）：${st.mains.join('、')}</div>` + priP.map(x=>x.h).join('')
-      + [...rest.filter(p=>st.mains.includes(p.code)).map(p=>v1Item(p)), ...mOk.filter(x=>st.mains.includes(x.c.code)).map(x=>catItem(x.c, x.e))].join('') + `</div>`;
-    h += `<div class="mfold">📁 其他 ${nAllMain - st.mains.length} 個主約已收起 <button type="button" class="mini" data-mshow="1">顯示全部主約</button></div>`;
+    // v1.13：收起時「常用優先」仍全部保留（方便加第二張主約，如 XWS5＋SDG），只收起非優先的其他主約
+    const othP = [...rest.filter(p=>st.mains.includes(p.code)).map(p=>v1Item(p)), ...mOk.filter(x=>st.mains.includes(x.c.code)).map(x=>catItem(x.c, x.e))];
+    h += `<div class="favbox"><div class="subhd favhd">✅ 已勾主約（${st.mains.length}）：${st.mains.join('、')}｜⭐ 常用優先：${pri.map(x=>lbl(x.c, x.sx)).join(' → ')}</div>` + pri.map(x=>x.h).join('') + othP.join('') + `</div>`;
+    const nHid = nAllMain - pri.length - othP.length;
+    h += `<div class="mfold">📁 其他 ${nHid} 個主約已收起 <button type="button" class="mini" data-mshow="1">顯示全部主約</button></div>`;
     $('#list').innerHTML = h;
   } else {
   if (st.mains.length) h += `<div class="mfold">已顯示全部主約 <button type="button" class="mini" data-mshow="0">收起未勾選主約</button></div>`;
