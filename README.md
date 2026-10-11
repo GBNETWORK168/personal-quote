@@ -1,4 +1,11 @@
-# 富邦個人險快速報價 v1.8（附約保費全部上架）
+# 富邦個人險快速報價 v1.9（全部主約＋附約費率上架）
+
+## v1.9 變更（2026-10-11）
+- **其餘 24 項主約費率全部上架**：SDG、CLX、CLZ、CLW、CLQ、SDH、SDN、SDJ、SDKA（SDKB 續保表）、SWB5、SWD1、SWW、XDZ、FDC（美元）、SIE、SWI、AJC1、AJI、AJJ、AJK、ALA、MPA、MPB、XDY → 50／50 主約可試算，「費率整理中」清空。詳見 `MAIN_RATES_PROGRESS.md`。
+- 引擎：性別專屬（CLX／CLZ 不符仍列在常用優先、不可勾）、職業限制（傷害險 1–4 類、ALA 1 類）、繳費年期標籤（10 年繳／保 25 年、繳至 90 歲…）、SDN 兩段階梯保費、SWW 明年續保、FDC 美元另計、SIE 每百元保額、MPA／MPB 每 10 萬費率、SDH／SDN 附約白名單。
+- **公司通則**：累計人壽保險保額 <30 萬 → 醫療險附約住院日額累計 ≦4,000（30–100 萬 5,000、101–200 萬 6,000、>200 萬 8,000），醫療主約＋附約 ≦8,000，超過即擋；第①區可填既有壽險保額。原文見 `MAIN_RATES_PROGRESS.md`。
+- 測試：`node tests/verify.js` 121 項全過；`tests/shot_v19.py`。
+
 
 ## v1.8 變更（2026-10-11）
 - **附約／豁免附約費率全部上架（29 項）**：ADG、TMR、ADH、ADM、ADN、HJK、HKR5、HLR2、SJR1、HSV（1–3）、HSY（1–2）、HSW（1–3）、HTA、CWR3、CWR4、PCC5、CMR、CNR、SDL、SWZ、UCR、LTU、FDE、FDF、FDG、WP、WPA、WPF1、WPH。
