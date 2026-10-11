@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.9 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.10 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -7,6 +7,7 @@ const UNIT = {day:'元／日', wan:'萬元', unit:'單位', usd:'美元', h:'元
 const RUN = p => p.unit==='day'?'百元日額':p.unit==='h'?'百元保額':p.unit==='usd'?'萬美元':p.unit==='unit'?'單位':(p.per?p.per+' 萬元':'萬元');
 const unitsOf = (p, S) => p.unit==='day'||p.unit==='h' ? S/100 : p.unit==='usd' ? S/10000 : p.unit==='unit' ? 1 : S/(p.per||1);
 const termLbl = (p, t) => (p && p.tl && p.tl[t]) || (t==0?'躉繳':t==1?'一年期':t+'年');
+// v1.10：附約保額受主約額度限制改硬性擋（ADH ≦可附加額度 5 倍、SDL >50 萬 ≦可附加額度、LTU 2 倍／×10）；FDE/FDF/FDG 不可附加 FDC
 // v1.9：主約性別／職業限制（CLX 女、CLZ 男；傷害險職業 1–4 類、ALA 限 1 類）
 function pEl(p){
   if (!eligible(p, st.age)) return {ok:false, why:'投保年齡 '+ageRangeText(p)};
@@ -130,7 +131,8 @@ function riderOnMain(r, m){
   if (m.noRider) return {ok:false, why:`${m.code}：${m.noRider}`};
   if ((m.code==='SDH'||m.code==='SDN') && !['ADG','ADH','TMR','XTY','CMR','CNR','HTA'].includes(r)) return {ok:false, why:`${m.code} 僅可附加 ADG、ADH、TMR、XTY、CMR、CNR、HTA`};
   const fxR = /^FD[EFG]$/.test(r);
-  if (fxR && !m.fx) return {ok:false, why:'僅可附加同幣別外幣主約（如 FDC）'};
+  if (fxR && !m.fx) return {ok:false, why:'僅可附加同幣別外幣壽險主約（FAK1、FAZ、FBO、PFA…等，本工具未收錄）'};
+  if (fxR && m.code==='FDC') return {ok:false, why:'FDC 不可附加附約；FDE／FDF／FDG 可附加主約為 FAK1、FAZ、FBO、PFA…等外幣壽險（本工具未收錄）'};
   if (!fxR && m.fx) return {ok:false, why:'外幣主約只能附加同幣別外幣附約'};
   const W = () => (r==='CWR4'||r==='PCC5') ? (m.whole && !m.cancer) : true;
   switch (r){
@@ -209,19 +211,48 @@ function rTable(code, q, renew){
   const v = row[1][q.age - row[0]];
   return v == null ? null : v;
 }
-function rLim(code, age, occ, mode, hostSum){
+// ---------- 主約「換算附約可附加額度」（萬元）：各主約投保規則「附加附約」欄 ----------
+// ×1：XWS5、OLA6、XDY、AJC1、AJI、CLX、CLZ、SDG/SDH/SDN/SDJ/SDKA、SWB5、LTP、HTB；×70：XDN2；×100：LTS、LTQ、LTT；
+// 日額型醫療：日額 ×100；SIE：保額 ×100；HAC／HAD：計劃 1／2／3 ＝ 10／20／30 萬
+const CAPCO = {XWS5:1, OLA6:1, XDY:1, AJC1:1, AJI:1, CLX:1, CLZ:1, SDG:1, SDH:1, SDN:1, SDJ:1, SDKA:1, SWB5:1, LTP:1, HTB:1, XDN2:70, LTS:100, LTQ:100, LTT:100};
+const LTC_WHOLE = ['LTS','LTQ'];   // 長期照顧終身型主約（LTU：≦主約保額 2 倍）
+function capOf(p, s){
+  if (!p || !s) return null;
+  const sum = +s.sum;
+  if (p.code==='HAC'){ const n = +String(s.plan||'').slice(-1); return [10,20,30][n-1] ? {wan:[10,20,30][n-1], txt:`${s.plan} 可附加額度 ${[10,20,30][n-1]} 萬`} : null; }
+  if (!(sum > 0)) return null;
+  if (p.unit==='day' && /醫療/.test(p.cat) && p.code!=='SWI') return {wan: sum*100/10000, txt:`${p.code} 日額 ${sum.toLocaleString()} 元 ×100`};
+  if (p.code==='SIE') return {wan: sum*100/10000, txt:`SIE ${sum.toLocaleString()} 元 ×100`};
+  if (p.unit==='wan' && p.code in CAPCO) return {wan: Math.round(sum*CAPCO[p.code]*100)/100, txt:`${p.code} ${sum.toLocaleString()} 萬${CAPCO[p.code]!==1?' ×'+CAPCO[p.code]:''}`};
+  return null;
+}
+// 附約保額上限受主約額度限制（硬性擋下）：回傳 {max, why}；cap＝capOf 結果
+function capRule(code, cap, hostCode){
+  if (!cap) return null;
+  const W = cap.wan;
+  if (code==='ADH') return {max: Math.floor(W*5+1e-9), why:`≦主約保額（可附加額度）5 倍：${cap.txt}＝${W.toLocaleString()} 萬 ×5`};
+  if (code==='SDL') return {max: Math.max(50, Math.floor(W+1e-9)), why:`超過 50 萬須 ≦主約可附加額度：${cap.txt}＝${W.toLocaleString()} 萬`};
+  if (code==='LTU') return LTC_WHOLE.includes(hostCode)
+    ? {max: Math.floor(W/100*10000*2+1e-9), why:`附長照終身型主約 ≦主約保額 2 倍：${hostCode} ${(W/100).toLocaleString()} 萬 ×2`}
+    : {max: Math.floor(W*10000/10/1000+1e-9)*1000, why:`保額 ×10 ≦主約可附加額度：${cap.txt}＝${W.toLocaleString()} 萬`};
+  return null;
+}
+const CAPPED = ['ADH','SDL','LTU'];
+function rLim(code, age, occ, mode, hostSum, capR){
   const g = RCFG[code]; if (!g) return null;
   const L = {u:g.u, terms:g.terms ? g.terms(age) : null, plans:g.plans ? g.plans(age, occ) : null};
   if (g.min){ L.min = g.min(age, occ, mode); L.max = g.max(age, occ, mode); L.step = g.step || (g.u==='day'?100:1); }
   if (g.hostX2 && hostSum != null) L.max = Math.min(L.max, hostSum*2);        // HLR2 ≦ 主約日額 2 倍
   if (g.tmr && hostSum != null) L.max = Math.min(L.max, Math.floor(hostSum*0.1)); // TMR ≦ ADG 保額 10%
+  if (capR && L.max != null && capR.max < L.max){ L.max = capR.max; L.capWhy = capR.why; }
   return L;
 }
 // q：{age, sex, occ, plan, term, sum, mode, payDisc, covered(豁免：被豁免保費年繳合計), hostSum}
 function rQuote(code, q){
   const g = RCFG[code], R = RR[code];
   if (!g || !R) return {errs:['此附約費率尚未收錄']};
-  const errs = [], L = rLim(code, q.age, q.occ, q.mode, q.hostSum);
+  const errs = [], L = rLim(code, q.age, q.occ, q.mode, q.hostSum, q.capR);
+  if (L.capWhy && L.max < L.min) return {errs:[`主約額度不足，無法附加：${L.capWhy}＝${L.max.toLocaleString()} ${RUNIT[g.u]}，低於最低 ${L.min.toLocaleString()} ${RUNIT[g.u]}`]};
   if (L.plans && !L.plans.includes(+q.plan)) errs.push(`此職業類別可選計劃：${L.plans.map(p=>g.pn+p).join('、')}`);
   if (L.terms && !L.terms.includes(+q.term)) errs.push(`此年齡可選年期：${L.terms.join('／')} 年`);
   let units;
@@ -232,7 +263,7 @@ function rQuote(code, q){
   else {
     const S = +q.sum;
     if (!(S >= L.min - 1e-9)) errs.push(`保額低於最低 ${L.min.toLocaleString()} ${RUNIT[g.u]}`);
-    if (!(S <= L.max + 1e-9)) errs.push(`保額超過上限 ${L.max.toLocaleString()} ${RUNIT[g.u]}` + (g.hostX2 && q.hostSum!=null ? `（≦主約日額 ${q.hostSum.toLocaleString()} × 2）` : g.tmr && q.hostSum!=null ? `（≦ADG ${q.hostSum} 萬 × 10%）` : ''));
+    if (!(S <= L.max + 1e-9)) errs.push(`保額超過上限 ${L.max.toLocaleString()} ${RUNIT[g.u]}` + (g.hostX2 && q.hostSum!=null ? `（≦主約日額 ${q.hostSum.toLocaleString()} × 2）` : g.tmr && q.hostSum!=null ? `（≦ADG ${q.hostSum} 萬 × 10%）` : L.capWhy ? `（${L.capWhy}）` : ''));
     if (Math.abs(Math.round(S/L.step)*L.step - S) > 1e-6) errs.push(`保額需以 ${L.step.toLocaleString()} ${RUNIT[g.u]} 為單位`);
     units = g.u==='day' ? S/100 : g.u==='yuan' ? S/g.per : g.u==='usd' ? S : g.u==='unit' ? S : g.tmr ? 1 : S/g.per;
   }
@@ -266,7 +297,7 @@ function medCheck(lifeWan, riderDays, mainDays){
   if (rt + mt > 8000) errs.push(`通則：醫療險主約＋附約累計住院日額 ≦8,000 元；目前 ${[...mainDays, ...riderDays].map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${(rt+mt).toLocaleString()} 元`);
   return {cap, errs, rt, mt};
 }
-window.QuoteEngine = {quote, medCheck, medRiderCap, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG};
+window.QuoteEngine = {quote, medCheck, medRiderCap, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
 if (typeof document === 'undefined') return;
 
 // ---------- UI ----------
@@ -334,8 +365,9 @@ function rDefaults(code){
   let hostSum = null;
   if (g.hostX2 && hp && hp.unit==='day') hostSum = +hs.sum;
   if (g.tmr && 'ADG' in st.riders){ const a = st.rsel.ADG; hostSum = a && a.sum != null ? +a.sum : RCFG.ADG.def; }
-  const L = rLim(code, st.age, st.occ, mode, hostSum);
-  const q = {age:st.age, sex:st.sex, occ:st.occ, mode, payDisc, hostSum};
+  const capR = CAPPED.includes(code) ? capRule(code, capOf(hp, hs), host) : null;
+  const L = rLim(code, st.age, st.occ, mode, hostSum, capR);
+  const q = {age:st.age, sex:st.sex, occ:st.occ, mode, payDisc, hostSum, capR};
   if (L.plans) q.plan = L.plans.includes(+s.plan) ? +s.plan : L.plans[0];
   if (L.terms) q.term = L.terms.includes(+s.term) ? +s.term : L.terms[L.terms.length-1];
   if (L.min != null){ const d = g.def != null ? g.def : g.u==='day' ? 1000 : L.min; q.sum = s.sum != null ? s.sum : Math.min(Math.max(d, L.min), L.max); }
@@ -383,7 +415,7 @@ function rctl(code){
   if (L.min != null){
     const fixed = L.min === L.max;
     h += `<div class="sumrow">${fixed?'':`<button class="pm" data-rk="sumd" data-r="${code}" data-v="-1">−</button>`}<input data-rsum="${code}" type="number" inputmode="decimal" step="${L.step}" value="${q.sum}" ${fixed?'readonly':''}><span class="unit">${RUNIT[g.u]}</span>${fixed?'':`<button class="pm" data-rk="sumd" data-r="${code}" data-v="1">＋</button>`}</div>`
-      + `<div class="lim">${fixed?'固定':''}${fixed?L.min.toLocaleString():L.min.toLocaleString()+'–'+L.max.toLocaleString()} ${RUNIT[g.u]}${L.step>1&&!fixed?`（每 ${L.step.toLocaleString()}）`:g.u==='usd'?'（以千美元為單位）':''}</div>`;
+      + `<div class="lim">${fixed?'固定':''}${fixed?L.min.toLocaleString():L.min.toLocaleString()+'–'+L.max.toLocaleString()} ${RUNIT[g.u]}${L.step>1&&!fixed?`（每 ${L.step.toLocaleString()}）`:g.u==='usd'?'（以千美元為單位）':''}${L.capWhy?`<br>🔒 上限 ${L.max.toLocaleString()} ${RUNIT[g.u]}：${L.capWhy}`:''}</div>`;
   }
   if (!hp && !isW(code)) h += `<div class="chips">${Object.keys(RMF).map(m=>`<button class="chip${m===q.mode?' on':''}" data-rk="mode" data-r="${code}" data-v="${m}">${m}</button>`).join('')}</div>`;
   if (r.errs) h += `<div class="err">⛔ ${r.errs.join('<br>⛔ ')}</div>`;
@@ -422,11 +454,11 @@ function catItem(c, e, rs){
 function riderWarn(r){
   const h = st.riders[r], p = P.find(x=>x.code===h), s = p && st.sel[h];
   const w = [];
-  if (r==='ADH' && p && p.unit==='wan' && s) w.push(`ADH ≦ 主約保額 5 倍＝${(s.sum*5).toLocaleString()} 萬（且 10–200 萬）`);
-  if (r==='SDL') w.push(`≦50 萬不受主約額度限制；超過 50 萬須 ≦ 主約可附加額度${p&&p.unit==='wan'&&s&&/XWS5|OLA6/.test(h)?`（${h} ${s.sum} 萬 ×1）`:''}`);
+  const capKnown = p && !!capOf(p, defaultsFor(p));
+  if (CAPPED.includes(r) && !capKnown) w.push(`${h} 的附約可附加額度未收錄／主約費率整理中，${r} 保額上限無法自動檢查，請以建議書確認`);
+  if (r==='SDL') w.push('≦50 萬不受主約額度限制');
   if (['SJR1','HTA','HKR5','SWZ'].includes(r)) w.push('附約年期不得超過主約');
   if (r==='WP' && p && s && ![10,15,20,25,30].includes(s.term)) w.push(`WP 需主約繳費 10／15／20／25／30 年（目前 ${termTxt(s.term)}）`);
-  if (r==='LTU') w.push('LTU 保額：附長照終身型主約 ≦主約保額 2 倍，其他主約 保額×10 ≦ 主約可附加額度');
   if (r==='HSV' || r==='HSY' || r==='HSW') w.push('實支實付型附約同一被保險人有張數限制（含同業），請確認');
   if (r==='WPF1' && 'WPA' in st.riders) w.push('WPF1 規則寫與 WPA 僅可擇一，請確認');
   const rs = riderState(r, st.mains, riderCodes().filter(x=>x!==r));
