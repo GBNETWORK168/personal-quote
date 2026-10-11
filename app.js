@@ -1,5 +1,8 @@
-/* 富邦四季春快速報價 v1.18 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.18.1 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
+document.title = '富邦四季春快速報價';
+const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
+const _sub=document.querySelector('header .sub'); if(_sub && !/四季春/.test(_sub.textContent)) _sub.textContent='v1.18.1｜富邦四季春快速報價｜預設一張主約・要第二張再展開｜僅供內部試算，以公司正式建議書為準';
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
 const pick = (tbl, age) => { for (const [up, v] of tbl) if (age <= up) return v; return null; };
