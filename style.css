@@ -164,3 +164,10 @@ button.hc.lk{cursor:pointer}
 .inst .ih{font-size:13px;color:#0a4f8f;padding:2px 0 4px 6px}
 .inst .ih .w{display:block;color:#8a5a00;font-size:12px;margin-top:2px}
 .inst .rctl{padding-left:6px}
+/* v1.14 同商品兩張 */
+.qk.dupq{border-style:dashed;background:#fff7f7}
+.tag.dupt{background:#e3ecff;color:#1d4ed8}
+.prod.dupi{border-left:4px solid #1d4ed8}
+.dupr{margin:6px 0 2px}
+.chip.dup{border:1px dashed #1d4ed8;color:#1d4ed8;background:#f3f6ff;font-weight:600}
+.code sup{font-size:10px;margin-left:1px}
