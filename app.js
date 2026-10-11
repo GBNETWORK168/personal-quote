@@ -663,9 +663,10 @@ function render(){
   $('#subRider').textContent = st.mains.length ? `已勾主約可搭 ${nAttach} 項` : '先勾主約，才能勾附約';
   // 常用快選（step2）
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
-  const quick = ['XWS5','OLA6','CLZ','CLX'].map(c => P.find(p=>p.code===c)).filter(Boolean);
+  // 只顯示目前年齡／性別／職業可投保者（不符的快選按鈕直接隱藏；已勾者保留以便取消）
+  const quick = ['XWS5','OLA6','CLZ','CLX'].map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
   const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症'};
-  $('#quick').innerHTML = '⭐ 常用快選：' + quick.map(p => { const e = pEl(p), el = !!e.ok, on = st.mains.includes(p.code);
+  $('#quick').innerHTML = '⭐ 常用快選：' + (quick.length ? '' : '<span class="hint">此年齡／性別沒有可投保的主推商品</span>') + quick.map(p => { const e = pEl(p), el = !!e.ok, on = st.mains.includes(p.code);
     return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('');
   // 主約區
   const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p), sx:!!pEl(p).sexMis})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || (a.c==='CLZ'?-1:1));
