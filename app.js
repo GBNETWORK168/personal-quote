@@ -1,4 +1,4 @@
-/* 富邦個人險快速報價 v1.14 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦個人險快速報價 v1.15 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -631,6 +631,8 @@ function render(){
   syncHsv();
   $('#age').value = st.age;
   document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', +b.dataset.v === st.sex));
+  // v1.15：被保險人性別配色（男＝藍、女＝玫瑰色系）
+  document.body.classList.toggle('fem', st.sex === 2); { const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = st.sex === 2 ? '#a3325c' : '#0a4f8f'; }
   $('#occ').value = st.occ;
   $('#page').value = st.pAge == null ? '' : st.pAge;
   if ($('#lifeex')) $('#lifeex').value = st.lifeEx == null ? '' : st.lifeEx;
