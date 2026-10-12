@@ -1,7 +1,5 @@
-/* 富邦四季春快速報價 v1.19 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.19.1 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
-if (typeof document !== 'undefined'){
-}
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
 const pick = (tbl, age) => { for (const [up, v] of tbl) if (age <= up) return v; return null; };
@@ -100,7 +98,7 @@ function quote(p, q){
 }
 // ---------- 常用優先排序：1 XWS5 → 2 OLA／OLA6 → 3 SDG → 4 男女癌（CLZ／CLX 男女平權皆列出；性別不符標示） ----------
 const PRI = code => /^XWS5/.test(code) ? 1 : /^OLA/.test(code) ? 2 : code === 'SDG' ? 3 : (code === 'CLZ' || code === 'CLX') ? 4 : 99;
-const FAV = code => PRI(code) <= 2;   // 標「常用」
+const FAV = code => PRI(code) <= 3;   // 標「常用」（v1.19.1：SDG 也標常用）
 // ---------- 主約／附約目錄（尚未收錄費率者：只做投保年齡／性別／職業篩選＋商品說明） ----------
 const CAT = window.CATALOG || [];
 const KIND = {main:'主約', rider:'附約', waiver:'豁免附約'};
@@ -215,7 +213,7 @@ const RCFG = {
   UCR:{u:'wan', per:1, min:()=>10, max:()=>200, yr:1, yrt:1},
   ADH:{u:'wan', per:1, min:()=>10, max:()=>200, yrt:1, defMax:1},   // v1.19 骨折險預設最高可投保額（≦主約可附加額度 5 倍、累計 200 萬）
   ADG:{u:'wan', per:1, min:(a,o,m)=>a<15?(m==='月繳'?2:1):30, max:a=>a<15?200:a<=60?2000:600, yrt:1, def:100},
-  TMR:{u:'wan', per:1, min:()=>3, max:()=>20, yrt:1, tmr:1},
+  TMR:{u:'wan', per:1, min:()=>3, max:()=>20, yrt:1, tmr:1, def:10},   // v1.19.1 預設 10 萬（仍 3–20 萬且 ≦ADG 保額 10%：ADG 不足 100 萬時取上限）
   ADN:{u:'wan', per:10, step:10, min:()=>100, max:()=>300, yrt:1},
   LTU:{u:'yuan', per:10000, step:1000, min:()=>3000, max:()=>25000},
   FDE:{u:'usd', step:0.1, min:()=>1, max:()=>10, terms:()=>[20]},
@@ -361,7 +359,7 @@ window.QuoteEngine = {norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, 
 if (typeof document === 'undefined') return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/四季春/.test(_sub.textContent)) _sub.textContent='v1.19｜富邦四季春快速報價｜骨折險預設最高・SDG 回常用・HSV3 修正｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.19\.1/.test(_sub.textContent)) _sub.textContent='v1.19.1｜富邦四季春快速報價｜骨折險預設最高・SDG 回常用・HSV3 修正｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
@@ -382,7 +380,7 @@ function addInst(c, h){ const a = st.riders[c] || (st.riders[c] = []); if (!a.in
   if (RCFG[c] && RCFG[c].u === 'plan'){ const pl = lastPlan(c); if (pl != null) (st.rsel[c+'@'+h] || (st.rsel[c+'@'+h] = {})).plan = pl; } }
 function lastPlan(c){ if (st.rsel[c] && st.rsel[c].plan != null) return +st.rsel[c].plan; const k = Object.keys(st.rsel).find(x => x.startsWith(c+'@') && st.rsel[x] && st.rsel[x].plan != null); return k ? +st.rsel[k].plan : null; }
 function delInst(c, h){ const a = (st.riders[c] || []).filter(x => x !== h); if (a.length) st.riders[c] = a; else delete st.riders[c]; }
-function moveInst(c, from, to){ const a = st.riders[c] || []; st.riders[c] = a.map(x => x === from ? to : x).filter((v,i,z)=>z.indexOf(v)===i); if (st.rsel[c+'@'+from]){ st.rsel[c+'@'+to] = st.rsel[c+'@'+from]; } }
+function moveInst(c, from, to){ const a = st.riders[c] || []; st.riders[c] = a.map(x => x === from ? to : x).filter((v,i,z)=>z.indexOf(v)===i); if (st.rsel[c+'@'+from]){ st.rsel[c+'@'+to] = Object.assign({}, st.rsel[c+'@'+from]); } }   // v1.19.1 複製而非共用同一物件
 const termTxt = t => t==0?'躉繳':t==1?'一年期':t+'年';
 // 通則醫療日額檢查（UI）：累計人壽保險保額＝已勾主約（LIFECO）＋①區「既有有效壽險保額」
 const pOf = id => P.find(x => x.code === base(id));
