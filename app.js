@@ -1,8 +1,7 @@
-/* 富邦四季春快速報價 v1.18.1 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.19 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
-document.title = '富邦四季春快速報價';
-const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/四季春/.test(_sub.textContent)) _sub.textContent='v1.18.1｜富邦四季春快速報價｜預設一張主約・要第二張再展開｜僅供內部試算，以公司正式建議書為準';
+if (typeof document !== 'undefined'){
+}
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
 const pick = (tbl, age) => { for (const [up, v] of tbl) if (age <= up) return v; return null; };
@@ -214,7 +213,7 @@ const RCFG = {
   SDL:{u:'wan', per:10, min:()=>30, max:()=>200, yr:1, yrt:1, def:50},
   SWZ:{u:'wan', per:1, min:()=>10, max:()=>200},
   UCR:{u:'wan', per:1, min:()=>10, max:()=>200, yr:1, yrt:1},
-  ADH:{u:'wan', per:1, min:()=>10, max:()=>200, yrt:1},
+  ADH:{u:'wan', per:1, min:()=>10, max:()=>200, yrt:1, defMax:1},   // v1.19 骨折險預設最高可投保額（≦主約可附加額度 5 倍、累計 200 萬）
   ADG:{u:'wan', per:1, min:(a,o,m)=>a<15?(m==='月繳'?2:1):30, max:a=>a<15?200:a<=60?2000:600, yrt:1, def:100},
   TMR:{u:'wan', per:1, min:()=>3, max:()=>20, yrt:1, tmr:1},
   ADN:{u:'wan', per:10, step:10, min:()=>100, max:()=>300, yrt:1},
@@ -360,6 +359,9 @@ for (const p of P) HAY[p.code] = hayOf(p.code, p.name, p.cat + ' ' + ((CAT.find(
 const qHit = (code, q) => qMatch(HAY[base(code)] || base(code), q);
 window.QuoteEngine = {norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
 if (typeof document === 'undefined') return;
+document.title = '富邦四季春快速報價';
+const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
+const _sub=document.querySelector('header .sub'); if(_sub && !/四季春/.test(_sub.textContent)) _sub.textContent='v1.19｜富邦四季春快速報價｜骨折險預設最高・SDG 回常用・HSV3 修正｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
@@ -375,7 +377,10 @@ const attached = c => st.riders[c] || [];
 const instList = () => Object.entries(st.riders).flatMap(([c, hs]) => hs.map(h => [c, h]));
 const instKeys = () => instList().map(([c, h]) => c+'@'+h);
 const splitK = k => k.split('@');
-function addInst(c, h){ const a = st.riders[c] || (st.riders[c] = []); if (!a.includes(h)) a.push(h); if (!st.rsel[c+'@'+h] && st.rsel[c]) st.rsel[c+'@'+h] = Object.assign({}, st.rsel[c]); }
+function addInst(c, h){ const a = st.riders[c] || (st.riders[c] = []); if (!a.includes(h)) a.push(h); if (!st.rsel[c+'@'+h] && st.rsel[c]) st.rsel[c+'@'+h] = Object.assign({}, st.rsel[c]);
+  // v1.19：計劃型附約（HSV1／2／3、HSY、HSW）改掛／換主約後沿用最後選的計劃（原本會掉回計劃 1）
+  if (RCFG[c] && RCFG[c].u === 'plan'){ const pl = lastPlan(c); if (pl != null) (st.rsel[c+'@'+h] || (st.rsel[c+'@'+h] = {})).plan = pl; } }
+function lastPlan(c){ if (st.rsel[c] && st.rsel[c].plan != null) return +st.rsel[c].plan; const k = Object.keys(st.rsel).find(x => x.startsWith(c+'@') && st.rsel[x] && st.rsel[x].plan != null); return k ? +st.rsel[k].plan : null; }
 function delInst(c, h){ const a = (st.riders[c] || []).filter(x => x !== h); if (a.length) st.riders[c] = a; else delete st.riders[c]; }
 function moveInst(c, from, to){ const a = st.riders[c] || []; st.riders[c] = a.map(x => x === from ? to : x).filter((v,i,z)=>z.indexOf(v)===i); if (st.rsel[c+'@'+from]){ st.rsel[c+'@'+to] = st.rsel[c+'@'+from]; } }
 const termTxt = t => t==0?'躉繳':t==1?'一年期':t+'年';
@@ -473,7 +478,7 @@ const rSel = (code, host) => st.rsel[code+'@'+host] || (st.rsel[code+'@'+host] =
 function rOthers(code, host){
   const g = RCFG[code]; if (!g || !g.min) return 0;
   let t = 0;
-  for (const h of attached(code)){ if (h === host) break; const s = st.rsel[code+'@'+h] || {}; t += s.sum != null ? +s.sum || 0 : (g.def != null ? g.def : g.u==='day' ? 1000 : g.min(st.age, st.occ, '年繳')); }
+  for (const h of attached(code)){ if (h === host) break; const s = st.rsel[code+'@'+h] || {}; t += s.sum != null ? +s.sum || 0 : g.defMax ? (+rDefaults(code, h).q.sum || 0) : (g.def != null ? g.def : g.u==='day' ? 1000 : g.min(st.age, st.occ, '年繳')); }
   return t;
 }
 function rDefaults(code, host){
@@ -492,7 +497,7 @@ function rDefaults(code, host){
   const q = {age:st.age, sex:st.sex, occ:st.occ, mode, payDisc, hostSum, capR};
   if (L.plans) q.plan = L.plans.includes(+s.plan) ? +s.plan : L.plans[0];
   if (L.terms) q.term = L.terms.includes(+s.term) ? +s.term : L.terms[L.terms.length-1];
-  if (L.min != null){ const d = g.def != null ? g.def : g.u==='day' ? 1000 : L.min; q.sum = s.sum != null ? s.sum : Math.max(Math.min(Math.max(d, L.min), L.max), L.min); }
+  if (L.min != null){ const d = g.defMax ? (capR ? L.max : L.min) : g.def != null ? g.def : g.u==='day' ? 1000 : L.min; q.sum = s.sum != null ? s.sum : Math.max(Math.min(Math.max(d, L.min), L.max), L.min); }
   if (g.parent){ q.age = st.pAge; q.sex = st.pSex || 1; }
   return {q, L, hp, hs, host};
 }
@@ -532,7 +537,8 @@ function rctl(code, host){
   const {d, r} = rCalc(code, host); if (!d) return '';
   const {q, L, hp} = d, K = code+'@'+d.host;
   let h = '<div class="rctl">';
-  if (L.plans) h += `<div class="chips">${L.plans.map(p=>`<button class="chip${p===q.plan?' on':''}" data-rk="plan" data-r="${K}" data-v="${p}">${g.pn}${p}</button>`).join('')}</div>`;
+  if (L.plans) h += `<div class="chips">${L.plans.map(p=>`<button class="chip${p===q.plan?' on':''}" data-rk="plan" data-r="${K}" data-v="${p}">${g.pn}${p}</button>`).join('')}</div>`
+    + (st.rsel[K] && st.rsel[K].plan != null && +st.rsel[K].plan !== q.plan ? `<div class="lim">⚠ 職業第 ${st.occ} 類不可選 ${g.pn}${st.rsel[K].plan}，目前以 ${g.pn}${q.plan} 試算</div>` : '');
   if (L.terms && L.terms.length > 1) h += `<div class="chips">${L.terms.map(t=>`<button class="chip${t===q.term?' on':''}" data-rk="term" data-r="${K}" data-v="${t}">${t} 年繳</button>`).join('')}</div>`;
   if (L.min != null){
     const fixed = L.min === L.max;
@@ -694,8 +700,9 @@ function render(){
   // 常用快選（step2）
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
   // 只顯示目前年齡／性別／職業可投保者（不符的快選按鈕直接隱藏；已勾者保留以便取消）
-  const quick = ['XWS5','OLA6','CLZ','CLX'].map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
-  const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症'};
+  // v1.19：SDG 回到常用快選（XWS5、OLA6、SDG、男女癌），一樣只顯示可投保年齡
+  const quick = ['XWS5','OLA6','SDG','CLZ','CLX'].map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
+  const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', SDG:'SDG 醫保安心重大傷病', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症'};
   $('#quick').innerHTML = '⭐ 常用快選：' + (quick.length ? '' : '<span class="hint">此年齡／性別沒有可投保的主推商品</span>') + quick.map(p => { const e = pEl(p), el = !!e.ok, on = st.mains.includes(p.code);
     return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (st.multi && on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('') + (st.mains.length && !st.multi ? '<button type="button" class="qk need2" data-multi="1">➕ 需要第二張主約</button>' : '');
   $('#multihint').hidden = !st.multi;
@@ -975,7 +982,7 @@ document.addEventListener('click', e => {
   }
   const rk = e.target.closest('[data-rk]');
   if (rk){ const [c, h] = splitK(rk.dataset.r), v = rk.dataset.v, s = rSel(c, h);
-    if (rk.dataset.rk==='plan') s.plan = +v; else if (rk.dataset.rk==='term') s.term = +v; else if (rk.dataset.rk==='mode') s.mode = v;
+    if (rk.dataset.rk==='plan'){ s.plan = +v; st.rsel[c] = Object.assign(st.rsel[c] || {}, {plan:+v}); } else if (rk.dataset.rk==='term') s.term = +v; else if (rk.dataset.rk==='mode') s.mode = v;
     else if (rk.dataset.rk==='sumd'){ const d = rDefaults(c, h); const L = d.L; s.sum = Math.round(Math.min(L.max, Math.max(L.min, (+d.q.sum||0) + +v*L.step))*100)/100; }
     render(); return; }
   const ps = e.target.closest('#psex button');
@@ -988,7 +995,7 @@ document.addEventListener('click', e => {
   if (h5){ attachHsv(h5.dataset.hsv5, true); render(); return; }
   const ht = e.target.closest('[data-hsvto]');
   if (ht){ const m = ht.dataset.hsvto;
-    if (riderOk('HSV')) attachHsv(m, false); else alert('HSV 目前無法附加於 '+m+'：'+(rs.why||'年齡／條件不符')); render(); return; }
+    if (riderOk('HSV')) attachHsv(m, false); else alert('HSV 目前無法附加於 '+m+'：年齡／條件不符'); render(); return; }
   const rh = e.target.closest('[data-rh]');
   if (rh){ const [c, h] = splitK(rh.dataset.rh);
     if (attached(c).includes(h)) delInst(c, h);
