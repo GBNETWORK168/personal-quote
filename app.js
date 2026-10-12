@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.19.1 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.20 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -359,7 +359,7 @@ window.QuoteEngine = {norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, 
 if (typeof document === 'undefined') return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.19\.1/.test(_sub.textContent)) _sub.textContent='v1.19.1｜富邦四季春快速報價｜骨折險預設最高・SDG 回常用・HSV3 修正｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.20/.test(_sub.textContent)) _sub.textContent='v1.20｜富邦四季春快速報價｜CWR3 下架・改上 CWR4（115.10.12）｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
