@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.20 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.21 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -14,7 +14,14 @@ const DUPMAX = code => code === 'OLA6' ? 4 : 2;   // OLA6：同一被保險人�
 const termLbl = (p, t) => (p && p.tl && p.tl[t]) || (t==0?'躉繳':t==1?'一年期':t+'年');
 // v1.10：附約保額受主約額度限制改硬性擋（ADH ≦可附加額度 5 倍、SDL >50 萬 ≦可附加額度、LTU 2 倍／×10）；FDE/FDF/FDG 不可附加 FDC
 // v1.9：主約性別／職業限制（CLX 女、CLZ 男；傷害險職業 1–4 類、ALA 限 1 類）
+// v1.21：停售日程（富壽商開字第1150004618號）：CLX／CLZ 10/22 停售，10/23 起不受理新契約。以台北日期判斷；要恢復只刪這裡。
+const STOPSALE = {CLX:'2026-10-23', CLZ:'2026-10-23'};
+const STOPNOTE = '10/22 停售（10/23 起不受理新契約）';
+const twToday = () => (window.__TODAY || new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(new Date()));
+const isStopped = c => !!STOPSALE[c] && twToday() >= STOPSALE[c];
+const stopSoon = c => !!STOPSALE[c] && !isStopped(c);
 function pEl(p){
+  if (isStopped(p.code)) return {ok:false, stop:true, why:'已停售（10/23 起不受理新契約）'};
   if (!eligible(p, st.age)) return {ok:false, why:'投保年齡 '+ageRangeText(p)};
   if (p.occMax && st.occ > p.occMax) return {ok:false, why:`投保職業類別限 1${p.occMax>1?'～'+p.occMax:''} 類`};
   if (p.sex && p.sex !== st.sex) return {ok:false, sexMis:true, why:p.sex===1?'男性專屬商品':'女性專屬商品'};
@@ -359,7 +366,7 @@ window.QuoteEngine = {norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, 
 if (typeof document === 'undefined') return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.20/.test(_sub.textContent)) _sub.textContent='v1.20｜富邦四季春快速報價｜CWR3 下架・改上 CWR4（115.10.12）｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.21/.test(_sub.textContent)) _sub.textContent='v1.21｜富邦四季春快速報價｜CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
@@ -640,7 +647,7 @@ function v1Item(p, id){
   const [mn,mx] = limits(p, st.age, st.occ);
   const lim = p.unit==='unit' ? '1 單位' : (mn===mx ? `限 ${mn.toLocaleString()} ${UNIT[p.unit]}` : `${mn.toLocaleString()}–${mx.toLocaleString()} ${UNIT[p.unit]}`) + (p.minHSV ? `（搭 HSV 最低 ${p.minHSV} 萬）` : '');
   const el = pEl(p), sexNo = !!el.sexMis;
-  const tag = (FAV(p.code) ? '<span class="tag fav">常用</span>' : PRI(p.code) < 99 ? `<span class="tag pri">優先 ${PRI(p.code)}</span>` : '') + (sexNo ? `<span class="tag sexno">⚠ 性別不符（${p.sex===1?'限男性':'限女性'}）</span>` : '') + (p.cur==='USD' ? '<span class="tag cond">美元</span>' : '');
+  const tag = (FAV(p.code) ? '<span class="tag fav">常用</span>' : PRI(p.code) < 99 ? `<span class="tag pri">優先 ${PRI(p.code)}</span>` : '') + (sexNo ? `<span class="tag sexno">⚠ 性別不符（${p.sex===1?'限男性':'限女性'}）</span>` : '') + (p.cur==='USD' ? '<span class="tag cond">美元</span>' : '') + (stopSoon(p.code) ? `<span class="tag stop">⏰ ${STOPNOTE}</span>` : isStopped(p.code) ? '<span class="tag stop">已停售</span>' : '');
   const on = st.mains.includes(id), open = on ? !st.fold[id] : st.open===p.code;
   let sub = '';
   const nS = sibs(p.code).length, canDup = st.multi && on && nS < DUPMAX(p.code) && id === sibs(p.code)[nS-1];
@@ -699,10 +706,10 @@ function render(){
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
   // 只顯示目前年齡／性別／職業可投保者（不符的快選按鈕直接隱藏；已勾者保留以便取消）
   // v1.19：SDG 回到常用快選（XWS5、OLA6、SDG、男女癌），一樣只顯示可投保年齡
-  const quick = ['XWS5','OLA6','SDG','CLZ','CLX'].map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
+  const quick = ['XWS5','OLA6','SDG','CLZ','CLX'].filter(c => !isStopped(c)).map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
   const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', SDG:'SDG 醫保安心重大傷病', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症'};
   $('#quick').innerHTML = '⭐ 常用快選：' + (quick.length ? '' : '<span class="hint">此年齡／性別沒有可投保的主推商品</span>') + quick.map(p => { const e = pEl(p), el = !!e.ok, on = st.mains.includes(p.code);
-    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (st.multi && on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('') + (st.mains.length && !st.multi ? '<button type="button" class="qk need2" data-multi="1">➕ 需要第二張主約</button>' : '');
+    return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${stopSoon(p.code)?`<span class="tag stop">${STOPNOTE}</span>`:''}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (st.multi && on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('') + (st.mains.length && !st.multi ? '<button type="button" class="qk need2" data-multi="1">➕ 需要第二張主約</button>' : '');
   $('#multihint').hidden = !st.multi;
   // 主約區
   const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p), sx:!!pEl(p).sexMis})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || (a.c==='CLZ'?-1:1));
