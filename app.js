@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.21 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.22 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -322,7 +322,15 @@ function rQuote(code, q){
 // 累計人壽保險保額＜30 萬 → 醫療險附約 ≦4,000；30～100 萬(含) ≦5,000；101～200 萬(含) ≦6,000；＞200 萬 ≦8,000；醫療險主約＋附約 ≦8,000
 // 人壽保險保額＝壽險主約＋壽險附約＋重大疾病險（面額 × 「附加附約之人壽保險保額係數」，通算保額係數一覽表 115.09.30）
 const LIFECO = {XWS5:1, OLA6:1, XDY:1, LTS:100, SDG:1, SDH:1, SDJ:1, SDKA:1, SWB5:1, SWD1:1, SWW:1};
-const MEDDAY = ['HJK','HKR5','HLR2','SJR1'];   // 以元／日投保之住院醫療附約（HSV／HSY／HSW 計劃型不在此計算）
+const MEDDAY = ['HJK','HKR5','HLR2'];   // 以元／日投保之住院醫療附約（HSV／HSY／HSW 計劃型不在此計算）
+// v1.22：手術醫療險另計（險種附表 115.09.30 捌、各型手術醫療險附表）：SIE、SJR1 等以保額 1 倍計，累計總保額 ≦3,000 元；
+// 有效壽險累計通算保額＞200 萬且職業 1、2 類 ≦4,000 元。不計入住院醫療日額上限。
+const SURG = {SIE:1, SJR1:1};
+const surgCap = (lifeW, occ) => (lifeW > 200 && occ <= 2) ? 4000 : 3000;
+function surgCheck(lifeW, occ, items){
+  const cap = surgCap(lifeW, occ), t = items.reduce((a,x)=>a+x[1],0);
+  return {cap, t, errs: t > cap ? [`險種附表：手術醫療險（SIE、SJR1 等）累計總保額 ≦${cap.toLocaleString()} 元${cap===4000?'（壽險＞200 萬且職業 1、2 類）':'（壽險＞200 萬且職業 1、2 類可 4,000 元）'}；目前 ${items.map(x=>x[0]+' '+x[1].toLocaleString()).join('＋')}＝${t.toLocaleString()} 元`] : []};
+}
 function medRiderCap(lifeWan){ return lifeWan < 30 ? 4000 : lifeWan <= 100 ? 5000 : lifeWan <= 200 ? 6000 : 8000; }
 // 特定身分（投保規定 115.09.30 一、(二)3.(4)）：kid＝孩童／學生、home＝家管／退休人士／無業／待業；仍需符合 (3) 一般身分 → 取兩者較小
 // 孩童／學生 0～5 歲(含)：附約 ≦4,000、主約＋附約 ≦4,000；6 歲以上：壽險 ≦200 萬 4,000／6,000、＞200 萬 6,000／6,000
@@ -362,11 +370,11 @@ const HAY = {};
 for (const c of CAT) HAY[c.code] = hayOf(c.code, c.name, c.cat, KIND[c.kind]);
 for (const p of P) HAY[p.code] = hayOf(p.code, p.name, p.cat + ' ' + ((CAT.find(c => c.code === p.code) || {}).cat || ''), '主約');
 const qHit = (code, q) => qMatch(HAY[base(code)] || base(code), q);
-window.QuoteEngine = {norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
+window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
 if (typeof document === 'undefined') return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.21/.test(_sub.textContent)) _sub.textContent='v1.21｜富邦四季春快速報價｜CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.22/.test(_sub.textContent)) _sub.textContent='v1.22｜富邦四季春快速報價｜SJR1 改計手術險累計・CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
@@ -415,6 +423,12 @@ function lifeWan(){
   for (const c of st.mains){ const p = pOf(c); if (!p || !(base(c) in LIFECO)) continue; const {s, r} = qOf(p, c); if (r.errs) continue; const v = (+s.sum) * LIFECO[base(c)]; w += v; parts.push(`${lab(c)} ${v.toLocaleString()} 萬`); }
   return {w: Math.round(w*100)/100, parts};
 }
+function surgState(){
+  const it = [];
+  for (const [rc, h] of instList()) if (SURG[rc] && !P.some(p=>p.code===rc)){ const d = rDefaults(rc, h); if (d && d.q.sum) it.push([attached(rc).length > 1 ? `${rc}(${lab(h)})` : rc, +d.q.sum * SURG[rc]]); }
+  for (const c of st.mains){ const p = pOf(c); if (p && SURG[p.code]){ const s = defaultsFor(p, c); if (s.sum) it.push([lab(c), +s.sum * SURG[p.code]]); } }
+  const L = lifeWan(); const m = surgCheck(L.w, st.occ, it); m.life = L; m.items = it; return m;
+}
 function medState(){
   const rd = [], md = [];
   for (const [rc, h] of instList()) if (MEDDAY.includes(rc)){ const d = rDefaults(rc, h); if (d && d.q.sum) rd.push([attached(rc).length > 1 ? `${rc}(${lab(h)})` : rc, +d.q.sum]); }
@@ -448,6 +462,7 @@ function defaultsFor(p, id){
 const isMedMain = p => p.unit==='day' && /醫療/.test(p.cat);
 let _medG = false;
 function mainMed(p, r, id){   // 醫療主約日額本身已超過（特定身分）主約＋附約上限 → 硬性擋
+  if (!r.errs && !_medG && SURG[p.code] && st.mains.includes(id || p.code)){ _medG = true; try { const m = surgState(); if (m.errs.length) return {errs:m.errs}; } finally { _medG = false; } }
   if (r.errs || _medG || !isMedMain(p) || !st.mains.includes(id || p.code)) return r;
   _medG = true; try { const m = medState(); if (m.merrs.length) return {errs:m.merrs}; } finally { _medG = false; }
   return r;
@@ -534,6 +549,7 @@ function rCalc(code, host){
     d.cover = c;
   }
   const r = rQuote(code, q);
+  if (!r.errs && SURG[code]){ const m = surgState(); if (m.errs.length) return {d, r:{errs:m.errs}}; }
   if (!r.errs && MEDDAY.includes(code)){ const m = medState(); if (m.errs.length) return {d, r:{errs:m.errs.map(e => e + `（累計壽險：${m.life.parts.join('＋')||'無'}；可在①區填既有壽險保額）`)}}; }
   return {d, r};
 }
@@ -610,6 +626,7 @@ function riderWarn(r, h){
   if (r==='HSV' && base(h)==='XWS5') w.push(`掛 ${lab(h)} 時這張 XWS5 最低 5 萬`);
   if (r==='WPF1' && attached('WPA').includes(h)) w.push('WPF1 規則寫與 WPA 僅可擇一，請確認');
   if (MEDDAY.includes(r) && st.mains.length > 1) w.push('兩張主約日額合計仍受通則醫療日額上限');
+  if (SURG[r]) w.push('手術醫療險另計，不算住院日額：SIE＋SJR1 等累計 ≦3,000 元（壽險＞200 萬且職業 1、2 類 4,000 元）');
   const rs = riderState(r, [h], instKeys().filter(k => k !== r+'@'+h));
   if (rs.warns) w.push(...rs.warns);
   return w.length ? `<span class="w">⚠ ${w.join('；')}</span>` : '';
