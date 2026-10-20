@@ -3,6 +3,7 @@
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2;
 const load=src=>new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});
 const st={sex:1,T:20,Y:20};let ready=null,on=false;
+window.pfdLoad=()=>window.__pfdP||(window.__pfdP=Promise.all([load('combo/pfd_engine.js?v=c01'),load('combo/pfd_data.js?v=c01')]).catch(e=>{window.__pfdP=null;throw e;}));
 const seg=(id,k)=>$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{st[k]=+b.dataset.v;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(k==='sex')document.body.classList.toggle('f',st.sex===2);if(on)run();});
 seg('sexb','sex');seg('tb','T');
 const MINY=20,maxY=()=>Math.max(MINY,100-(+$('age').value||0)+1);
@@ -35,6 +36,6 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(sv(t))}</td></tr>`;
   o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；最可能紅利</div></details></div>';}
 window.ComboRun=run;
-$('open').onclick=()=>{$('open').disabled=true;$('open').textContent='載入中…';ready=ready||Promise.all([load('combo/pfd_engine.js?v=c01'),load('combo/pfd_data.js?v=c01')]);
+$('open').onclick=()=>{$('open').disabled=true;$('open').textContent='載入中…';ready=window.pfdLoad();
   ready.then(()=>{try{$('open').style.display='none';on=true;run();['age','clzS','fx'].forEach(i=>$(i).addEventListener('input',()=>{fillY();run();}));}catch(e){$('out').innerHTML='<div class="card no">試算錯誤：'+e.message+'</div>';}}).catch(()=>{$('open').disabled=false;$('open').textContent='載入失敗，再按一次';});};
 })();

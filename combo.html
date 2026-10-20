@@ -21,8 +21,12 @@ input{font-size:18px;padding:6px;width:5em;border:2px solid #ccd;border-radius:8
 details summary{font-size:17px;font-weight:700;cursor:pointer}
 table{border-collapse:collapse;width:100%;font-size:15px}th,td{border-bottom:1px solid #e3e8ef;padding:5px 4px;text-align:right}th{background:var(--l)}
 tr.hit td{background:#eaf7ee;font-weight:700}
+.tabs{display:flex;gap:6px;padding:8px 10px 0}.tabs button{flex:1;font-size:17px;font-weight:700;padding:10px 4px;border:2px solid var(--m);background:#fff;color:var(--d);border-radius:12px 12px 0 0}
+.tabs button.on{background:var(--d);color:#fff}
 </style></head><body>
 <header><a href="index.html" style="float:right;background:#fff;color:var(--d);font-weight:700;font-size:15px;padding:6px 12px;border-radius:999px;text-decoration:none">← 回報價</a><h1>癌症險＋PFD 紅富美好　搭配試算</h1></header>
+<nav class="tabs"><button id="tA" class="on">男女癌＋PFD</button><button id="tB">PFD＋FDE／FDF</button></nav>
+<section id="secA">
 <div class="stop">CLZ／CLX 10/22 停售（10/23 起不受理新契約）</div>
 <div class="card">
  <div class="row"><span>性別</span><div class="seg" id="sexb"><button data-v="1" class="on">男｜CLZ</button><button data-v="2">女｜CLX</button></div></div>
@@ -35,7 +39,21 @@ tr.hit td{background:#eaf7ee;font-weight:700}
  <button id="open" type="button" style="margin-top:10px">▶ 開始試算</button>
 </div>
 <div id="out"></div>
+</section>
+<section id="secB" hidden>
+<div class="card">
+ <div class="row"><span>性別</span><div class="seg" id="b_sex"><button data-v="1" class="on">男</button><button data-v="2">女</button></div></div>
+ <div class="row"><span>年齡</span><input id="b_age" type="number" value="40" min="0" max="65"> 歲</div>
+ <div class="row"><span>附約</span><div class="seg" id="b_rd"><button data-v="FDE" class="on">FDE 重大傷病</button><button data-v="FDF">FDF 重大疾病</button></div></div>
+ <div class="row"><span>附約保額</span><input id="b_rs" type="number" value="2" min="1" max="10" step="0.1"> 萬美元</div>
+ <div class="row"><span>第幾年<br>拿回</span><div class="seg" id="b_yb"><button data-v="20" class="on">20 年</button><button data-v="25">25 年</button><button data-v="30">30 年</button></div></div>
+ <div class="row"><span></span><label style="font-size:16px">其他年份：第 <select id="b_ysel" style="font-size:18px;padding:4px;border:2px solid var(--m);border-radius:8px"></select> 年</label></div>
+ <div class="row"><span>怎麼拿回</span><div class="seg" id="b_md"><button data-v="a" class="on">部分解約<br><small>留 PFD 2 萬＋附約</small></button><button data-v="b">全部解約</button></div></div>
+ <div class="fx">匯率 1 美元＝<input id="b_fx" type="number" value="31" step="0.1"> 台幣</div>
+</div>
+<div id="b_out"><div class="card" style="text-align:center">載入中…</div></div>
+</section>
 <script>window.__ENGINE_ONLY=1;window.PRODUCTS=window.PRODUCTS||[];</script>
 <script src="data.js?v=c02"></script><script src="data_life.js?v=c02"></script><script src="data_mains.js?v=c02"></script><script src="catalog.js?v=c02"></script><script src="riders_rates.js?v=c02"></script><script src="app.js?v=c07"></script>
-<script src="combo/combo.js?v=c06"></script>
+<script src="combo/combo.js?v=c08"></script><script src="combo/combo2.js?v=c08"></script>
 <!--CFWA--><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "1f1171fedb8a47c1b04731b056bc8142"}'></script><!--/CFWA--></body></html>
