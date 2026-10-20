@@ -1,0 +1,35 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>搭配專區（試作）CLZ＋PFD</title>
+<style>
+body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;margin:0;background:#f4f7fb;color:#1d2733;font-size:16px}
+header{background:#0b5fa5;color:#fff;padding:12px 14px}header h1{margin:0;font-size:20px}header .sub{font-size:12px;opacity:.9}
+.card{background:#fff;margin:10px;border-radius:12px;padding:12px;box-shadow:0 1px 3px #0002}
+label{display:block;font-size:14px;margin:6px 0 2px}input,select{font-size:16px;padding:6px;width:100%;box-sizing:border-box}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.warn{background:#fff4e5;border-left:4px solid #e08a00;padding:8px;font-size:14px;margin:8px 0;border-radius:6px}
+.note{font-size:13px;color:#4a5562;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid #e3e8ef;padding:4px 3px;text-align:right}th{background:#eef3f9;position:sticky;top:0}
+tr.be td{background:#eaf7ee;font-weight:700}tr.k td{background:#fffbe6}
+.res{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 0}.res div{background:#eef6ff;border-radius:8px;padding:6px;font-size:13px}.res b{font-size:16px;display:block}
+button{font-size:16px;padding:10px;border-radius:8px;border:0;background:#0b5fa5;color:#fff;width:100%}
+.nong{color:#a35b00}
+</style></head><body>
+<header><h1>搭配專區（試作）：CLZ 男性癌症 ＋ PFD 紅富美好</h1><div class="sub">combo v0.1｜內部試算，非正式建議書｜以公司正式建議書為準</div></header>
+<div class="card warn">⚠ CLZ 依富壽商開字第1150004618號 <b>10/22 停售（10/23 起不受理新契約）</b>；新版男女癌預計 11/6。本頁僅為搭配概念試作。</div>
+<div class="card">
+ <div class="g2"><div><label>被保險人年齡</label><input id="age" type="number" value="40" min="18" max="60"></div>
+ <div><label>性別</label><select id="sex"><option value="1">男（CLZ 限男性）</option></select></div></div>
+ <div class="g2"><div><label>CLZ 保額（萬，50–300）</label><input id="clzS" type="number" value="100" min="50" max="300"></div>
+ <div><label>CLZ 年期</label><select id="clzT"><option value="20">20 年</option><option value="10">10 年</option></select></div></div>
+ <div class="g2"><div><label>PFD 繳費年期</label><select id="pfdT"><option value="20">20 年（0–60 歲）</option><option value="10">10 年（0–69 歲）</option></select></div>
+ <div><label>目標：第幾年解約要拿回</label><select id="tgt"><option>20</option><option selected>30</option></select></div></div>
+ <div class="g2"><div><label>依據情境算 PFD 保額</label><select id="basis"><option value="0">保證解約金（不含紅利）</option><option value="1" selected>紅利 L（較低，非保證）</option><option value="2">紅利 M（最可能，非保證）</option></select></div>
+ <div><label>匯率 USD→TWD（假設，可改）</label><input id="fx" type="number" value="31" step="0.1"></div></div>
+ <p class="note">試算條件：CLZ 年繳，含繳費方式 1% 折扣；PFD 年繳，首期匯款、續期金融機構轉帳，含高保費折扣；紅利選「購買增額繳清保險金額」（建議書預設）。CLZ 解約金不計入（從寬起見當 0）。</p>
+ <button id="open" type="button">▶ 開啟搭配試算（載入 PFD 資料約 2MB）</button>
+</div>
+<div id="out"></div>
+<script>window.__ENGINE_ONLY=1;window.PRODUCTS=window.PRODUCTS||[];</script>
+<script src="data.js?v=c01"></script><script src="data_life.js?v=c01"></script><script src="data_mains.js?v=c01"></script><script src="catalog.js?v=c01"></script><script src="riders_rates.js?v=c01"></script><script src="app.js?v=c01"></script>
+<script src="combo/combo.js?v=c01"></script>
+<!--CFWA--><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "1f1171fedb8a47c1b04731b056bc8142"}'></script><!--/CFWA--></body></html>

@@ -371,7 +371,7 @@ for (const c of CAT) HAY[c.code] = hayOf(c.code, c.name, c.cat, KIND[c.kind]);
 for (const p of P) HAY[p.code] = hayOf(p.code, p.name, p.cat + ' ' + ((CAT.find(c => c.code === p.code) || {}).cat || ''), '主約');
 const qHit = (code, q) => qMatch(HAY[base(code)] || base(code), q);
 window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
-if (typeof document === 'undefined') return;
+if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
 const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.22/.test(_sub.textContent)) _sub.textContent='v1.22｜富邦四季春快速報價｜SJR1 改計手術險累計・CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
