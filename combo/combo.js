@@ -6,8 +6,8 @@ const st={sex:1,T:20,Y:20};let ready=null,on=false;
 const seg=(id,k)=>$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{st[k]=+b.dataset.v;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(k==='sex')document.body.classList.toggle('f',st.sex===2);if(on)run();});
 seg('sexb','sex');seg('tb','T');
 const MINY=20,maxY=()=>Math.max(MINY,100-(+$('age').value||0)+1);
-function fillY(){const m=maxY(),sel=$('ysel');if(st.Y>m)st.Y=m;if(st.Y<MINY)st.Y=MINY;sel.innerHTML=Array.from({length:m-MINY+1},(_,i)=>i+MINY).map(y=>`<option value="${y}"${y===st.Y?' selected':''}>${y}</option>`).join('');}
-fillY();$('ysel').onchange=()=>{st.Y=+$('ysel').value;if(on)run();};$('age').addEventListener('change',fillY);
+function fillY(){const m=maxY(),sel=$('ysel');document.querySelectorAll('#yb button').forEach(x=>x.classList.toggle('on',+x.dataset.v===st.Y));if(st.Y>m)st.Y=m;if(st.Y<MINY)st.Y=MINY;sel.innerHTML=Array.from({length:m-MINY+1},(_,i)=>i+MINY).map(y=>`<option value="${y}"${y===st.Y?' selected':''}>${y}</option>`).join('');}
+seg('yb','Y');document.querySelectorAll('#yb button').forEach(x=>x.addEventListener('click',fillY));fillY();$('ysel').onchange=()=>{st.Y=+$('ysel').value;fillY();if(on)run();};$('age').addEventListener('change',fillY);
 function cRows(code,age,S,T){const p=window.PRODUCTS.find(x=>x.code===code);const r=window.QuoteEngine.quote(p,{age,sex:st.sex,occ:1,term:T,sum:S,mode:'年繳',payDisc:true});
   if(r.errs)return {err:r.errs.join('；')};const rows=[];let c=0;for(let t=1;t<=120;t++){const py=t>T?0:(r.from2&&t>=r.from2&&r.paid2!=null?r.paid2:r.paid);c+=py;rows.push({py,cum:c});}return {rows,first:r.paid};}
 function pfd(age,S){const P=window.PFD_P,M=P.meta,D=P.data;const pr=ENG.prem(M,D,st.sex,age,20,S,M.m1,M.m2);if(!pr)return null;return Object.assign(ENG.quote(M,D,st.sex,age,20,S,SC,'PUA',pr.p1,pr.p2),{p1:pr.p1,p2:pr.p2});}
