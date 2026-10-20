@@ -2,17 +2,24 @@
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2;
 const load=src=>new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});
-const st={sex:1,T:20,Y:30};let ready=null,on=false;
+const st={sex:1,T:20,Y:20};let ready=null,on=false;
 const seg=(id,k)=>$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{st[k]=+b.dataset.v;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(k==='sex')document.body.classList.toggle('f',st.sex===2);if(on)run();});
-seg('sexb','sex');seg('tb','T');seg('yb','Y');
+seg('sexb','sex');seg('tb','T');
+const maxY=()=>Math.max(1,100-(+$('age').value||0)+1);
+function fillY(){const m=maxY(),sel=$('ysel');if(st.Y>m)st.Y=m;sel.innerHTML=Array.from({length:m},(_,i)=>`<option value="${i+1}"${i+1===st.Y?' selected':''}>${i+1}</option>`).join('');}
+fillY();$('ysel').onchange=()=>{st.Y=+$('ysel').value;if(on)run();};$('age').addEventListener('change',fillY);
 function cRows(code,age,S,T){const p=window.PRODUCTS.find(x=>x.code===code);const r=window.QuoteEngine.quote(p,{age,sex:st.sex,occ:1,term:T,sum:S,mode:'年繳',payDisc:true});
   if(r.errs)return {err:r.errs.join('；')};const rows=[];let c=0;for(let t=1;t<=120;t++){const py=t>T?0:(r.from2&&t>=r.from2&&r.paid2!=null?r.paid2:r.paid);c+=py;rows.push({py,cum:c});}return {rows,first:r.paid};}
 function pfd(age,S){const P=window.PFD_P,M=P.meta,D=P.data;const pr=ENG.prem(M,D,st.sex,age,20,S,M.m1,M.m2);if(!pr)return null;return Object.assign(ENG.quote(M,D,st.sex,age,20,S,SC,'PUA',pr.p1,pr.p2),{p1:pr.p1,p2:pr.p2});}
 function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=st.Y,T=st.T,code=st.sex===1?'CLZ':'CLX',o=$('out');
   const M=window.PFD_P.meta,tA=M.terms['20'];if(age<tA[0]||age>tA[1]){o.innerHTML=`<div class="card no">PFD 20 年期限 ${tA[0]}–${tA[1]} 歲</div>`;return;}
   const C=cRows(code,age,S,T);if(C.err){o.innerHTML=`<div class="card no">${code}：${C.err}</div>`;return;}
-  let Sp=null,q=null;for(let s=Math.round(M.smin*10);s<=Math.round(M.smax*10);s++){const x=pfd(age,s/10);if(!x)continue;const r=x.rows[Y-1];if(r.X*fx>=C.rows[Y-1].cum+r.cum*fx){Sp=s/10;q=x;break;}}
-  if(Sp==null){o.innerHTML=`<div class="card big"><div class="no">第 ${Y} 年拿回：PFD 買到上限 ${M.smax} 萬美元也做不到</div><div class="k">可改成第 30 年，或降低癌症險保額</div></div>`;return;}
+  const qs=[];for(let s=Math.round(M.smin*10);s<=Math.round(M.smax*10);s++){const x=pfd(age,s/10);if(x)qs.push([s/10,x]);}
+  const okY=(x,y)=>{const r=x.rows[y-1];return !!r&&r.X*fx>=C.rows[y-1].cum+r.cum*fx;};
+  let Sp=null,q=null;for(const [s,x] of qs)if(okY(x,Y)){Sp=s;q=x;break;}
+  if(Sp==null){let e=null;for(let y=1;y<=maxY()&&e==null;y++)if(qs.some(([,x])=>okY(x,y)))e=y;
+    o.innerHTML=`<div class="card big"><div class="no">第 ${Y} 年拿回：PFD 買到 ${M.smax} 萬美元也做不到</div><div class="be" style="color:var(--d)">${e?'最早可以：第 '+e+' 年':'到 100 歲都做不到'}</div>${e?`<div style="text-align:center"><button type="button" id="goE" style="font-size:18px;padding:8px 16px;border:0;border-radius:10px;background:var(--d);color:#fff">改成第 ${e} 年</button></div>`:''}</div>`;
+    if(e)$('goE').onclick=()=>{st.Y=e;fillY();run();};return;}
   const tot=t=>C.rows[t-1].cum+q.rows[t-1].cum*fx, sv=t=>q.rows[t-1].X*fx, be=q.rows.findIndex((r,i)=>sv(i+1)>=tot(i+1))+1;
   const yrBoth=C.first+q.p1*fx;
   let h=`<div class="card big">
@@ -29,5 +36,5 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
   o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；最可能紅利</div></details></div>';}
 window.ComboRun=run;
 $('open').onclick=()=>{$('open').disabled=true;$('open').textContent='載入中…';ready=ready||Promise.all([load('combo/pfd_engine.js?v=c01'),load('combo/pfd_data.js?v=c01')]);
-  ready.then(()=>{try{$('open').style.display='none';on=true;run();['age','clzS','fx'].forEach(i=>$(i).addEventListener('input',run));}catch(e){$('out').innerHTML='<div class="card no">試算錯誤：'+e.message+'</div>';}}).catch(()=>{$('open').disabled=false;$('open').textContent='載入失敗，再按一次';});};
+  ready.then(()=>{try{$('open').style.display='none';on=true;run();['age','clzS','fx'].forEach(i=>$(i).addEventListener('input',()=>{fillY();run();}));}catch(e){$('out').innerHTML='<div class="card no">試算錯誤：'+e.message+'</div>';}}).catch(()=>{$('open').disabled=false;$('open').textContent='載入失敗，再按一次';});};
 })();

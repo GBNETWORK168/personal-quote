@@ -21,7 +21,6 @@ input{font-size:18px;padding:6px;width:5em;border:2px solid #ccd;border-radius:8
 details summary{font-size:17px;font-weight:700;cursor:pointer}
 table{border-collapse:collapse;width:100%;font-size:15px}th,td{border-bottom:1px solid #e3e8ef;padding:5px 4px;text-align:right}th{background:var(--l)}
 tr.hit td{background:#eaf7ee;font-weight:700}
-.foot{font-size:12px;color:#667;margin:6px 14px 20px}
 </style></head><body>
 <header><h1>癌症險＋PFD 紅富美好　搭配試算</h1></header>
 <div class="stop">CLZ／CLX 10/22 停售（10/23 起不受理新契約）</div>
@@ -30,7 +29,7 @@ tr.hit td{background:#eaf7ee;font-weight:700}
  <div class="row"><span>年齡</span><input id="age" type="number" value="40" min="18" max="60"> 歲</div>
  <div class="row"><span>癌症險</span><input id="clzS" type="number" value="100" min="50" max="300"> 萬</div>
  <div class="row"><span>繳費</span><div class="seg" id="tb"><button data-v="20" class="on">20 年</button><button data-v="10">10 年</button></div></div>
- <div class="row"><span>第幾年<br>拿回</span><div class="seg" id="yb"><button data-v="20">20 年</button><button data-v="30" class="on">30 年</button></div></div>
+ <div class="row"><span>第幾年<br>拿回</span>第 <select id="ysel" style="font-size:20px;padding:6px;border:2px solid var(--m);border-radius:8px"></select> 年</div>
  <div class="fx">匯率 1 美元＝<input id="fx" type="number" value="31" step="0.1"> 台幣</div>
  <button id="open" type="button" style="margin-top:10px">▶ 開始試算</button>
 </div>
