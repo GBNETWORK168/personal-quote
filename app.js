@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.22 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.23 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -374,7 +374,7 @@ window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY,
 if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.22/.test(_sub.textContent)) _sub.textContent='v1.22｜富邦四季春快速報價｜SJR1 改計手術險累計・CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.23/.test(_sub.textContent)) _sub.textContent='v1.23｜富邦四季春快速報價｜新增搭配專區・CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);

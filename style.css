@@ -253,3 +253,5 @@ body{padding-bottom:150px}
 body.fem .multibar{background:#fdeef3;color:#7a2445}
 
 .tag.stop{background:#fdecea;color:#b3261e;border:1px solid #f3b4ae;font-weight:600}
+
+.combo-btn{float:right;margin-left:8px;background:#fff;color:var(--c1);font-weight:700;font-size:15px;padding:6px 12px;border-radius:999px;text-decoration:none;box-shadow:0 1px 3px #0003}
