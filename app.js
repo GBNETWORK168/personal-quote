@@ -375,7 +375,7 @@ window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY,
 if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.23/.test(_sub.textContent)) _sub.textContent='v1.23｜富邦四季春快速報價｜新增搭配專區｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.26/.test(_sub.textContent)) _sub.textContent='v1.26｜富邦四季春快速報價｜CLX/CLZ 不下架・搭配專區保障示意圖｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
