@@ -15,7 +15,7 @@ const termLbl = (p, t) => (p && p.tl && p.tl[t]) || (t==0?'躉繳':t==1?'一年�
 // v1.10：附約保額受主約額度限制改硬性擋（ADH ≦可附加額度 5 倍、SDL >50 萬 ≦可附加額度、LTU 2 倍／×10）；FDE/FDF/FDG 不可附加 FDC
 // v1.9：主約性別／職業限制（CLX 女、CLZ 男；傷害險職業 1–4 類、ALA 限 1 類）
 // v1.21：停售日程（富壽商開字第1150004618號）：CLX／CLZ 10/22 停售，10/23 起不受理新契約。以台北日期判斷；要恢復只刪這裡。
-const STOPSALE = {CLX:'2026-10-23', CLZ:'2026-10-23'};
+const STOPSALE = {}; // CLX/CLZ 不下架，與新版男女癌並行（銘旭 2026-10-20）
 const STOPNOTE = '10/22 停售（10/23 起不受理新契約）';
 const twToday = () => (window.__TODAY || new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(new Date()));
 const isStopped = c => !!STOPSALE[c] && twToday() >= STOPSALE[c];
@@ -375,7 +375,7 @@ window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY,
 if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.23/.test(_sub.textContent)) _sub.textContent='v1.23｜富邦四季春快速報價｜新增搭配專區・CLX／CLZ 10/22 停售｜僅供內部試算，以公司正式建議書為準';
+const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.23/.test(_sub.textContent)) _sub.textContent='v1.23｜富邦四季春快速報價｜新增搭配專區｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);

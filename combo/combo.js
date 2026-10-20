@@ -34,7 +34,8 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
    <div class="be">✅ 第 ${be} 年回本</div></div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳</th><th>PFD 解約金</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(sv(t))}</td></tr>`;
-  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；最可能紅利</div></details></div>';}
+  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；最可能紅利</div></details></div>';
+  if(window.ComboDiagram)window.ComboDiagram(o,{age,fx,C,q,code,T,be,Y,Sp,S});}
 window.ComboRun=run;
 $('open').onclick=()=>{$('open').disabled=true;$('open').textContent='載入中…';ready=window.pfdLoad();
   ready.then(()=>{try{$('open').style.display='none';on=true;run();['age','clzS','fx'].forEach(i=>$(i).addEventListener('input',()=>{fillY();run();}));}catch(e){$('out').innerHTML='<div class="card no">試算錯誤：'+e.message+'</div>';}}).catch(()=>{$('open').disabled=false;$('open').textContent='載入失敗，再按一次';});};
