@@ -1,6 +1,7 @@
 // 搭配專區 第二組：PFD 20 年期＋FDE 或 FDF（美元），最可能紅利（M）。PFD 用 engine.js（ENG.quote），附約保費用四季春 QuoteEngine.rQuote（費率已與 FDE／FDF 費率表 PDF 逐格核對）
 // 拿回方式 a 部分解約：PFD 減額到 2 萬美元（PFD 條款第29條，最低承保金額 2 萬），減少部分依第12條終止給付解約金；
 //   假設：減少部分的解約金＝當年全部解約金（含增額繳清與解約紅利）×（PFD 保額−2）÷ PFD 保額；附約不受影響、繼續有效；附約無解約金（以 0 計）。
+// 附約 ≦2 萬與主約保額無關；＞2 萬投保時須 ≦PFD 保額（可附加額度暫以 1 倍）。方式 a 若附約＞2 萬：第 N 年同步減額到 2 萬（FDE 條款第26條／FDF 第20條，只退未到期保費、無解約金，以 0 計）。
 // 拿回方式 b 全部解約：拿回當年全部解約金；附約依 FDE 條款第19條至當期已繳保費期滿後終止。
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2, KEEP=2, MINY=20;
@@ -42,8 +43,8 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
     <div><div class="k">第 ${Y} 年</div>已繳 <b>US$ ${f(tot(Y))}</b><br>拿回 <b>US$ ${f(back(x,Y))}</b></div>
    </div>
    <div class="be">✅ 第 ${be} 年回本</div>
-   <div class="k" style="text-align:center">${st.md==='a'?`拿回後還有：PFD ${KEEP} 萬美元＋${R} ${rs} 萬美元`:'PFD 全部解約；附約到當期已繳保費期滿後終止'}</div>
-   ${st.md==='a'&&rs>KEEP?`<div class="k" style="text-align:center;color:#a35b00">附約 ${rs} 萬＞2 萬：投保時須 ≦ PFD 保額；減到 2 萬後請先確認附約可否續保</div>`:''}</div>
+   <div class="k" style="text-align:center">${st.md==='a'?`拿回後還有：PFD ${KEEP} 萬美元＋${R} ${Math.min(rs,KEEP)} 萬美元`:'PFD 全部解約；附約到當期已繳保費期滿後終止'}</div>
+   ${st.md==='a'&&rs>KEEP?`<div class="k" style="text-align:center;color:#a35b00">PFD 降到 2 萬時，附約同步降到 2 萬</div>`:''}</div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>${st.md==='a'?'部分解約<br>拿回 US$':'解約金<br>US$'}</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(back(x,t))}</td></tr>`;
   o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元；最可能紅利</div></details></div>';}
