@@ -15,7 +15,7 @@ fillY();$('b_ysel').onchange=()=>{st.Y=+$('b_ysel').value;fillY();run();};
 ['b_age','b_rs','b_fx'].forEach(i=>$(i).addEventListener('input',()=>{fillY();run();}));
 function pfd(age,S){const P=window.PFD_P,M=P.meta,D=P.data;const pr=ENG.prem(M,D,st.sex,age,20,S,M.m1,M.m2);if(!pr)return null;return Object.assign(ENG.quote(M,D,st.sex,age,20,S,SC,'PUA',pr.p1,pr.p2),{p1:pr.p1,p2:pr.p2,S});}
 const back=(x,y)=>x.rows[y-1].X;
-function calc(age,rs,Y){const Q=window.QuoteEngine,r=Q.rQuote(st.rd,{age,sex:st.sex,occ:1,mode:'年繳',term:20,sum:rs,payDisc:true});
+function calc(age,rs,Y){const Q=window.QuoteEngine,r=Q.rQuote(st.rd,{age,sex:st.sex,occ:1,mode:'年繳',term:20,sum:rs,payDisc:false});
   if(r.errs)return {err:st.rd+'：'+r.errs.join('；')};const rp=r.paid,rcum=t=>rp*Math.min(t,20);
   const M=window.PFD_P.meta,smin=Math.max(+M.smin,+M.smin,rs>2?rs:0),qs=[];
   for(let s=Math.round(smin*10);s<=Math.round(M.smax*10);s++){const x=pfd(age,s/10);if(x)qs.push(x);}

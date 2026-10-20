@@ -283,6 +283,7 @@ function rLim(code, age, occ, mode, hostSum, capR){
   return L;
 }
 // q：{age, sex, occ, plan, term, sum, mode, payDisc, covered(豁免：被豁免保費年繳合計), hostSum}
+const NOPAYDISC = ['FDE','FDF'];
 function rQuote(code, q){
   const g = RCFG[code], R = RR[code];
   if (!g || !R) return {errs:['此附約費率尚未收錄']};
@@ -310,7 +311,7 @@ function rQuote(code, q){
   const annual = Math.round(units * rate * 10 + 1e-7) / 10;
   const f = (g.mf || RMF)[q.mode] || 1;
   const modal = Math.round(annual * f + 1e-7);
-  const bp = q.payDisc ? 100 : 0;   // 繳費方式 1%＝總應收保費（主約＋附約）1%，依主約保費規定
+  const bp = (q.payDisc && !NOPAYDISC.includes(code)) ? 100 : 0;   // v1.25：FDE／FDF 保費規定只有健康管理折扣，不適用繳費方式折扣； 繳費方式 1%＝總應收保費（主約＋附約）1%，依主約保費規定
   const paid = Math.round(modal * (10000 - bp) / 10000 + 1e-7);
   const n = {年繳:1,躉繳:1,半年繳:2,季繳:4,月繳:12}[q.mode] || 1;
   const out = {rate, rateTxt, units, annual, modal, paid, bp, n, firstYear: paid*n, cur: g.u==='usd' ? 'USD' : 'TWD'};
