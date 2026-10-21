@@ -1,4 +1,4 @@
-/* 解說頁通用模板 v1.31：explain.html?bundle=[...] 整包；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
+/* 解說頁通用模板 v1.32：explain.html?bundle=[...] 整包；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
 (function(){
 const $=s=>document.querySelector(s), q=new URLSearchParams(location.search), E=window.EXPLAIN||{};
 const fm=n=>Math.round(n).toLocaleString('zh-TW');
@@ -60,7 +60,7 @@ function draw(){
    ${D.warn&&D.warn(c)?`<div class="warn">${D.warn(c)}</div>`:''}</section>`;
   h+=`<div class="tag1">${D.tagline}</div><section class="grid">`+D.cards(c).map(k=>`<div class="bc"><div class="ic">${k.ic}</div><div class="bt">${k.t}</div><div class="big">${k.big}</div><div class="ln">${k.line}</div>${k.sub?`<div class="sb">${k.sub}</div>`:''}</div>`).join('')+`</section>`;
   if(D.tl){const t=D.tl(c); if(t) h+=`<h2 class="h2">${t.title}</h2><div class="card">${t.svg}</div>`;}
-  h+=`<h2 class="h2">💡 理賠範例（${D.exLabel?D.exLabel(c):I.kind==='plan'?'計劃 '+st.plan:'保額 '+fm(st.sum)+' '+I.unit}）</h2><section class="exs">`+D.examples(c).map(e=>`<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.calc}</div><div class="ep">${e.pay>0?(e.lbl||'賠')+' '+fm(e.pay)+' 元':(e.zero||'—')}</div>${e.note?`<div class="en">${e.note}</div>`:''}</div>`).join('')+`</section>`;
+  h+=`<h2 class="h2">💡 理賠範例（${D.exLabel?D.exLabel(c):I.kind==='plan'?'計劃 '+st.plan:'保額 '+(D.cur==='USD'?'US$ '+fm(st.sum):fm(st.sum)+' '+I.unit)}）</h2><section class="exs">`+D.examples(c).map(e=>`<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.calc}</div><div class="ep">${e.pay>0?(e.lbl||'賠')+' '+(D.cur==='USD'?'US$ '+fm(e.pay):fm(e.pay)+' 元'):(e.zero||'—')}</div>${e.note?`<div class="en">${e.note}</div>`:''}</div>`).join('')+`</section>`;
   h+=`<div class="src">資料來源：${D.src.join('；')}</div><div class="src"><a href="explain.html?age=${st.age}&sex=${st.sex}">📚 其他商品解說</a></div>`;
   $('#app').innerHTML=h;
 }
