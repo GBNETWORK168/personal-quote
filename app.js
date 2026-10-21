@@ -649,6 +649,7 @@ function hostChips(code, rs){
 function catPanel(c, e){
   const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : '';
   let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${c.name}（${c.code}）｜${KIND[c.kind]}｜${c.cat}</div>`;
+  if (EXPL.includes(c.code)){ const rs = st.rsel && (st.rsel[c.code] || Object.keys(st.rsel).filter(k=>k.startsWith(c.code+'@')).map(k=>st.rsel[k])[0]) || {}; const ms = (st.sel||{})[c.code] || {}; const pl = rs.plan ? `&plan=${rs.plan}` : '', sm = (rs.sum||ms.sum) ? `&sum=${rs.sum||ms.sum}` : ''; h += `<a class="xbtn" href="explain.html?code=${c.code}&age=${st.age}&sex=${st.sex}${pl}${sm}">📖 解說（圖示說明給客戶看）</a>`; }
   h += `<table class="info">${row('投保年齡', c.ages.map(x=>`${x.t}：${x.a}–${x.b} 歲`).join('<br>'))}${row('保障期間', c.cover)}${row('保額規定', c.sum)}${row(c.kind==='main'?'附加附約':'附加條件', c.attach)}${row('其他', [c.other, c.note].filter(Boolean).join('<br>'))}${row('職業限制', c.occx.length?`第 ${c.occx.join('、')} 類不可附加`:'')}</table>`;
   if (e.sexMis) h += `<div class="err">⚠ 性別不符：${e.why}（目前被保險人為${st.sex==1?'男':'女'}性）。男女平權列出供比較／說明，實際投保須符合性別。</div>`;
   else if (e.ok === false) h += `<div class="err">⛔ ${e.why}</div>`;
@@ -838,7 +839,7 @@ function attachHsv(code, sum5){
   if (sum5 || s.sum == null || s.sum < p.min || s.sum === p.min){ s.sum = p.minHSV; s.hsv = true; }
   if (was && was !== code){ const o = st.sel[was]; if (o && o.sum != null && o.sum < p.min) o.sum = p.min; }   // HSV 改掛後原本那張回到最低保額
 }
-const EXPL = ['XWS5'];   // v1.27 有解說頁的商品
+const EXPL = ['XWS5','OLA6','HSV','HSY','SJR1','SDG','CLZ','CLX'];   // v1.28 有解說頁的商品
 function panel(p, id){
   id = id || p.code;
   const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined});
