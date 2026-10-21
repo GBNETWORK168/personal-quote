@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.23 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.29 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -890,14 +890,14 @@ function bundle(){
     if (p){ const {s, r} = qOf(p, code);
       const desc = (p.plans?`計劃${s.plan.slice(3)}(${s.plan.startsWith('HAD')?80:75}歲啟動)｜`:'') + termLbl(p,s.term)+(s.term>1&&!(p.tl&&p.tl[s.term])?'期':'') + (p.unit==='unit'?'｜1單位':`｜${(+s.sum).toLocaleString()}${UNIT[p.unit]}`) + (p.minHSV && s.hsv ? '｜搭 HSV' : '');
       const usdM = p.cur==='USD';
-      items.push({kind:'主約', code:(p.plans?s.plan:base(code))+(inum(code)>1?`（第${inum(code)}張）`:''), name:p.name, desc, mode:s.mode, paid:r.errs?null:r.paid, firstYear:r.errs||usdM?0:r.firstYear, usd:!r.errs&&usdM?r.firstYear:0, cur:usdM?'USD':'TWD', err:!!r.errs});
-    } else { const c = CAT.find(x=>x.code===code); items.push({kind:'主約', code, name:c.name, desc:c.cat, pending:true}); }
+      items.push({kind:'主約', code:(p.plans?s.plan:base(code))+(inum(code)>1?`（第${inum(code)}張）`:''), name:p.name, desc, bx:{c:base(code), s:+s.sum||0, t:s.term, p:s.plan||''}, mode:s.mode, paid:r.errs?null:r.paid, firstYear:r.errs||usdM?0:r.firstYear, usd:!r.errs&&usdM?r.firstYear:0, cur:usdM?'USD':'TWD', err:!!r.errs});
+    } else { const c = CAT.find(x=>x.code===code); items.push({kind:'主約', code, name:c.name, desc:c.cat, pending:true, bx:{c:code}}); }
     const rs = instList().filter(([rc, h]) => h === code).map(([rc]) => rc).sort((a,b) => isW(a) - isW(b));
     for (const rc of rs){ const c = CAT.find(x=>x.code===rc);
-      if (!RR[rc]){ items.push({kind:KIND[c.kind], code:rc, rc, name:c.name, amt:'', desc:`附加於 ${lab(code)}`, pending:true, sub:true}); continue; }
+      if (!RR[rc]){ items.push({kind:KIND[c.kind], code:rc, rc, name:c.name, amt:'', bx:{c:rc}, desc:`附加於 ${lab(code)}`, pending:true, sub:true}); continue; }
       const {d, r} = rCalc(rc, code), q = d ? d.q : {}, g = RCFG[rc];
       const amt = g.u==='plan' ? `計劃${q.plan}` : g.u==='waiver' ? `${q.term||''}年期` : `${(+q.sum).toLocaleString()}${RUNIT[g.u]}` + (q.term ? `｜${q.term}年繳` : '');
-      items.push({kind:KIND[c.kind], code:g.u==='plan'?g.pn+q.plan:rc, rc, name:c.name, amt, desc:`附加於 ${lab(code)}｜${amt}`, mode:q.mode, paid:r.errs?null:r.paid, firstYear:r.errs||r.cur==='USD'?0:r.firstYear, usd:!r.errs&&r.cur==='USD'?r.firstYear:0, cur:r.cur, err:!!r.errs, sub:true}); }
+      items.push({kind:KIND[c.kind], code:g.u==='plan'?g.pn+q.plan:rc, rc, name:c.name, amt, bx:{c:rc, s:+q.sum||0, t:q.term||0, p:q.plan||''}, desc:`附加於 ${lab(code)}｜${amt}`, mode:q.mode, paid:r.errs?null:r.paid, firstYear:r.errs||r.cur==='USD'?0:r.firstYear, usd:!r.errs&&r.cur==='USD'?r.firstYear:0, cur:r.cur, err:!!r.errs, sub:true}); }
     for (let i = n0; i < items.length; i++){ items[i].g = g; items[i].mid = code; }
   });
   return items;
@@ -917,17 +917,23 @@ function mtree(it){
 let _lastTot = null;
 function renderCart(it){
   const c = $('#cart'); it = it || bundle();
-  if (!it.length){ c.classList.add('hidden'); $('#cartsum').innerHTML = '<span class="ct0">尚未勾選主約<small>勾主約後這裡即時合計保費</small></span>'; $('#cartmini').innerHTML = ''; $('#cartbody').innerHTML = ''; _lastTot = null; return; }
+  if (!it.length){ c.classList.add('hidden'); $('#cartsum').innerHTML = '<span class="ct0">尚未勾選主約<small>勾主約後這裡即時合計保費</small></span>'; $('#cartmini').innerHTML = ''; $('#cartbody').innerHTML = ''; _lastTot = null; const bl = $('#bxlink'); if (bl) bl.classList.add('hidden'); return; }
   c.classList.remove('hidden');
   const tot = it.reduce((a,x)=>a+(x.firstYear||0),0), usd = it.reduce((a,x)=>a+(x.usd||0),0), pend = it.filter(x=>x.pending).length, err = it.filter(x=>x.err).length;
   const nM = it.filter(x=>x.kind==='主約').length, G = groupsOf(it);
+  $('#bxlink').href = bundleUrl(it); $('#bxlink').classList.remove('hidden');
   $('#cartsum').innerHTML = `<span class="ctl">首年實繳合計｜主約 ${nM}・附約 ${it.length-nM}</span><span class="ctot">NT$ <b id="ctot">${fmt(tot)}</b>${usd?` ＋ US$ <b>${fmt(usd)}</b>`:''}</span><small>≈ 每月約 ${fmt(tot/12)} 元${pend?`｜另 ${pend} 項待試算`:''}</small>${err?`<small class="e">${err} 項設定不符未計</small>`:''}`;
   if (_lastTot != null && _lastTot !== tot){ const b = $('#ctot'); if (b){ b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); } }
   _lastTot = tot;
   $('#cartmini').innerHTML = G.length > 1 ? G.map(x => `<span class="cm m${x.g%4}">${mno(x.id)}${lab(x.id)} ${fmt(x.sub)}</span>`).join('') : '';
   $('#cartbody').innerHTML = G.map(x => `<div class="cg m${x.g%4}"><div class="cgh" data-goto="${x.id}">${mno(x.id)}<b>${lab(x.id)}</b><span>小計 NT$ ${fmt(x.sub)}${x.usd?`＋US$ ${fmt(x.usd)}`:''}</span></div>`
       + x.xs.map(y => `<div class="ci${y.sub?' sub':''}"><div>${y.sub?'└ ':''}${y.code} ${y.name}<small>${y.kind}｜${y.sub ? (y.amt || y.desc) : y.desc}</small></div><div style="text-align:right">${amtTxt(y)}<small>${y.pending||y.err?'':y.mode}</small></div></div>`).join('') + '</div>').join('')
-    + `<div class="ctot2">首年實繳合計 <b>NT$ ${fmt(tot)}</b>${usd?` ＋ US$ ${fmt(usd)}`:''}</div><div style="display:flex;gap:8px;margin-top:10px"><button id="copy">複製文字（貼 LINE）</button><button id="clear">全部取消勾選</button></div>`;
+    + `<div class="ctot2">首年實繳合計 <b>NT$ ${fmt(tot)}</b>${usd?` ＋ US$ ${fmt(usd)}`:''}</div><div style="display:flex;gap:8px;margin-top:10px"><a class="xbtn bx2" href="${bundleUrl(it)}">📖 整包解說</a><button id="copy">複製文字（貼 LINE）</button><button id="clear">全部取消勾選</button></div>`;
+}
+// v1.29 整包解說：把年齡、性別、每張主約＋附約（計劃／保額／年期／首年保費）帶到 explain.html?bundle=
+function bundleUrl(it){
+  const L = (it||bundle()).map(x => { const o = Object.assign({}, x.bx||{c:x.code}); o.h = x.sub ? x.g : -1; o.g = x.g; o.n = x.name; o.k = x.kind; if (x.amt||x.desc) o.a = x.sub ? (x.amt||'') : x.desc; if (x.firstYear) o.y = Math.round(x.firstYear); if (x.usd) o.u = Math.round(x.usd); if (x.pending) o.pd = 1; if (x.err) o.e = 1; return o; });
+  return `explain.html?age=${st.age}&sex=${st.sex}&bundle=` + encodeURIComponent(JSON.stringify(L));
 }
 function cartText(){
   const it = bundle(), tot = it.reduce((a,x)=>a+(x.firstYear||0),0), usd = it.reduce((a,x)=>a+(x.usd||0),0), pend = it.filter(x=>x.pending).length, G = groupsOf(it), multi = G.length > 1;
