@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.34 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.35 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -212,7 +212,6 @@ const RCFG = {
   HTA:{u:'unit', min:()=>1, max:()=>2},
   PCC5:{u:'unit', min:()=>1, max:()=>6},
   CWR4:{u:'unit', min:()=>1, max:()=>5, terms:()=>[10,15,20]},
-  CWR3:{u:'unit', min:()=>1, max:a=>a<14?2:3, terms:a=>a<=60?[15,20]:[15]},
   CMR:{u:'wan', per:10, step:10, min:()=>30, max:()=>60},
   CNR:{u:'wan', per:15, step:15, min:()=>15, max:()=>15},
   SDL:{u:'wan', per:10, min:()=>30, max:()=>200, yr:1, yrt:1, def:50},
@@ -375,7 +374,6 @@ window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY,
 if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
-const _sub=document.querySelector('header .sub'); if(_sub && !/v1\.26/.test(_sub.textContent)) _sub.textContent='v1.26｜富邦四季春快速報價｜CLX/CLZ 不下架・搭配專區保障示意圖｜僅供內部試算，以公司正式建議書為準';
 
 // ---------- UI ----------
 const $ = s => document.querySelector(s);
@@ -839,7 +837,7 @@ function attachHsv(code, sum5){
   if (sum5 || s.sum == null || s.sum < p.min || s.sum === p.min){ s.sum = p.minHSV; s.hsv = true; }
   if (was && was !== code){ const o = st.sel[was]; if (o && o.sum != null && o.sum < p.min) o.sum = p.min; }   // HSV 改掛後原本那張回到最低保額
 }
-const EXPL = ['XWS5','OLA6','HSV','HSY','SJR1','SDG','CLZ','CLX','HKR5','HJK','SIE','ADG','TMR','ADH','SDL','CMR','CNR','LTU','CWR4','PCC5','HTA','HSW','HLR2','UCR','SWZ','ADM','LTS','LTQ','CLW','CLQ','SDH','SDN','SDJ','SDKA','SWB5','SWD1','SWW','FDE','FDF','FDC','HJM','HJA4','HJB3','HJE','HJI','HIZ','HIY1','HJD','HJH','HJJ','HJL','HAC','HSZ','HTB','XDZ','SWI','AJC1','AJI','AJJ','AJK','ALA','MPA','MPB','XDY','FDG','WPH','WP','WPA','WPF1','LTT','LTP','LTV','XDN2','XDP','XDV','XDW','XDX','ADN'];   // v1.34 有解說頁的商品
+const EXPL = ['XWS5','OLA6','HSV','HSY','SJR1','SDG','CLZ','CLX','HKR5','HJK','SIE','ADG','TMR','ADH','SDL','CMR','CNR','LTU','CWR4','PCC5','HTA','HSW','HLR2','UCR','SWZ','ADM','LTS','LTQ','CLW','CLQ','SDH','SDN','SDJ','SDKA','SWB5','SWD1','SWW','FDE','FDF','FDC','HJM','HJA4','HJB3','HJE','HJI','HIZ','HIY1','HJD','HJH','HJJ','HJL','HAC','HSZ','HTB','XDZ','SWI','AJC1','AJI','AJJ','AJK','ALA','MPA','MPB','XDY','FDG','WPH','WP','WPA','WPF1','LTT','LTP','LTV','XDN2','XDP','XDV','XDW','XDX','ADN'];   // v1.35 有解說頁的商品
 function panel(p, id){
   id = id || p.code;
   const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined});
