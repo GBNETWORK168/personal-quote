@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.30 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.31 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -839,7 +839,7 @@ function attachHsv(code, sum5){
   if (sum5 || s.sum == null || s.sum < p.min || s.sum === p.min){ s.sum = p.minHSV; s.hsv = true; }
   if (was && was !== code){ const o = st.sel[was]; if (o && o.sum != null && o.sum < p.min) o.sum = p.min; }   // HSV 改掛後原本那張回到最低保額
 }
-const EXPL = ['XWS5','OLA6','HSV','HSY','SJR1','SDG','CLZ','CLX','HKR5','HJK','SIE','ADG','TMR','ADH','SDL','CMR','CNR','LTU'];   // v1.30 有解說頁的商品
+const EXPL = ['XWS5','OLA6','HSV','HSY','SJR1','SDG','CLZ','CLX','HKR5','HJK','SIE','ADG','TMR','ADH','SDL','CMR','CNR','LTU','CWR4','PCC5','HTA','HSW','HLR2','UCR','SWZ','ADM','LTS','LTQ'];   // v1.31 有解說頁的商品
 function panel(p, id){
   id = id || p.code;
   const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined});

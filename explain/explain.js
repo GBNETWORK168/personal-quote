@@ -1,4 +1,4 @@
-/* 解說頁通用模板 v1.29：explain.html?bundle=[...] 整包；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
+/* 解說頁通用模板 v1.31：explain.html?bundle=[...] 整包；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
 (function(){
 const $=s=>document.querySelector(s), q=new URLSearchParams(location.search), E=window.EXPLAIN||{};
 const fm=n=>Math.round(n).toLocaleString('zh-TW');
@@ -7,11 +7,17 @@ const code=(q.get('code')||'').toUpperCase(), D=E[code];
 const gAge=+(q.get('age')??ls.age??30), gSex=+(q.get('sex')??ls.sex??1);
 // ---------- 共用時間軸：bars [{from,to,label,color,row}] pts [[age,label]] ----------
 window.EXPLAIN_TL=function(c,end,bars,pts){
+  // v1.31：年齡標籤自動分行避免重疊（每行記錄右緣，放不下就往下一行）；兩端靠齊不出界
   const a0=c.age, X=a=>20+(Math.min(a,end)-a0)/Math.max(1,end-a0)*560;
-  let s=`<svg viewBox="0 0 600 ${76+bars.length*40}" role="img">`;
+  const P=[]; [...pts].sort((x,y)=>x[0]-y[0]).forEach(([a,l])=>{const q=P.find(p=>p[0]===a); if(q){ if(l&&!q[1].split('・').includes(l)) q[1]=q[1]?q[1]+'・'+l:l; } else P.push([a,l||''])});
+  const rowsR=[], L=P.map(([a,l])=>{const x=X(a), txt=`${a}歲${l?' '+l:''}`, w=txt.length*13+8;
+    let anc='middle', x0=x-w/2; if(x0<4){anc='start';x0=Math.max(4,x-6);} else if(x+w/2>596){anc='end';x0=Math.min(x+6,596)-w;}
+    let r=0; while(rowsR[r]!=null&&rowsR[r]>x0) r++; rowsR[r]=x0+w; return {x,txt,anc,r,tx:anc==='start'?Math.max(4,x-6):anc==='end'?Math.min(596,x+6):x};});
+  const nr=Math.max(1,rowsR.length), top=52+nr*24;
+  let s=`<svg viewBox="0 0 600 ${top+6+bars.length*40}" role="img">`;
   s+=`<line x1="${X(a0)}" y1="20" x2="${X(end)}" y2="20" stroke="#9aa7b5" stroke-width="3"/>`;
-  let last=-99; [...pts].sort((x,y)=>x[0]-y[0]).forEach(([a,l],i)=>{const x=X(a),dy=x-last<80?18:0; last=dy?-99:x; s+=`<circle cx="${x}" cy="20" r="6" fill="var(--c1)"/><text x="${Math.min(570,Math.max(30,x))}" y="${44+dy}" text-anchor="middle" font-size="15" fill="#333">${a}歲${l?' '+l:''}</text>`;});
-  bars.forEach((b,i)=>{const y=70+i*40, x1=X(Math.max(b.from,a0)), x2=X(b.to); s+=`<rect x="${x1}" y="${y}" width="${Math.max(4,x2-x1)}" height="12" rx="6" fill="${b.color||'var(--c2)'}"/><text x="20" y="${y+30}" font-size="15" fill="#333">${b.label}</text>`;});
+  L.forEach(o=>{s+=`<circle cx="${o.x}" cy="20" r="6" fill="var(--c1)"/>`+(o.r?`<line x1="${o.x}" y1="26" x2="${o.x}" y2="${30+o.r*24}" stroke="#c5ced8" stroke-width="1"/>`:'')+`<text x="${o.tx}" y="${44+o.r*24}" text-anchor="${o.anc}" font-size="15" fill="#333">${o.txt}</text>`;});
+  bars.forEach((b,i)=>{const y=top+i*40, x1=X(Math.max(b.from,a0)), x2=X(b.to); s+=`<rect x="${x1}" y="${y}" width="${Math.max(4,x2-x1)}" height="12" rx="6" fill="${b.color||'var(--c2)'}"/><text x="20" y="${y+30}" font-size="15" fill="#333">${b.label}</text>`;});
   return s+`</svg>`;
 };
 if(q.get('bundle')){ try{ window.EXPLAIN_BUNDLE(JSON.parse(q.get('bundle')), gAge, gSex); }catch(e){ console.error(e); $('#app').innerHTML='<div class="card warn">整包資料讀取失敗，請回報價頁重新按「📖 整包解說」。</div>'; } return; }
