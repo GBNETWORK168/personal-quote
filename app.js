@@ -838,11 +838,13 @@ function attachHsv(code, sum5){
   if (sum5 || s.sum == null || s.sum < p.min || s.sum === p.min){ s.sum = p.minHSV; s.hsv = true; }
   if (was && was !== code){ const o = st.sel[was]; if (o && o.sum != null && o.sum < p.min) o.sum = p.min; }   // HSV 改掛後原本那張回到最低保額
 }
+const EXPL = ['XWS5'];   // v1.27 有解說頁的商品
 function panel(p, id){
   id = id || p.code;
   const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined});
   const [mn, mx, step] = limits(p, st.age, st.occ, s.hsv);
-  let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${p.name}（${p.code}）｜主約｜${p.cat}｜保障 ${p.cover}｜投保年齡 ${ageRangeText(p)}</div>`;
+  let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${p.name}（${p.code}）｜主約｜${p.cat}｜保障 ${p.cover}｜投保年齡 ${ageRangeText(p)}</div>`
+  if (EXPL.includes(p.code)) h += `<a class="xbtn" href="explain.html?code=${p.code}&age=${st.age}&sex=${st.sex}&sum=${s.sum||''}">📖 解說（圖示說明給客戶看）</a>`;
   if (inum(id) > 1 || sibs(id).length > 1) h += `<div class="note">📑 同商品兩張：這是 <b>${lab(id)}</b>，保額／年期／繳別與附約各自設定；累計本險種最高保額兩張合計計算${s.cumOther?`（前面已 ${s.cumOther.toLocaleString()} ${UNIT[p.unit]}）`:''}。</div>`;
   if (!st.mains.includes(id)) h += `<div class="note">☐ 勾選左側方框即加入組合，並可勾選可附加的附約。</div>`;
   if (p.plans){
