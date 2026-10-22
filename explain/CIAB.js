@@ -14,9 +14,9 @@ function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'�
     {ic:'🎁',t:'身故或 95 歲祝壽',big:`${F(c.tot*1.06)} 元`,line:'年繳保費總和 × 1.06，扣掉已領保險金',sub:'終身保障；未滿 15 足歲身故退還所繳保費'},
     {ic:'🙌',t:'保費豁免',big:'免繳',line:'重度癌症或意外 1～6 級失能',sub:'之後續期保費全免，契約繼續有效'}],
   tl:c=>({title:'📈 保障終身（到 95 歲）',svg:EXPLAIN_TL(c,95,[{from:c.age,to:c.payEnd,label:`💰 繳費 ${c.term} 年（重度癌症可免繳）`},{from:c.age,to:c.age+1,label:'⏳ 第 1 年：給年繳總和×1.06',color:'#e8a33d'},{from:c.age+1,to:c.age+6,label:'📶 特定癌症加碼 10%→50%',color:'#c084fc'},{from:c.age+6,to:95,label:`🎗️ 重度癌症＋特定癌症＝${F(c.S*1.5)} 元`,color:'#9aa7b5'}],[[c.age,'投保'],[c.payEnd,'繳完'],[95,'祝壽']])}),
-  examples:c=>{const n6=Math.min(6,c.term), p6=c.annual*n6*1.06, sev=Math.max(c.S,p6);   // v1.41：年繳保費總和＝實際繳費年度數（第 6 年確診→已繳 6 年），條款第二條／DM p2
+  examples:c=>{/* v1.42：特定手術範例年齡＝max(60, 投保年齡+1) */ const n6=Math.min(6,c.term), p6=c.annual*n6*1.06, sev=Math.max(c.S,p6);   // v1.41：年繳保費總和＝實際繳費年度數（第 6 年確診→已繳 6 年），條款第二條／DM p2
     const ex=[{ic:'🎗️',t:`第 6 年確診第二期${o.ex}`,calc:`重度：保額 ${F(c.S)} 與 已繳 ${n6} 年保費×1.06＝${F(p6)} 取高 ${F(sev)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:sev+c.S*0.5,note:'續期保費豁免'},
-    {ic:'🔧',t:o.exOp,calc:`保額 ${c.sum} 萬 × 2%`,pay:c.S*0.02},
+    {ic:'🔧',t:`${Math.max(60,c.age+1)} 歲${o.exOp}`,calc:`保額 ${c.sum} 萬 × 2%`,pay:c.S*0.02},
     {ic:'🚗',t:'車禍嚴重頭部創傷成植物人',calc:`保額 ${c.sum} 萬 × 10%`,pay:c.S*0.1}];
     const net=c.tot*1.06-c.S*0.02;
     ex.push({ic:'🎁',t:'活到 95 歲（只領過特定手術）',calc:`${F(c.tot)} × 1.06 − ${F(c.S*0.02)}`,pay:Math.max(0,net),lbl:'領回'});
@@ -24,9 +24,9 @@ function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'�
   src:o.src};}
 const E=window.EXPLAIN=window.EXPLAIN||{};
 E.CIA=mk('CIA',1,{name:'豪愛守護防癌終身健康保險',tag:'新版男性防癌（終身）：攝護腺、大腸等 9 項特定癌症最高給保額 1.5 倍，0 歲起可投保',
-  sc:'結腸、直腸、肛門、陰莖、攝護腺、睪丸、膀胱等 9 項',op:'攝護腺／前列腺相關 8 項手術',ex:'大腸癌',exOp:'60 歲經尿道攝護腺切除術',
+  sc:'結腸、直腸、肛門、陰莖、攝護腺、睪丸、膀胱等 9 項',op:'攝護腺／前列腺相關 8 項手術',ex:'大腸癌',exOp:'經尿道攝護腺切除術',
   src:['CIA DM 公版 115.10.23（30 歲男 100 萬 20 年 年繳 30,000 範例）','CIA 保單條款樣張 115.10.23','CIA 投保規則 115.10.23','CIA 費率表']});
 E.CIB=mk('CIB',2,{name:'真馨守護防癌終身健康保險',tag:'新版女性防癌（終身）：乳癌、子宮頸、卵巢、皮膚等 11 項特定癌症最高給保額 1.5 倍，0 歲起可投保',
-  sc:'乳房、子宮頸、子宮體、卵巢、皮膚等 11 項',op:'尿失禁、骨盆底重建、子宮懸吊等 14 項手術',ex:'乳癌',exOp:'60 歲尿失禁做陰道懸吊術',
+  sc:'乳房、子宮頸、子宮體、卵巢、皮膚等 11 項',op:'尿失禁、骨盆底重建、子宮懸吊等 14 項手術',ex:'乳癌',exOp:'尿失禁做陰道懸吊術',
   src:['CIB DM 公版 115.10.23（30 歲女 100 萬 20 年 年繳 29,300 範例）','CIB 保單條款樣張 115.10.23','CIB 投保規則 115.10.23','CIB 費率表']});
 })();

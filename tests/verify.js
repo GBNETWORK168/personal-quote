@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 富邦四季春快速報價 自動驗證（v1.41）：node tests/verify.js
+// 富邦四季春快速報價 自動驗證（v1.42）：node tests/verify.js
 // 無外部相依：用 Node vm 載入網站實際的 data*.js／catalog.js／app.js／combo 引擎／解說檔，DOM 以空殼代替。
 // 期望值：CIA／CIB 費率取自 tests/fixtures/cia_cib_rates.json（官方費率表 PDF 擷取）；其他數字取自 DM 公版範例（見各項註記）。
 'use strict';
@@ -90,6 +90,9 @@ for(const c of ['CIA','CIB']){const d=X[c];ok(/等待期間/.test(d.warn()),`解
   ok(/嚴重頭部創傷、嚴重第三度燒燙傷/.test(cards),`解說 ${c} 特定傷病`);ok(/1～6 級失能/.test(cards),`解說 ${c} 豁免`);}
 ok(/9 項/.test(X.CIA.tagline)&&/11 項/.test(X.CIB.tagline),'解說 特定癌症 男 9 項／女 11 項');
 ok(!/大腸/.test(X.CIB.examples(ctxOf('CIB',2,30,20,100)).map(e=>e.t).join()),'解說 CIB 範例不用大腸癌（不在女性 11 項）');
+// ---------- 11b. v1.42 特定手術範例年齡不早於投保年齡、金額不變 ----------
+for(const [code,sex,age,T,want] of [['CIA',1,30,20,60],['CIA',1,65,10,66],['CIB',2,30,20,60],['CIB',2,59,10,60],['CIB',2,60,10,61]]){
+  const ex=X[code].examples(ctxOf(code,sex,age,T,100))[1];ok(ex.t.startsWith(want+' 歲'),`解說 ${code} ${age}歲投保 特定手術範例 ${want} 歲`,ex.t);eq(ex.pay,20000,`解說 ${code} ${age}歲 特定手術 2萬`);}
 // ---------- 12. 禁用字（不顯示佣金、無團隊行銷字樣） ----------
 for(const f of ['index.html','explain.html','combo.html','app.js','explain/CIAB.js'])ok(!/佣金|富爸爸/.test(rd(f)),`${f} 無佣金／富爸爸字樣`);
 // ---------- 結果 ----------
