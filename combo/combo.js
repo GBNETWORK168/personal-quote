@@ -17,7 +17,9 @@ document.querySelectorAll('#pkb button').forEach(b=>b.onclick=()=>{st.pk=b.datas
 seg('sexb','sex');pkUI();
 const MINY=20,maxY=()=>Math.max(MINY,100-(+$('age').value||0)+1);
 function fillY(){const m=maxY(),sel=$('ysel');document.querySelectorAll('#yb button').forEach(x=>x.classList.toggle('on',+x.dataset.v===st.Y));if(st.Y>m)st.Y=m;if(st.Y<MINY)st.Y=MINY;sel.innerHTML=Array.from({length:m-MINY+1},(_,i)=>i+MINY).map(y=>`<option value="${y}"${y===st.Y?' selected':''}>${y}</option>`).join('');}
-seg('yb','Y');document.querySelectorAll('#yb button').forEach(x=>x.addEventListener('click',fillY));fillY();$('ysel').onchange=()=>{st.Y=+$('ysel').value;fillY();if(on)run();};$('age').addEventListener('change',fillY);
+seg('yb','Y');document.querySelectorAll('#yb button').forEach(x=>x.addEventListener('click',()=>{st.yManual=true;}));
+// v1.40：0–18 歲預設第 30 年拿回（YT 2026-10-22）；手動選過年份就不再自動改
+const autoY=()=>{if(!st.yManual){st.Y=(+$('age').value||0)<=18?30:20;}};$('age').addEventListener('input',()=>{autoY();fillY();});$('age').addEventListener('change',()=>{autoY();fillY();});document.querySelectorAll('#yb button').forEach(x=>x.addEventListener('click',fillY));fillY();$('ysel').onchange=()=>{st.yManual=true;st.Y=+$('ysel').value;fillY();if(on)run();};$('age').addEventListener('change',fillY);
 function cRows(code,age,S,T){const p=window.PRODUCTS.find(x=>x.code===code);const r=window.QuoteEngine.quote(p,{age,sex:st.sex,occ:1,term:T,sum:S,mode:'年繳',payDisc:true});
   if(r.errs)return {err:r.errs.join('；')};const rows=[];let c=0;for(let t=1;t<=120;t++){const py=t>T?0:(r.from2&&t>=r.from2&&r.paid2!=null?r.paid2:r.paid);c+=py;rows.push({py,cum:c});}return {rows,first:r.paid};}
 function pfd(age,S){const P=window.PFD_P,M=P.meta,D=P.data;const pr=ENG.prem(M,D,st.sex,age,20,S,M.m1,M.m2);if(!pr)return null;return Object.assign(ENG.quote(M,D,st.sex,age,20,S,SC,'PUA',pr.p1,pr.p2),{p1:pr.p1,p2:pr.p2});}
