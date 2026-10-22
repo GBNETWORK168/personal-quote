@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.37 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.38 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -75,6 +75,7 @@ function quote(p, q){
     const left = Math.round((mx - q.cumOther)*100)/100;
     if (S > left + 1e-9) errs.push(`累計本險種最高 ${mx.toLocaleString()} ${UNIT[p.unit]}，同商品其他張已投保 ${q.cumOther.toLocaleString()} ${UNIT[p.unit]} → 這張 ≦${Math.max(0,left).toLocaleString()} ${UNIT[p.unit]}`);
   }
+  if (q.grpOther > 0 && S > CANCER_MAX - q.grpOther - (q.cumOther||0) + 1e-9) errs.push(`保額型癌症險累計最高 ${CANCER_MAX} 萬（投保規則），其他癌症主約已投保 ${q.grpOther.toLocaleString()} 萬 → 這張 ≦${Math.max(0, CANCER_MAX - q.grpOther - (q.cumOther||0)).toLocaleString()} 萬`);
   if (!(S <= mx + 1e-9)) errs.push(`保額超過上限 ${mx.toLocaleString()} ${UNIT[p.unit]}`);
   if (!p.free && Math.abs(Math.round(S/step)*step - S) > 1e-6) errs.push(`保額需以 ${step} ${UNIT[p.unit]} 為單位`);
   if (errs.length) return {errs};
@@ -104,7 +105,11 @@ function quote(p, q){
   return {rate, units, annual, modal, paid, bp, dl, firstYear, n, warn, rate2, annual2, paid2, from2, renewRate, renewAnnual, renewPaid, cur:p.cur||'TWD'};
 }
 // ---------- 常用優先排序：1 XWS5 → 2 OLA／OLA6 → 3 SDG → 4 男女癌（CLZ／CLX 男女平權皆列出；性別不符標示） ----------
-const PRI = code => /^XWS5/.test(code) ? 1 : /^OLA/.test(code) ? 2 : code === 'SDG' ? 3 : (code === 'CLZ' || code === 'CLX') ? 4 : 99;
+// v1.38：SDP 與 SDG 同列 3；新版男女癌 CIA／CIB 與 CLZ／CLX 同列 4（新版排前）
+const PRI = code => /^XWS5/.test(code) ? 1 : /^OLA/.test(code) ? 2 : (code === 'SDG' || code === 'SDP') ? 3 : ['CIA','CIB','CLZ','CLX'].includes(code) ? 4 : 99;
+const PORD = c => ({SDG:0, SDP:1, CIA:0, CIB:1, CLZ:2, CLX:3})[c] ?? 9;
+// v1.38：保額型癌症險累計 ≦500 萬（CIA／CIB／CLX／CLZ 投保規則「其他累計限額規定」）
+const CANCER_GRP = ['CIA','CIB','CLX','CLZ','CLQ'], CANCER_MAX = 500;
 const FAV = code => PRI(code) <= 3;   // 標「常用」（v1.19.1：SDG 也標常用）
 // ---------- 主約／附約目錄（尚未收錄費率者：只做投保年齡／性別／職業篩選＋商品說明） ----------
 const CAT = window.CATALOG || [];
@@ -142,11 +147,14 @@ function mInfo(code){
   return {code, name:c.name, cat:c.cat, cover:c.cover, whole:/終身/.test(c.cover), single:false, cancer:/防癌/.test(c.cat), ci:/重疾|重大傷病/.test(c.cat),
     acc:/傷害/.test(c.cat), fx:c.code==='FDC', noRider:/不可附加附約/.test(c.other||'') ? '此主約不可附加附約' : c.code==='SDKA' ? 'SDKA 僅可附加 AOR、CLR' : false, v1:false};
 }
-const SDGS = ['SDG','SDH','SDJ','SDN'];
+const CANCER_R = ['CWR4','PCC5','CMR','CNR','HSW'];
+const SDGS = ['SDG','SDH','SDJ','SDN','SDP'];
 // 附約 r 能否附加在主約 m 上
 function riderOnMain(r, m){
   if (m.noRider) return {ok:false, why:`${m.code}：${m.noRider}`};
-  if ((m.code==='SDH'||m.code==='SDN') && !['ADG','ADH','TMR','XTY','CMR','CNR','HTA'].includes(r)) return {ok:false, why:`${m.code} 僅可附加 ADG、ADH、TMR、XTY、CMR、CNR、HTA`};
+  if ((m.code==='SDH'||m.code==='SDN'||m.code==='SDP') && !['ADG','ADH','TMR','XTY','CMR','CNR','HTA'].includes(r)) return {ok:false, why:`${m.code} 僅可附加 ADG、ADH、TMR、XTY、CMR、CNR、HTA`};
+  // v1.38：防癌主約（CIA／CIB／CLX／CLZ 投保規則）不得附加防癌險附約
+  if (m.cancer && CANCER_R.includes(r)) return {ok:false, why:`${m.code} 不得附加防癌險附約（投保規則）`};
   const fxR = /^FD[EFG]$/.test(r);
   if (fxR && !m.fx) return {ok:false, why:'僅可附加同幣別外幣壽險主約（FAK1、FAZ、FBO、PFA…等，本工具未收錄）'};
   if (fxR && m.code==='FDC') return {ok:false, why:'FDC 不可附加附約；FDE／FDF／FDG 可附加主約為 FAK1、FAZ、FBO、PFA…等外幣壽險（本工具未收錄）'};
@@ -241,7 +249,7 @@ function rTable(code, q, renew){
 // ---------- 主約「換算附約可附加額度」（萬元）：各主約投保規則「附加附約」欄 ----------
 // ×1：XWS5、OLA6、XDY、AJC1、AJI、CLX、CLZ、SDG/SDH/SDN/SDJ/SDKA、SWB5、LTP、HTB；×70：XDN2；×100：LTS、LTQ、LTT；
 // 日額型醫療：日額 ×100；SIE：保額 ×100；HAC／HAD：計劃 1／2／3 ＝ 10／20／30 萬
-const CAPCO = {XWS5:1, OLA6:1, XDY:1, AJC1:1, AJI:1, CLX:1, CLZ:1, SDG:1, SDH:1, SDN:1, SDJ:1, SDKA:1, SWB5:1, LTP:1, HTB:1, XDN2:70, LTS:100, LTQ:100, LTT:100};
+const CAPCO = {XWS5:1, OLA6:1, XDY:1, AJC1:1, AJI:1, CLX:1, CLZ:1, CIA:1, CIB:1, SDP:1, SDG:1, SDH:1, SDN:1, SDJ:1, SDKA:1, SWB5:1, LTP:1, HTB:1, XDN2:70, LTS:100, LTQ:100, LTT:100};
 const LTC_WHOLE = ['LTS','LTQ'];   // 長期照顧終身型主約（LTU：≦主約保額 2 倍）
 function capOf(p, s){
   if (!p || !s) return null;
@@ -321,7 +329,7 @@ function rQuote(code, q){
 // ---------- 通則（投保規定 115.09.30 一、(二)3.(3) 一般身分累計最高住院醫療日額） ----------
 // 累計人壽保險保額＜30 萬 → 醫療險附約 ≦4,000；30～100 萬(含) ≦5,000；101～200 萬(含) ≦6,000；＞200 萬 ≦8,000；醫療險主約＋附約 ≦8,000
 // 人壽保險保額＝壽險主約＋壽險附約＋重大疾病險（面額 × 「附加附約之人壽保險保額係數」，通算保額係數一覽表 115.09.30）
-const LIFECO = {XWS5:1, OLA6:1, XDY:1, LTS:100, SDG:1, SDH:1, SDJ:1, SDKA:1, SWB5:1, SWD1:1, SWW:1};
+const LIFECO = {XWS5:1, OLA6:1, XDY:1, LTS:100, SDG:1, SDP:1, SDH:1, SDJ:1, SDKA:1, SWB5:1, SWD1:1, SWW:1};
 const MEDDAY = ['HJK','HKR5','HLR2'];   // 以元／日投保之住院醫療附約（HSV／HSY／HSW 計劃型不在此計算）
 // v1.22：手術醫療險另計（險種附表 115.09.30 捌、各型手術醫療險附表）：SIE、SJR1 等以保額 1 倍計，累計總保額 ≦3,000 元；
 // 有效壽險累計通算保額＞200 萬且職業 1、2 類 ≦4,000 元。不計入住院醫療日額上限。
@@ -370,7 +378,7 @@ const HAY = {};
 for (const c of CAT) HAY[c.code] = hayOf(c.code, c.name, c.cat, KIND[c.kind]);
 for (const p of P) HAY[p.code] = hayOf(p.code, p.name, p.cat + ' ' + ((CAT.find(c => c.code === p.code) || {}).cat || ''), '主約');
 const qHit = (code, q) => qMatch(HAY[base(code)] || base(code), q);
-window.QuoteEngine = {surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
+window.QuoteEngine = {CANCER_GRP, CANCER_R, PORD, surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
 if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
@@ -456,7 +464,9 @@ function defaultsFor(p, id){
   let cumOther = 0; const sb = sibs(id), ix = sb.indexOf(id);
   if (ix > 0) for (const o of sb.slice(0, ix)){ const so = st.sel[o] || {}; cumOther += so.sum != null ? +so.sum || 0 : (p.unit==='day' ? Math.min(Math.max(1000,mn),mx) : p.soft || mn); }
   if (s.sum == null && cumOther > 0 && sum > mx - cumOther) sum = Math.max(mn, Math.round((mx - cumOther)*100)/100);
-  return Object.assign({plan, term, sum, mode, hsv, payDisc: s.payDisc !== false, cumOther}, {terms});
+  let grpOther = 0;
+  if (CANCER_GRP.includes(p.code)){ const ix2 = st.mains.indexOf(id); for (const o of st.mains.slice(0, ix2 < 0 ? st.mains.length : ix2)){ if (!CANCER_GRP.includes(base(o)) || base(o) === p.code) continue; const po = pOf(o), so = st.sel[o] || {}; if (po) grpOther += so.sum != null ? +so.sum || 0 : po.min; } }
+  return Object.assign({plan, term, sum, mode, hsv, payDisc: s.payDisc !== false, cumOther, grpOther}, {terms});
 }
 const isMedMain = p => p.unit==='day' && /醫療/.test(p.cat);
 let _medG = false;
@@ -723,14 +733,14 @@ function render(){
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
   // 只顯示目前年齡／性別／職業可投保者（不符的快選按鈕直接隱藏；已勾者保留以便取消）
   // v1.19：SDG 回到常用快選（XWS5、OLA6、SDG、男女癌），一樣只顯示可投保年齡
-  const quick = ['XWS5','OLA6','SDG','CLZ','CLX'].filter(c => !isStopped(c)).map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
-  const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', SDG:'SDG 醫保安心重大傷病', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症'};
+  const quick = ['XWS5','OLA6','SDG','SDP','CIA','CIB','CLZ','CLX'].filter(c => !isStopped(c)).map(c => P.find(p=>p.code===c)).filter(p => p && (pEl(p).ok || st.mains.includes(p.code)));
+  const QN = {XWS5:'XWS5 新平準終身', OLA6:'OLA6 金來寶（OLA）', SDG:'SDG 醫保安心重大傷病', CLZ:'CLZ 男性癌症', CLX:'CLX 女性癌症', SDP:'SDP 溢卡呵護重大傷病（新）', CIA:'CIA 男性癌症 豪愛守護（新）', CIB:'CIB 女性癌症 真馨守護（新）'};
   $('#quick').innerHTML = '⭐ 常用快選：' + (quick.length ? '' : '<span class="hint">此年齡／性別沒有可投保的主推商品</span>') + quick.map(p => { const e = pEl(p), el = !!e.ok, on = st.mains.includes(p.code);
     return `<button type="button" class="qk${on?' on':''}" data-quick="${p.code}" ${el||on?'':'disabled'}>${on?'☑':'☐'} ${QN[p.code]}${stopSoon(p.code)?`<span class="tag stop">${STOPNOTE}</span>`:''}${el?'':e.sexMis?'（性別不符）':'（年齡不符）'}</button>` + (st.multi && on && sibs(p.code).length < DUPMAX(p.code) ? `<button type="button" class="qk dupq" data-mdup="${p.code}">＋第${sibs(p.code).length+1}張 ${p.code}</button>` : ''); }).join('') + (st.mains.length && !st.multi ? '<button type="button" class="qk need2" data-multi="1">➕ 需要第二張主約</button>' : '');
   $('#multihint').hidden = !st.multi;
   // 主約區
-  const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p), sx:!!pEl(p).sexMis})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || (a.c==='CLZ'?-1:1));
-  const lbl = (c, sx) => (c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='OLA6' ? 'OLA6（OLA）' : c) + (sx ? '（性別不符）' : '');
+  const pri = [...pOk.map(p => ({k:PRI(p.code), c:p.code, h:v1Item(p), sx:!!pEl(p).sexMis})), ...mPri.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e)})), ...mSex.map(x => ({k:PRI(x.c.code), c:x.c.code, h:catItem(x.c, x.e), sx:true}))].sort((a,b)=>a.k-b.k || (a.sx?1:0)-(b.sx?1:0) || PORD(a.c)-PORD(b.c));
+  const lbl = (c, sx) => (c==='CLZ' ? '男性癌症 CLZ' : c==='CLX' ? '女性癌症 CLX' : c==='CIA' ? '男性癌症 CIA（新）' : c==='CIB' ? '女性癌症 CIB（新）' : c==='OLA6' ? 'OLA6（OLA）' : c) + (sx ? '（性別不符）' : '');
   let h = st.dropped.length ? `<div class="warn">條件改變，已自動取消不符的勾選：${st.dropped.join('、')}</div>` : '';
   st.dropped = [];
   // 常用優先：獨立醒目區塊
@@ -840,7 +850,7 @@ function attachHsv(code, sum5){
 const EXPL = ['XWS5','OLA6','HSV','HSY','SJR1','SDG','CLZ','CLX','HKR5','HJK','SIE','ADG','TMR','ADH','SDL','CMR','CNR','LTU','CWR4','PCC5','HTA','HSW','HLR2','UCR','SWZ','ADM','LTS','LTQ','CLW','CLQ','SDH','SDN','SDJ','SDKA','SWB5','SWD1','SWW','FDE','FDF','FDC','HJM','HJA4','HJB3','HJE','HJI','HIZ','HIY1','HJD','HJH','HJJ','HJL','HAC','HSZ','HTB','XDZ','SWI','AJC1','AJI','AJJ','AJK','ALA','MPA','MPB','XDY','FDG','WPH','WP','WPA','WPF1','LTT','LTP','LTV','XDN2','XDP','XDV','XDW','XDX','ADN'];   // v1.37 有解說頁的商品
 function panel(p, id){
   id = id || p.code;
-  const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined});
+  const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined, grpOther:undefined});
   const [mn, mx, step] = limits(p, st.age, st.occ, s.hsv);
   let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${p.name}（${p.code}）｜主約｜${p.cat}｜保障 ${p.cover}｜投保年齡 ${ageRangeText(p)}</div>`
   if (EXPL.includes(p.code)) h += `<a class="xbtn" href="explain.html?code=${p.code}&age=${st.age}&sex=${st.sex}&sum=${s.sum||''}">📖 解說（圖示說明給客戶看）</a>`;
