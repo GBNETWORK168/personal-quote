@@ -5,6 +5,7 @@
 - 商品解說 CIA／CIB 修正：「第 6 年確診」範例的重度癌症改用已繳 6 年保費×1.06 與保額取高（原用全繳費期總和，60 歲 10 年期 100 萬誤算 1,772,000 → 正確 1,500,000）；重度卡補「第 1 年：年繳保費總和×1.06」；警示列補等待期（30 日、癌症 90 日、意外不受限）（DM p1–2、條款第二條）。explain.html `CIAB.js?v=141`。
 - CLX／CLZ 照常販售、無停售提示（未變）。
 - cache-bust：index `?v=141`；combo.html app.js `?v=c141`。
+- 自動測試：`node tests/verify.js`（無外部相依，Node 18+）。用 vm 載入網站實際 data／catalog／app.js、搭配專區 PFD 引擎與 `explain/CIAB.js`，檢查 501 項：CIA／CIB 336 格費率對 `tests/fixtures/cia_cib_rates.json`（官方費率表 PDF 擷取）＋引擎報價、繳別係數、1% 折扣上限、投保年齡／保額、性別專屬、防癌附約限制、癌症險累計 ≦500 萬、CLX／CLZ 無停售、其他主約 DM 範例（SDG／CLX／CLZ／CLQ）、搭配專區 3 個手算案例、CIAB 第 6 年範例、禁用字（佣金／富爸爸）。全部通過印「通過 N／N」，有失敗列出項目並 exit 1。
 
 ## v1.40 變更（2026-10-22）
 - 搭配專區第一頁改為「男女癌＋PFD」：商品可選 新版男女癌 CIA／CIB（預設）、CLZ／CLX（保留）；年期依商品（CIA／CIB 20/10/30、CLZ／CLX 20/10）。不做 SDP＋PFD（YT 確認 2026-10-22），保額範圍依投保規則。
