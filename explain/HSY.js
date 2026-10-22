@@ -13,6 +13,8 @@ const L={1:{dR:1000,R:3000,dM:100000,M:300000,dO:15000,O:25000,dS:7500,S:12500,y
     {ic:'📊',t:'每年給付上限',big:`${F(l.yr)} 元`,line:'不計入住院日額累計限額',sub:'沒有健保身分改按實際費用 75%'}];},
   tl:c=>c.age>80?null:({title:'📈 保障期間',svg:EXPLAIN_TL(c,80,[{from:c.age,to:80,label:'🔁 一年一保・保證續保到 80 歲（子女到 23 歲）'}],[[c.age,'投保'],[80,'續保到']])}),
   examples:c=>{const l=L[c.plan], ex=[];
+    {const M=50000,S=200000,T=M+S,R=0.47,P=[['HSV3',80000,0,0,0],['HSV2＋HSY2',60000,200000,300000,1],['HSV1＋HSY1',40000,100000,300000,1]].map(([n,u,d,lim,y])=>{const v=Math.min(M,y?(d===200000?200000:100000):300000)+Math.min(S,u*R), h=y?Math.min(Math.max(0,T-Math.max(d,v)),lim-d):0; return {n,v,h,t:v+h};});
+     ex.push({ic:'🦴',t:'舉例：橈骨尺骨骨折開刀（手術比率 47%）住院 3 天，自費醫材 5 萬＋自費手術 20 萬',calc:'<table style="width:100%;border-collapse:collapse;font-size:13px;text-align:right"><tr><th style="text-align:left">方案</th><th>HSV 賠</th><th>HSY 補</th><th>合計</th><th>自付</th></tr>'+P.map(p=>`<tr><td style="text-align:left">${p.n}</td><td>${F(p.v)}</td><td>${p.h?F(p.h):'—'}</td><td><b>${F(p.t)}</b></td><td>${F(T-p.t)}</td></tr>`).join('')+'</table>',pay:P[2].t,lbl:'HSV1＋HSY1 最多賠',note:'HSV 手術＝手術限額 × 47%（附表二第 96 項）；HSY 依收據把雜費＋手術合併，扣「自負額」或「HSV 已賠」較大者，不看手術比率'});}
     {const tot=255000, p=Math.min(Math.max(0,tot-l.dM), l.M-l.dM); ex.push({ic:'🧮',t:`HSY${c.plan}：住院花 25 萬＋出院後回診 5,000`,calc:`加總 25.5 萬 − 自負額 ${F(l.dM)}（上限 ${F(l.M-l.dM)}）`,pay:p,note:'第八條第三項第九款：前後門診併入該次住院'});}
     const r1=Math.min(3000*5-l.dR*5,(l.R-l.dR)*5), m1=Math.min(250000-l.dM,l.M-l.dM);
     ex.push({ic:'🏥',t:'只買 HSY：住院 5 天，病房差額每天 3,000、自費 25 萬',calc:`病房 (3,000−${F(l.dR)})×5 ＋ 醫療 25萬−${F(l.dM)}`,pay:r1+m1});

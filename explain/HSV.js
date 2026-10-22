@@ -16,6 +16,8 @@ const L={1:{room:1000,med:100000,medTot:150000,surg:40000,op:15000,sp:7500,day:1
     {ic:'🧾',t:'每年給付上限',big:`${F(l.yr)} 元`,line:'同一保單年度各項合計上限',sub:'沒有健保身分改按實際費用 75%'}];},
   tl:c=>c.age>80?null:({title:'📈 保障期間',svg:EXPLAIN_TL(c,80,[{from:c.age,to:80,label:'🔁 一年一保・保證續保到 80 歲（子女到 23 歲）'}],[[c.age,'投保'],[80,'續保到']])}),
   examples:c=>{const l=L[c.plan], ex=[];
+    {const M=50000,S=200000,T=M+S,R=0.47,P=[['HSV3',80000,0,0,0],['HSV2＋HSY2',60000,200000,300000,1],['HSV1＋HSY1',40000,100000,300000,1]].map(([n,u,d,lim,y])=>{const v=Math.min(M,y?(d===200000?200000:100000):300000)+Math.min(S,u*R), h=y?Math.min(Math.max(0,T-Math.max(d,v)),lim-d):0; return {n,v,h,t:v+h};});
+     ex.push({ic:'🦴',t:'舉例：橈骨尺骨骨折開刀（手術比率 47%）住院 3 天，自費醫材 5 萬＋自費手術 20 萬',calc:'<table style="width:100%;border-collapse:collapse;font-size:13px;text-align:right"><tr><th style="text-align:left">方案</th><th>HSV 賠</th><th>HSY 補</th><th>合計</th><th>自付</th></tr>'+P.map(p=>`<tr><td style="text-align:left">${p.n}</td><td>${F(p.v)}</td><td>${p.h?F(p.h):'—'}</td><td><b>${F(p.t)}</b></td><td>${F(T-p.t)}</td></tr>`).join('')+'</table>',pay:P[2].t,lbl:'HSV1＋HSY1 最多賠',note:'HSV 手術＝手術限額 × 47%（附表二第 96 項）；HSY 依收據把雜費＋手術合併，扣「自負額」或「HSV 已賠」較大者，不看手術比率'});}
     const room=Math.min(2500,l.room)*5, med=Math.min(120000,l.med), sum=room+med, day=l.day*5;
     ex.push({ic:'🏥',t:'住院 5 天：病房差額每天 2,500、自費醫材 12 萬',calc:`病房 ${F(room)} ＋ 雜費 ${F(med)} ＝ ${F(sum)}（日額只有 ${F(day)}，選實支較多）`,pay:Math.max(sum,day)});
     ex.push({ic:'👁️',t:'門診白內障手術自付 3 萬',calc:`門診手術限額 ${F(l.op)} 元`,pay:Math.min(30000,l.op)});
