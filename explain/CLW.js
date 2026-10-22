@@ -15,7 +15,7 @@
     {ic:'🎁',t:'無理賠回饋',big:F(c.annual*10*0.1),line:'10 年都沒理賠，期滿給年繳總和 10%',sub:''}],
   tl:c=>c.age>70?null:({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,c.age+10,[{from:c.age,to:c.age+10,label:`💰 每年 ${F(c.annual)}・🎗️ 癌症保障 10 年`,color:'var(--c1)'},{from:c.age,to:c.age+1,label:'第 1 年減半'}],[[c.age,'投保'],[c.age+10,'期滿回饋']])}),
   examples:c=>[
-    {ic:'🎗️',t:'第 3 年確診重度肺癌，住院 10 天、出院療養',calc:'10 萬＋住院 1,000×10＋出院療養 10 萬',pay:210000},
+    {ic:'🎗️',t:`第 3 年確診重度${CX(c.sex,c.age+3)}，住院 10 天、出院療養`,calc:'10 萬＋住院 1,000×10＋出院療養 10 萬',pay:210000},
     {ic:'💊',t:'接著用標靶藥物治療',calc:'標靶 60 萬',pay:600000},
     {ic:'🎁',t:'10 年平安沒理賠',calc:`年繳 ${F(c.annual)} ×10 年 ×10%`,pay:c.annual,lbl:'領'}],
   src:['CLW DM 公版（40 歲男 年繳 11,600 範例）','CLW 保單條款','CLW 投保規則']};

@@ -79,7 +79,7 @@ for(const [code,sex,Sp,p1,first,tot] of [['CIA',1,21.7,4993,39105,3877760],['CIB
   eq(r.Sp,Sp,`combo ${code} ${age}歲 PFD 保額 ${Sp} 萬美元`);eq(Math.round(r.p1),p1,`combo ${code} PFD 年繳 US$${p1}`);eq(r.first,first,`combo ${code} 癌症險年繳 ${first}`);
   eq(Math.round(r.tot),tot,`combo ${code} 第20年累計已繳 ${tot}`);eq(Math.round(r.tot),(first+Math.round(p1*31))*20,`combo ${code} 累計＝(癌症險＋PFD×31)×20 手算`);}
 // ---------- 11. 商品解說 CIAB（DM p2、條款第二條：年繳總和＝實際繳費年度數） ----------
-vm.runInContext('window.EXPLAIN_TL=()=>"";',ctx);run('explain/CIAB.js');const X=W.EXPLAIN;
+vm.runInContext('window.EXPLAIN_TL=()=>"";',ctx);vm.runInContext(rd('explain/explain.js').split('\n').filter(l=>/^window\.CX[SD]?=/.test(l)).join('\n'),ctx);run('explain/CIAB.js');const X=W.EXPLAIN;
 const ctxOf=(code,sex,age,T,sum)=>{const annual=FX[code].rates[String(T)][age]*sum;return {age,sum,S:sum*1e4,term:T,annual,tot:annual*T,payEnd:age+T};};
 for(const [code,sex,age,T,sum,want] of [['CIA',1,60,10,100,1500000],['CIB',2,30,20,100,1500000],['CIA',1,65,10,500,7500000]]){
   const ex=X[code].examples(ctxOf(code,sex,age,T,sum))[0];eq(ex.pay,want,`解說 ${code} ${age}歲 ${T}年 ${sum}萬 第6年確診範例 ${want}`);

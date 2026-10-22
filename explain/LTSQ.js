@@ -12,7 +12,7 @@ function mk(code,o){return {name:o.name, cat:'長期照顧', icon:o.icon, taglin
     {ic:'👴',t:'80 歲起老年住院',big:`每天 ${F(c.S*0.1)} 元`,line:'保額 10% × 住院天數，累計最多 200 天',sub:o.oldSub},
     {ic:'🕊️',t:o.dT,big:`${F(c.tot*1.02)} 元`,line:o.dLine,sub:c.age<15?'未滿 15 足歲身故改給喪葬費用':''},
     {ic:'🙌',t:'免繳保費',big:'免繳',line:'完全失能、或符合長照狀態且過 90 天免責期',sub:'保障照樣有效'}],
-  tl:c=>{const pts=[[c.age,'投保'],[c.payEnd,'繳清'],[80,'老年住院'],[99,'祝壽']]; if(c.age<65&&c.payEnd!==65) pts.push([65,'失智加碼止']);
+  tl:c=>{const pts=[[c.age,'投保'],[c.payEnd,'繳費期滿'],[80,'老年住院'],[99,'祝壽']]; if(c.age<65&&c.payEnd!==65) pts.push([65,'失智加碼止']);
     return {title:'📈 繳費與保障',svg:EXPLAIN_TL(c,99,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:99,label:'🧓 長照／失能保障到 99 歲'},{from:80,to:99,label:'👴 80 歲起老年住院提前給付'}],pts)};},
   examples:c=>{const s=c.S, y1=s*2*12; return [
     {ic:'🧠',t:'55 歲確診中度失智，持續需要照顧',calc:`一次金 ${F(s*15)}＋${F(s*10)} ＋ 分期 192 個月 ${F(y1*SUMK)}`,pay:s*25+y1*SUMK,note:`第 1 年每月 ${F(s*2)}，第 16 年每月 ${F(s*2*1.3)}`},

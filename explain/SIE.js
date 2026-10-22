@@ -11,11 +11,11 @@
     {ic:'🧮',t:'手術＋處置終身上限',big:`${F(c.sum*1800)} 元`,line:'保額 1,800 倍',sub:''},
     {ic:'🕊️',t:'身故／99 歲祝壽',big:`${F(c.tot*1.06)} 元 − 已領`,line:'年繳保費總和 ×1.06，扣掉已領的手術、處置金',sub:c.age<15?'未滿 15 足歲身故改給喪葬費用':'領完契約結束'},
     {ic:'🙌',t:'失能免繳保費',big:'免繳',line:'繳費期間完全失能、或意外 2～6 級失能',sub:'保障照樣有效'}],
-  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,99,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:99,label:'🔪 手術／處置保障到 99 歲'}],[[c.age,'投保'],[c.payEnd,'繳清'],[99,'祝壽']])}),
+  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,99,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:99,label:'🔪 手術／處置保障到 99 歲'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[99,'祝壽']])}),
   examples:c=>[
     {ic:'👶',t:'剖腹產術（10 倍）',calc:`${F(c.sum)} × 10`,pay:c.sum*10},
     {ic:'🦵',t:'十字韌帶重建術（15 倍）',calc:`${F(c.sum)} × 15`,pay:c.sum*15},
     {ic:'🫀',t:'冠狀動脈繞道手術－二條血管（50 倍）',calc:`${F(c.sum)} × 50`,pay:c.sum*50},
-    {ic:'🎂',t:`繳清後一路沒用到，99 歲領祝壽金`,calc:`${F(c.tot)} × 1.06`,pay:c.tot*1.06,lbl:'領'}],
+    {ic:'🎂',t:`繳費期滿後一路沒用到，99 歲領祝壽金`,calc:`${F(c.tot)} × 1.06`,pay:c.tot*1.06,lbl:'領'}],
   src:['SIE DM 公版 115.01.22（常見手術／處置倍數摘錄）','SIE 保單條款 115.01.22（第13～19條）','SIE 投保規則 113.05.17','SIE 費率表 113.05.17']};
 })();

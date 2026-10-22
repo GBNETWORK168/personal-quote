@@ -12,7 +12,7 @@ const cyc=c=>{const b=[];let a=c.age;while(a<=71&&b.length<5){b.push(a);a+=10;}r
     {ic:'🔁',t:'10 年保證續保',big:'續保到 71 歲',line:'每 10 年續保一次，續保時年齡 ≦71 歲',sub:'主約剩餘期間不足 10 年不能續保'}],
   tl:c=>{const b=cyc(c); return {title:'📈 保障期間（每 10 年保證續保）',svg:EXPLAIN_TL(c,b[b.length-1]+10,b.map((a,i)=>({from:a,to:a+10,label:`${i?'🔁 續保':'🧬 投保'} ${a}～${a+10} 歲`,color:i?'var(--c2)':'var(--c1)'})),[[c.age,'投保'],[b[b.length-1]+10,'']])};},
   examples:c=>[
-    {ic:'🫁',t:'確診肺癌，醫師安排基因檢測找合適藥物',calc:'保額 150,000',pay:150000},
+    {ic:'🫁',t:`確診${CX(c.sex,c.age+1)}，醫師安排基因檢測找合適藥物`,calc:'保額 150,000',pay:150000},
     {ic:'🔁',t:'同一次癌症做了 2 次基因檢測',calc:'只給一次',pay:150000},
     {ic:'🩺',t:'健康人自費做癌症風險基因篩檢',calc:'沒有確診癌症',pay:0,zero:'不賠'}],
   src:['CNR DM 公版 113.09.23','CNR 保單條款 113.09.23','CNR 投保規則 115.10.12','CNR 費率表']};

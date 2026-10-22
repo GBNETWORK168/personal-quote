@@ -12,7 +12,7 @@ const pct=n=>n<=5?1:n<=10?1.05:n<=15?1.10:1.15, lp=n=>n<=5?0.10:n<=10?0.105:n<=1
     return {title:'📈 重度癌症給付',svg:EXPLAIN_TL(c,e,[{from:c.age,to:e,label:`💰 每年 ${F(c.annual)}・🎗️ 癌症保障 ${c.term} 年`,color:'var(--c1)'}],P)};},
   examples:c=>[
     {ic:'🎗️',t:'第 1 年確診重度癌症',calc:`年繳 ${F(c.annual)} × 1.06`,pay:c.annual*1.06},
-    {ic:'🔹',t:'第 3 年確診初期乳癌',calc:'保額 10%',pay:c.S*0.1},
-    {ic:'🎗️',t:`第 ${Math.min(c.term,12)} 年確診重度大腸癌`,calc:`保額 × ${pct(Math.min(c.term,12))*100}%`,pay:c.S*pct(Math.min(c.term,12))}],
+    {ic:'🔹',t:`第 3 年確診初期${CX(c.sex,c.age+3,1)}`,calc:'保額 10%',pay:c.S*0.1},
+    {ic:'🎗️',t:`第 ${Math.min(c.term,12)} 年確診重度${CX(c.sex,c.age+Math.min(c.term,12))}`,calc:`保額 × ${pct(Math.min(c.term,12))*100}%`,pay:c.S*pct(Math.min(c.term,12))}],
   src:['CLQ DM 公版（60 歲男 100 萬 20 年 年繳 33,900 範例）','CLQ 保單條款 113.09.23','CLQ 投保規則']};
 })();

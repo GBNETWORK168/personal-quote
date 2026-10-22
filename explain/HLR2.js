@@ -12,7 +12,7 @@ const hosp=(d,n)=>d*Math.min(n,30)+d*2*Math.max(0,Math.min(n,90)-30)+d*3*Math.ma
     {ic:'🔥',t:'燒燙傷中心',big:`每天加 ${F(d)} 元`,line:'額外再給日額 1 倍',sub:''},
     {ic:'🧮',t:'終身累計上限',big:`${F(d*3000)} 元`,line:'日額 3,000 倍',sub:''},
     {ic:'🙌',t:'1～6 級失能免繳',big:'免繳',line:'繳費期間失能，之後保費全免',sub:'保障照樣有效'}];},
-  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,Math.max(c.age+40,90),[{from:c.age,to:c.age+20,label:`💰 繳 20 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:Math.max(c.age+40,90),label:'🏥 住院日額保障終身'}],[[c.age,'投保'],[c.age+20,'繳清']])}),
+  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,Math.max(c.age+40,90),[{from:c.age,to:c.age+20,label:`💰 繳 20 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:Math.max(c.age+40,90),label:'🏥 住院日額保障終身'}],[[c.age,'投保'],[c.age+20,'繳費期滿']])}),
   examples:c=>{const d=c.sum; return [
     {ic:'🤒',t:'肺炎住院 7 天',calc:`${F(d)} × 7`,pay:hosp(d,7)},
     {ic:'🚨',t:'中風住院 45 天（含加護病房 5 天）',calc:`前 30 天 ${F(d*30)}＋15 天×2 倍 ${F(d*30)}＋加護 ${F(d*5)}`,pay:hosp(d,45)+d*5},

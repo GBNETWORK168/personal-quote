@@ -12,10 +12,10 @@
     {ic:'☢️',t:'放射線／化學治療',big:`每天 ${F(1000*u)} 元`,line:`癌症門診每天 ${F(500*u)} 元`,sub:'口服化療每次領藥算 1 天'},
     {ic:'🩸',t:'白血病骨髓／幹細胞移植',big:`${F(50000*u)} 元`,line:'限一次',sub:''},
     {ic:'🧮',t:'各項合計總限額',big:`${F(2000000*u)} 元`,line:'終身累計',sub:''}];},
-  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,Math.max(c.age+30,90),[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:Math.max(c.age+30,90),label:'🎗️ 防癌保障終身'},{from:c.age+20,to:Math.max(c.age+30,90),label:'⬆️ 第 21 年起罹癌一次金 1.5 倍'}],[[c.age,'投保'],[c.payEnd,'繳清'],[c.age+20,'第21年']])}),
+  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,Math.max(c.age+30,90),[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)} 元`,color:'var(--c1)'},{from:c.age,to:Math.max(c.age+30,90),label:'🎗️ 防癌保障終身'},{from:c.age+20,to:Math.max(c.age+30,90),label:'⬆️ 第 21 年起罹癌一次金 1.5 倍'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[c.age+20,'第21年']])}),
   examples:c=>{const u=c.sum; return [
-    {ic:'🫁',t:'第 5 年確診肺癌（重度），住院 10 天開刀，再化療 12 天',calc:`一次金 ${F(50000*u)}＋住院 ${F(15000*u)}＋療養 ${F(6000*u)}＋手術 ${F(15000*u)}＋化療 ${F(12000*u)}`,pay:98000*u},
-    {ic:'🎗️',t:'第 25 年確診大腸癌（重度）',calc:`一次金 ${F(75000*u)}（第 21 年起 1.5 倍）`,pay:75000*u,note:'另依住院、手術、放化療天數分項給付'},
+    {ic:'🎗️',t:`第 5 年確診${CX(c.sex,c.age+5)}（重度），住院 10 天開刀，再化療 12 天`,calc:`一次金 ${F(50000*u)}＋住院 ${F(15000*u)}＋療養 ${F(6000*u)}＋手術 ${F(15000*u)}＋化療 ${F(12000*u)}`,pay:98000*u},
+    {ic:'🎗️',t:`第 25 年確診${CXD(CX(c.sex,c.age+25),CX(c.sex,c.age+5))}（重度）`,calc:`一次金 ${F(75000*u)}（第 21 年起 1.5 倍）`,pay:75000*u,note:'另依住院、手術、放化療天數分項給付'},
     {ic:'🔬',t:'確診原位癌（初期），門診切除',calc:`一次金 ${F(7500*u)}＋手術 ${F(2250*u)}`,pay:9750*u}];},
   src:['CWR4 DM 公版 115.10.12','CWR4 保單條款 115.10.12（附表給付金額）','CWR4 投保規則 115.10.12','CWR4 費率表']};
 })();

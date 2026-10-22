@@ -24,10 +24,10 @@ function mk(code,o){ const U=o.usd, F=n=>U?'US$ '+fm(n):fm(n)+' 元', K=o.k;
     else L.push(...o.riderCards(c,F));
     return L;},
   tl:c=>{ const end=o.endAge(c); if(c.age>=end) return null; const bars=[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:end,label:o.barLabel(c)}]; if(o.rider) bars.push({from:c.payEnd,to:end,label:'✅ 繳費期滿後主約解約，附約照樣有效到 100 歲',color:'var(--c1)'});
-    return {title:'📈 繳費與保障',svg:EXPLAIN_TL(c,end,bars,[[c.age,'投保'],[c.payEnd,'繳清'],[end,o.endPt]])};},
+    return {title:'📈 繳費與保障',svg:EXPLAIN_TL(c,end,bars,[[c.age,'投保'],[c.payEnd,'繳費期滿'],[end,o.endPt]])};},
   examples:c=>{ if(U) c.S=c.sum; const ex=[
     {ic:'🦴',t:'投保第 1 年確診類風濕關節炎（重大傷病）',calc:`第 1 年：年繳 ${F(c.annual)} × ${K}`,pay:c.annual*K},
-    {ic:'🎗️',t:'第 5 年確診乳癌第一期，取得重大傷病證明',calc:`保額 ${F(c.S)} 與 年繳總和×${K} 取高`,pay:Math.max(c.S,tot(c,5)*K)},
+    {ic:'🎗️',t:`第 5 年確診${CX(c.sex,c.age+5,1)}第一期，取得重大傷病證明`,calc:`保額 ${F(c.S)} 與 年繳總和×${K} 取高`,pay:Math.max(c.S,tot(c,5)*K)},
     {ic:'🔥',t:'第 15 年燒燙傷達全身 20% 以上',calc:`保額 ＋ 20% 加碼`,pay:Math.max(c.S,tot(c,15)*K)+c.S*0.2},
     {ic:'🫀',t:'第 10 年冠狀動脈繞道手術',calc:`保額 ${F(c.S)}`,pay:Math.max(c.S,tot(c,10)*K)}];
     if(!o.rider) ex.push({ic:'🎁',t:o.endEx,calc:`保額 與 年繳總和×${K} 取高`,pay:Math.max(c.S,tot(c,c.term)*K),lbl:'領'});
@@ -47,9 +47,9 @@ E.SDJ=mk('SDJ',{name:'優卡安心重大傷病健康保險', icon:'💳', tag:'�
 E.FDC=mk('FDC',{usd:1, name:'美好安心外幣重大傷病保險（美元）', icon:'💵', tag:'美元重大傷病：拿到重大傷病卡一次給付，期滿領回滿期金', terms:[2,6,10,15,20], defTerm:4, TA:{2:[0,60],6:[0,60],10:[0,60],15:[0,55],20:[0,50]}, k:1.02, min:5000,max:170000,step:5000,def:30000,
   warn:'美元保單，保費以美元收付；不可附加附約', endT:'滿期保險金', endLine:'保險期間屆滿仍生存', endEx:'保險期間屆滿仍生存，領滿期金', endAge:c=>c.age+({2:20,6:20,10:25,15:30,20:35}[c.term]), endPt:'滿期', barLabel:c=>`💵 重大傷病保障 ${({2:20,6:20,10:25,15:30,20:35}[c.term])} 年`,
   src:['FDC DM 公版 115.01.22（30 歲女 3 萬美元 20 年 年繳 1,206 美元範例）','FDC 保單條款 115.01.22','FDC 投保規則','FDC 費率表']});
-E.FDE=mk('FDE',{usd:1, rider:1, name:'美好順心外幣重大傷病終身健康保險附約（美元）', icon:'💵', tag:'美元重大傷病附約：繳 20 年、保到 100 歲；繳清後主約解約也照樣有效', terms:[20], TA:{20:[0,60]}, k:1.06, min:10000,max:100000,step:1000,def:35000,
+E.FDE=mk('FDE',{usd:1, rider:1, name:'美好順心外幣重大傷病終身健康保險附約（美元）', icon:'💵', tag:'美元重大傷病附約：繳 20 年、保到 100 歲；繳費期滿後主約解約也照樣有效', terms:[20], TA:{20:[0,60]}, k:1.06, min:10000,max:100000,step:1000,def:35000,
   warn:'附加於同幣別美元主約（如 PFD）；保額＞2 萬美元須 ≦主約可附加額度；不可與 FDF 同附一張主約；不打繳費方式折扣',
-  riderCards:(c,F)=>[{ic:'✅',t:'繳清後不受主約影響',big:'保到 100 歲',line:'20 年繳費期滿後，主約（如 PFD）整張解約，附約照樣有效',sub:'YT 向保全科確認（2026-10-20）'}],
+  riderCards:(c,F)=>[{ic:'✅',t:'繳費期滿後不受主約影響',big:'保到 100 歲',line:'20 年繳費期滿後，主約（如 PFD）整張解約，附約照樣有效',sub:'YT 向保全科確認（2026-10-20）'}],
   endAge:()=>100, endPt:'屆滿', barLabel:()=>'💵 重大傷病保障到 100 歲',
   src:['FDE DM 公版 115.03.31（30 歲女 5 萬美元 年繳 1,445 美元範例）','FDE 保單條款 115.03.31（100 歲屆滿終止）','FDE 投保規則 115.03.31','繳費期滿後主約終止仍有效：保全科（YT 確認 2026-10-20）']});
 })();

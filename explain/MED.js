@@ -9,7 +9,7 @@ function mk(o){ return {name:o.name, cat:o.cat||'醫療（日額型）', icon:o.
   prem:c=>{const r=c.H.rateMain(); if(!r) return null; const a=r*c.sum/100; return {annual:a, txt:o.ptxt?o.ptxt(c,a):`${c.term} 年繳・年繳 <b>${F(a)}</b>（未折扣）・共 ${F(a*c.term)}`};},
   warn:c=>o.warn||'',
   cards:c=>o.cards(c,c.sum),
-  tl:c=>{const e=typeof o.end==='function'?o.end(c):o.end; if(c.age>=e) return null; const bars=[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:e,label:o.bar}]; const pts=[[c.age,'投保'],[c.payEnd,'繳清']]; (o.pts?o.pts(c):[]).forEach(p=>p[0]>c.age&&p[0]<e&&pts.push(p)); pts.push([e,o.endPt]);
+  tl:c=>{const e=typeof o.end==='function'?o.end(c):o.end; if(c.age>=e) return null; const bars=[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:e,label:o.bar}]; const pts=[[c.age,'投保'],[c.payEnd,'繳費期滿']]; (o.pts?o.pts(c):[]).forEach(p=>p[0]>c.age&&p[0]<e&&pts.push(p)); pts.push([e,o.endPt]);
     return {title:'📈 繳費與保障',svg:EXPLAIN_TL(c,e,bars,pts)};},
   examples:c=>o.ex(c,c.sum), src:o.src};}
 const E=(window.EXPLAIN=window.EXPLAIN||{});

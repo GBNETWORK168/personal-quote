@@ -14,10 +14,10 @@ E.SDP={name:'溢卡呵護重大傷病保險', cat:'重大傷病', icon:'💳', t
     {ic:'💵',t:'生存保險金（每年）',big:F(yr)+' 元',line:`繳費期滿後每滿一年仍生存、未理賠，領 max(保額, 年繳總和×1.06)×3%`,sub:`第 ${c.term+1}～${CV(c.term)} 年最多 ${CV(c.term)-c.term} 次`},
     {ic:'🕊️',t:'身故／完全失能',big:'至少 '+F(Math.max(c.S,c.tot*K))+' 元',line:'繳費期間：保額與年繳總和×1.06 取高',sub:'繳費期滿後扣累計已領生存保險金（最少當年度保險金額）'},
     {ic:'🙌',t:'意外 2～6 級失能免繳',big:'免繳',line:'意外 2～6 級失能，續期保費豁免',sub:'保障照樣有效'}];},
-  tl:c=>{const end=c.age+CV(c.term); return {title:'📈 繳費、保障與生存保險金',svg:EXPLAIN_TL(c,end,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:end,label:`🪪 重大傷病保障 ${CV(c.term)} 年`},{from:c.payEnd,to:end,label:`💵 每年領 ${F(Math.max(c.S,c.tot*K)*0.03)}`,color:'#16a34a'}],[[c.age,'投保'],[c.payEnd,'繳清'],[end,'期滿']])};},
+  tl:c=>{const end=c.age+CV(c.term); return {title:'📈 繳費、保障與生存保險金',svg:EXPLAIN_TL(c,end,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:end,label:`🪪 重大傷病保障 ${CV(c.term)} 年`},{from:c.payEnd,to:end,label:`💵 每年領 ${F(Math.max(c.S,c.tot*K)*0.03)}`,color:'#16a34a'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[end,'期滿']])};},
   examples:c=>{const tot=n=>c.annual*Math.min(n,c.term); const yr=Math.max(c.S,c.tot*K)*0.03, n=CV(c.term)-c.term; return [
     {ic:'🦴',t:'投保第 1 年確診類風濕關節炎（重大傷病）',calc:`第 1 年：年繳 ${F(c.annual)} × 1.06`,pay:c.annual*K},
-    {ic:'🎗️',t:'第 5 年確診乳癌第一期，取得重大傷病證明',calc:`保額 ${F(c.S)} 與 年繳總和×1.06 取高`,pay:Math.max(c.S,tot(5)*K)},
+    {ic:'🎗️',t:`第 5 年確診${CX(c.sex,c.age+5)}，取得重大傷病證明`,calc:`保額 ${F(c.S)} 與 年繳總和×1.06 取高`,pay:Math.max(c.S,tot(5)*K)},
     {ic:'🔥',t:'第 8 年燒燙傷達全身 20% 以上',calc:'重大傷病 ＋ 特定重大傷病 20%',pay:Math.max(c.S,tot(8)*K)+c.S*0.2},
     {ic:'💵',t:`都沒理賠，活到期滿（共領 ${n} 次生存保險金）`,calc:`${F(yr)} × ${n} 年`,pay:yr*n,lbl:'共領'}];},
   src:['SDP DM 公版 115.10.23（40 歲女 100 萬 20 年 年繳 50,000、繳費期滿後生存保險金 31,800 範例）','SDP 保單條款樣張 115.10.23（第 2、18、19 條）','SDP 投保規則 115.10.23','SDP 費率表']};

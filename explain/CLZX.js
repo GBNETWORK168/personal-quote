@@ -11,7 +11,7 @@ function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'�
     {ic:'🩺',t:'特定傷病',big:`${F(c.S*0.1)} 元`,line:o.ill,sub:'第 2 年起，保額 10%（限 1 次）'},
     {ic:'💰',t:'身故或 89 歲滿期',big:`${F(c.tot*1.06)} 元`,line:'年繳保費總和 × 1.06，扣掉已領保險金',sub:'沒理賠就是保費拿回 106%'}],
   tl:c=>({title:'📈 保障到 89 歲',svg:EXPLAIN_TL(c,89,[{from:c.age,to:c.payEnd,label:`💰 繳費 ${c.term} 年（重度癌症可免繳）`},{from:c.age,to:c.age+1,label:'⏳ 第 1 年：給年繳總和×1.06',color:'#e8a33d'},{from:c.age+1,to:c.age+6,label:'📶 特定癌症加碼 10%→50%',color:'#c084fc'},{from:c.age+6,to:89,label:`🎗️ 重度癌症＋特定癌症＝${F(c.S*1.5)} 元`,color:'#9aa7b5'}],[[c.age,'投保'],[c.payEnd,'繳完'],[89,'滿期']])}),
-  examples:c=>{const ex=[{ic:'🎗️',t:`第 6 年後確診第二期${o.ex}`,calc:`重度 ${F(c.S)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:c.S*1.5,note:'續期保費豁免'},
+  examples:c=>{const ex=[{ic:'🎗️',t:`第 6 年後確診第二期${CXS(sex,c.age+6)}`,calc:`重度 ${F(c.S)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:c.S*1.5,note:'續期保費豁免'},
     {ic:'🔧',t:o.exOp,calc:`保額 ${c.sum} 萬 × 2%`,pay:c.S*0.02}];
     const net=c.tot*1.06-c.S*0.02;
     ex.push({ic:'💰',t:'活到 89 歲（只領過特定手術）',calc:`${F(c.tot)} × 1.06 − ${F(c.S*0.02)}`,pay:Math.max(0,net),lbl:'領回'});

@@ -10,7 +10,7 @@
     {ic:'🔹',t:'癌症（輕度）',big:F(c.S*0.05),line:'保額 5%，給一次，契約繼續',sub:''},
     {ic:'♿',t:'完全失能生活扶助',big:F(c.S*0.05)+'/年',line:'完全失能後每年保單週年日給保額 5%，到 99 歲',sub:'完全失能及 2～6 級失能免繳'},
     {ic:'🕊️',t:'身故／99 歲祝壽',big:F(c.tot*1.1),line:'給年繳總和×1.1（當年度保險金額）',sub:''}],
-  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,99,[{from:c.age,to:c.payEnd,label:`💰 繳 20 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:99,label:'❤️ 重大疾病／特定傷病終身保障'}],[[c.age,'投保'],[c.payEnd,'繳清'],[99,'祝壽']])}),
+  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,99,[{from:c.age,to:c.payEnd,label:`💰 繳 20 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:99,label:'❤️ 重大疾病／特定傷病終身保障'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[99,'祝壽']])}),
   examples:c=>[
     {ic:'🔹',t:'第 5 年確診原位癌（輕度）',calc:'保額 5%',pay:c.S*0.05},
     {ic:'🧠',t:'第 20 年腦中風後重度障礙（第二類）',calc:'保額 ＋ 50%',pay:Math.max(c.S,c.tot*1.1)+c.S*0.5},

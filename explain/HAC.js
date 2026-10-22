@@ -16,7 +16,7 @@ const rate=c=>{CUR=c.plan; const k=typ()+pn(c.plan), R=(window.RATES||{}).HAC, r
     {ic:'🛏️',t:`${s} 歲起：住院（二擇一）`,big:F(p.day)+'/日',line:`日額，或實支：病房費每天最高 ${F(p.day)}（加護／燒燙傷最高 ${F(p.day*2)}，7 天）＋住院醫療暨手術費用最高 ${F(p.hosp)}/次`,sub:'非健保身分給 75%'},
     {ic:'🏥',t:`${s} 歲起：門診手術實支`,big:'最高 '+F(p.out),line:'每次',sub:`啟動後另有總額 ${p.cap}`},
     {ic:'🕊️',t:'身故／祝壽',big:'年繳總和×1.02',line:'扣掉已領各項保險金後的餘額',sub:`${typ()==='HAC'?'95':'100'} 歲仍生存領祝壽`}];},
-  tl:c=>{const s=typ()==='HAC'?75:80, e=typ()==='HAC'?95:100; if(c.age>=s) return null; return {title:'📈 先定額、後實支',svg:EXPLAIN_TL(c,e,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:s,label:'🩹 定額：關懷／醫材／手術'},{from:s,to:e,label:'🏥 實支實付'}],[[c.age,'投保'],[c.payEnd,'繳清'],[s,'啟動實支'],[e,'祝壽']])};},
+  tl:c=>{const s=typ()==='HAC'?75:80, e=typ()==='HAC'?95:100; if(c.age>=s) return null; return {title:'📈 先定額、後實支',svg:EXPLAIN_TL(c,e,[{from:c.age,to:c.payEnd,label:`💰 繳 ${c.term} 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:s,label:'🩹 定額：關懷／醫材／手術'},{from:s,to:e,label:'🏥 實支實付'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[s,'啟動實支'],[e,'祝壽']])};},
   examples:c=>{const p=P[pn(c.plan)]; return [
     {ic:'🫀',t:'60 歲心導管放支架，住院 5 天',calc:`住院關懷 ${fm(p.care)}＋醫材 ${fm(p.mat)}＋住院手術 ${fm(p.ops)}`,pay:p.care+p.mat+p.ops},
     {ic:'🦴',t:'78 歲換人工膝關節住院 6 天，自費 25 萬（選實支）',calc:`病房 ${fm(p.day)}×6 ＋ 醫療暨手術費最高 ${fm(p.hosp)}`,pay:p.day*6+Math.min(250000,p.hosp)}];},

@@ -6,7 +6,7 @@
   cards:c=>[
     {ic:'🔹',t:'輕度重大疾病',big:F(c.S*0.05),line:'心肌梗塞、腦中風、癌症、癱瘓（輕度），給保額 5%',sub:'給付後契約繼續有效'},
     {ic:'❤️',t:'重度重大疾病（7 項）',big:F(c.S),line:'確診重度，給保額，契約結束',sub:`從沒領過輕度：給 105%（${F(c.S*1.05)}）`}],
-  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,Math.max(c.age+40,85),[{from:c.age,to:c.payEnd,label:`💰 繳 10 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:Math.max(c.age+40,85),label:'❤️ 重大疾病終身保障 →'}],[[c.age,'投保'],[c.payEnd,'繳清']])}),
+  tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,Math.max(c.age+40,85),[{from:c.age,to:c.payEnd,label:`💰 繳 10 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:Math.max(c.age+40,85),label:'❤️ 重大疾病終身保障 →'}],[[c.age,'投保'],[c.payEnd,'繳費期滿']])}),
   examples:c=>[
     {ic:'🔹',t:'先確診輕度腦中風，之後重度癌症',calc:`5% ${F(c.S*0.05)} ＋ 保額 ${F(c.S)}`,pay:c.S*1.05},
     {ic:'❤️',t:'直接確診重度急性心肌梗塞',calc:'保額 × 105%',pay:c.S*1.05}],

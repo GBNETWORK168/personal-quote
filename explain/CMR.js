@@ -11,8 +11,8 @@ const cyc=c=>{const b=[];let a=c.age;while(a<=71&&b.length<5){b.push(a);a+=10;}r
     {ic:'🔁',t:'10 年保證續保',big:'續保到 71 歲',line:'每 10 年續保一次，續保時年齡 ≦71 歲',sub:'主約剩餘期間不足 10 年不能續保'}],
   tl:c=>{const b=cyc(c); return {title:'📈 保障期間（每 10 年保證續保）',svg:EXPLAIN_TL(c,b[b.length-1]+10,b.map((a,i)=>({from:a,to:a+10,label:`${i?'🔁 續保':'🎯 投保'} ${a}～${a+10} 歲`,color:i?'var(--c2)':'var(--c1)'})),[[c.age,'投保'],[b[b.length-1]+10,'']])};},
   examples:c=>[
-    {ic:'🫁',t:'確診肺腺癌，醫師安排標靶藥物',calc:`保額 ${F(c.S)}`,pay:c.S},
-    {ic:'🎗️',t:'乳癌（HER2 陽性）接受標靶治療',calc:`保額 ${F(c.S)}`,pay:c.S},
+    {ic:'🎗️',t:'確診'+(x=>({'白血病':'淋巴瘤','淋巴瘤':'白血病','肺癌':'大腸癌'})[x]||'肺腺癌')(CX(c.sex,c.age+1))+'，醫師安排標靶藥物',calc:`保額 ${F(c.S)}`,pay:c.S},
+    {ic:'🎗️',t:(x=>x==='乳癌'?'乳癌（HER2 陽性）':x)(CX(c.sex,c.age+1))+'接受標靶治療',calc:`保額 ${F(c.S)}`,pay:c.S},
     {ic:'🔪',t:'確診初期癌症，只開刀沒有做標靶',calc:'沒有接受標靶治療',pay:0,zero:'不賠（交給防癌險、重大傷病險）'}],
   src:['CMR DM 公版 113.09.23','CMR 保單條款 113.09.23','CMR 投保規則 115.10.12（搭售限制）','CMR 費率表']};
 })();

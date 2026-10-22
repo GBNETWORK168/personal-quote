@@ -12,8 +12,8 @@
     {ic:'1️⃣',t:'只賠一次',big:'領一項就結束',line:'重大疾病或特定傷病給付其中一項後附約終止',sub:''}],
   tl:c=>c.age>70?null:({title:'📈 保障期間',svg:EXPLAIN_TL(c,70,[{from:c.age,to:c.age+1,label:'1️⃣ 投保當年度：重度癌症給 10%',color:'var(--c1)'},{from:c.age+1,to:70,label:'🔁 一年一保・保證續保到 70 歲'}],[[c.age,'投保'],[70,'續保到']])}),
   examples:c=>[
-    {ic:'🎗️',t:'投保當年度確診重度肺癌',calc:`${F(c.S)} × 10%`,pay:c.S*0.1},
-    {ic:'🎗️',t:'續保第 3 年確診重度大腸癌',calc:`保額 ${F(c.S)}`,pay:c.S},
+    {ic:'🎗️',t:`投保當年度確診重度${CX(c.sex,c.age)}`,calc:`${F(c.S)} × 10%`,pay:c.S*0.1},
+    {ic:'🎗️',t:`續保第 3 年確診重度${CXD(CX(c.sex,c.age+3),CX(c.sex,c.age))}`,calc:`保額 ${F(c.S)}`,pay:c.S},
     {ic:'🧠',t:'腦中風滿 6 個月後仍有重度障礙',calc:`保額 ${F(c.S)}`,pay:c.S}],
   src:['UCR DM 公版 113.09.23','UCR 保單條款 113.09.23','UCR 投保規則 112.09.28','UCR 費率表']};
 })();
