@@ -3,7 +3,7 @@
 body.fem{--c1:#a3325c;--c2:#d4588a;--c3:#fbe3ec;--c4:#fff6f9;--bg:#fbf2f5}
 body{transition:background .25s}
 *{box-sizing:border-box}
-body{margin:0;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:#1d2733;font-size:15px;padding-bottom:90px}
+body{margin:0;font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Noto Sans CJK TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#1d2733;font-size:15px;padding-bottom:90px}
 header{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:5}
 header h1{margin:0;font-size:19px}
 header .sub{font-size:12px;opacity:.85;margin-top:2px}
@@ -279,3 +279,7 @@ body.fem .multibar{background:#fdeef3;color:#7a2445}
 .newxa{flex:1 1 140px;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #e5c58a;border-left:5px solid #64748b;font-weight:700;font-size:15px;color:#1f2937;text-decoration:none}
 .newxa.m{border-left-color:#1d5fa8}.newxa.f{border-left-color:#d4588a}
 .xbtn.xnew{display:block;text-align:center;font-size:16px;padding:12px 14px;margin:0 0 10px;background:#c2410c;border-radius:12px}
+
+/* v1.43 字體統一：正黑體 */
+html,body{font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Noto Sans CJK TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+input,button,select,textarea,table{font:inherit}

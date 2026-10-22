@@ -3,7 +3,7 @@
 <style>
 :root{--d:#0b5fa5;--m:#2f7fd0;--l:#e6f0fb}
 body.f{--d:#a3325c;--m:#d4588a;--l:#fbe3ec}
-body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;margin:0;background:#f5f6f8;color:#1d2733;font-size:18px;line-height:1.5}
+body{font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Noto Sans CJK TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;background:#f5f6f8;color:#1d2733;font-size:18px;line-height:1.5}
 header{background:var(--d);color:#fff;padding:10px 14px}header h1{margin:0;font-size:20px}
 .stop{font-size:13px;color:#8a4b00;background:#fff4e5;padding:4px 14px}
 .card{background:#fff;margin:10px;border-radius:14px;padding:14px;box-shadow:0 1px 3px #0002}
@@ -23,6 +23,24 @@ table{border-collapse:collapse;width:100%;font-size:15px}th,td{border-bottom:1px
 tr.hit td{background:#eaf7ee;font-weight:700}
 .tabs{display:flex;gap:6px;padding:8px 10px 0}.tabs button{flex:1;font-size:17px;font-weight:700;padding:10px 4px;border:2px solid var(--m);background:#fff;color:var(--d);border-radius:12px 12px 0 0}
 .tabs button.on{background:var(--d);color:#fff}
+/* v1.43 簡單明瞭：字體一致、細框線、結論放最上面 */
+body{font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Noto Sans CJK TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px}
+.card{box-shadow:none;border:1px solid #e3e8ef;border-radius:12px}
+.row{margin:10px 0}.row>span{font-size:15px;color:#4a5562;min-width:4.2em}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{font-size:16px;padding:7px 12px;border:1px solid #cbd5e1;color:#1d2733}.seg button.on{border-color:var(--d)}
+input{font-size:17px;border:1px solid #cbd5e1}
+.tabs button{border:1px solid #cbd5e1;font-size:16px}
+.big{display:flex;flex-direction:column;background:#fff;border:1px solid #e3e8ef;border-top:5px solid var(--d)}
+.big .be{order:-2;margin:0 0 10px;padding:8px;border-radius:10px;background:#eaf7ee;font-size:24px}
+.big .k{font-size:14px}.big>.k{order:-1}.big>.v{order:-1;font-size:32px;margin-bottom:6px}
+.big .no{order:-2}
+.grid{gap:8px}.grid>div{background:#f7f9fc;padding:8px 10px;font-size:15px;line-height:1.45}.grid b{white-space:nowrap;font-size:17px}
+details summary{padding:4px 0}
+table{font-size:14px}th{font-weight:600}
+
+/* v1.43 字體統一：正黑體 */
+html,body{font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Noto Sans CJK TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+input,button,select,textarea,table{font:inherit}
 </style></head><body>
 <header><a href="index.html" style="float:right;background:#fff;color:var(--d);font-weight:700;font-size:15px;padding:6px 12px;border-radius:999px;text-decoration:none">← 回報價</a><h1>搭配專區</h1></header>
 <nav class="tabs"><button id="tA" class="on">男女癌＋PFD</button><button id="tB">PFD＋FDE／FDF</button></nav>
