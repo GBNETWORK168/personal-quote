@@ -10,7 +10,8 @@
 - 費率：費率表 PDF（CIA 168、CIB 168、SDP 418 格）逐格比對建議書 PDATA／P_DATA，754／754 一致（`../build_new/`）。
 - 驗證：DM 公版範例 3 筆、建議書預設 3 筆、LibreOffice 改輸入重算 3 筆（月繳／半年繳／季繳）全對；`node tests/verify.js` 224 項全過；瀏覽器 `tests/shot_v138.py` 16 項全過，截圖 `tests/v138/`。
 - 另附 `tests/pfd_new_cancer_018.js`：0–18 歲 PFD 2 萬美元＋CIA／CIB 全部解約試算（組合尚未上架）。
-- cache-bust `?v=138`。
+- 首頁頂端新增「🆕 新商品上架」（app.js `NEW_PRODUCTS`，上架後 60 天顯示；依年齡／性別可投保才可點，不符變灰並寫原因；點一下即勾選該主約並捲到報價）。
+- cache-bust `?v=1381`。
 
 ## v1.26 變更（2026-10-20）
 - CLX／CLZ 不下架：移除 10/22 停售設定與提示，與新版男女癌並行販售。

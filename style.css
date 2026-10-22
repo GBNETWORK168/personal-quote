@@ -260,3 +260,14 @@ body.fem .multibar{background:#fdeef3;color:#7a2445}
 .xbtn{display:inline-block;margin:6px 0 4px;padding:8px 14px;border-radius:999px;background:var(--c1);color:#fff;font-weight:700;text-decoration:none;font-size:14px}
 
 .bxbtn{margin-left:auto;margin-right:8px;background:var(--c1);color:#fff;font-weight:700;font-size:14px;padding:8px 12px;border-radius:999px;text-decoration:none;white-space:nowrap}.bxbtn.hidden{display:none}.bx2{flex:1;text-align:center}
+
+/* v1.38 新商品上架 */
+.newp{padding:10px 12px;border:2px solid var(--c1);background:var(--c4)}
+.newhd{color:var(--c1)}
+.newhd{font-weight:800;font-size:16px;margin-bottom:6px}
+.newl{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
+.newi{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:1px;padding:7px 9px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font:inherit;cursor:pointer;border-left:5px solid #64748b}
+.newi.m{border-left-color:#1d5fa8}.newi.f{border-left-color:#d4588a}
+.newi b{font-size:15px}.newi .nn{font-size:12px;line-height:1.25}.newi .nd{font-size:12px;color:#64748b}.newi .ng{font-size:12px;font-weight:700;color:#0f766e}
+.newi.on{background:#ecfdf5}
+.newi:disabled{opacity:.45;cursor:not-allowed}.newi:disabled .ng{color:#b45309}

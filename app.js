@@ -107,6 +107,13 @@ function quote(p, q){
 // ---------- 常用優先排序：1 XWS5 → 2 OLA／OLA6 → 3 SDG → 4 男女癌（CLZ／CLX 男女平權皆列出；性別不符標示） ----------
 // v1.38：SDP 與 SDG 同列 3；新版男女癌 CIA／CIB 與 CLZ／CLX 同列 4（新版排前）
 const PRI = code => /^XWS5/.test(code) ? 1 : /^OLA/.test(code) ? 2 : (code === 'SDG' || code === 'SDP') ? 3 : ['CIA','CIB','CLZ','CLX'].includes(code) ? 4 : 99;
+// v1.38：首頁「新商品上架」區（資料驅動；之後新商品只要加一列）
+const NEW_PRODUCTS = [
+  {code:'CIA', label:'男性癌症（新版）', launch:'2026-10-23'},
+  {code:'CIB', label:'女性癌症（新版）', launch:'2026-10-23'},
+  {code:'SDP', label:'重大傷病', launch:'2026-10-23'},
+];
+const NEW_DAYS = 60;   // 上架後顯示 60 天
 const PORD = c => ({SDG:0, SDP:1, CIA:0, CIB:1, CLZ:2, CLX:3})[c] ?? 9;
 // v1.38：保額型癌症險累計 ≦500 萬（CIA／CIB／CLX／CLZ 投保規則「其他累計限額規定」）
 const CANCER_GRP = ['CIA','CIB','CLX','CLZ','CLQ'], CANCER_MAX = 500;
@@ -378,7 +385,7 @@ const HAY = {};
 for (const c of CAT) HAY[c.code] = hayOf(c.code, c.name, c.cat, KIND[c.kind]);
 for (const p of P) HAY[p.code] = hayOf(p.code, p.name, p.cat + ' ' + ((CAT.find(c => c.code === p.code) || {}).cat || ''), '主約');
 const qHit = (code, q) => qMatch(HAY[base(code)] || base(code), q);
-window.QuoteEngine = {CANCER_GRP, CANCER_R, PORD, surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
+window.QuoteEngine = {NEW_PRODUCTS, CANCER_GRP, CANCER_R, PORD, surgCheck, surgCap, SURG, MEDDAY, norm, qMatch, qHit, HAY, base, lab, inum, DUPMAX, SINGLE, cumRule, quote, medCheck, medRiderCap, specCaps, LIFECO, limits, termsFor, eligible, catElig, PRI, riderOnMain, riderState, mInfo, rQuote, rLim, RCFG, capOf, capRule};
 if (typeof document === 'undefined' || window.__ENGINE_ONLY) return;
 document.title = '富邦四季春快速報價';
 const _h1=document.querySelector('header h1'); if(_h1) _h1.textContent='富邦四季春快速報價';
@@ -729,6 +736,13 @@ function render(){
   $('#sumMain').textContent = ok.length + mAll.length; $('#sumRider').textContent = rOk.length;
   $('#subMain').textContent = mAll.length ? `可試算 ${ok.length}｜費率整理中 ${mAll.length}` : `全部可試算 ${ok.length}`;
   $('#subRider').textContent = st.mains.length ? `已勾主約可搭 ${nAttach} 項` : '先勾主約，才能勾附約';
+  // v1.38 新商品上架
+  { const box = $('#newp'); if (box){ const td = twToday(), md = d => +d.slice(5,7)+'/'+ +d.slice(8,10);
+    const list = NEW_PRODUCTS.filter(n => P.some(p=>p.code===n.code) && (Date.parse(td) - Date.parse(n.launch)) / 864e5 <= NEW_DAYS);
+    box.hidden = !list.length;
+    box.innerHTML = '<div class="newhd">🆕 新商品上架</div><div class="newl">' + list.map(n => { const p = P.find(x=>x.code===n.code), e = pEl(p), on = st.mains.includes(n.code), pre = td < n.launch;
+      return `<button type="button" class="newi${p.sex===1?' m':p.sex===2?' f':''}${on?' on':''}" data-newp="${n.code}" ${e.ok||on?'':'disabled'}><b>${n.code}</b> <span class="nn">${p.name}</span><span class="nd">${n.label}｜${md(n.launch)} ${pre?'上市':'起'}</span><span class="ng">${on?'✓ 已選，看報價':e.ok?'點我報價 ›':'⚠ '+(e.sexMis?e.why:'投保年齡 '+ageRangeText(p))}</span></button>`; }).join('') + '</div>';
+  } }
   // 常用快選（step2）
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
   // 只顯示目前年齡／性別／職業可投保者（不符的快選按鈕直接隱藏；已勾者保留以便取消）
@@ -1000,6 +1014,8 @@ document.addEventListener('click', e => {
   }
   const md = e.target.closest('[data-mdup]');
   if (md){ const id = addDup(md.dataset.mdup); render(); if (id){ const el = document.getElementById('p-'+id.replace('#','_')); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); } return; }
+  const np = e.target.closest('[data-newp]');
+  if (np){ const c = np.dataset.newp; if (!st.mains.includes(c)) toggle('m:'+c, true); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const qk = e.target.closest('[data-quick]');
   if (qk){ const c = qk.dataset.quick; toggle('m:'+c, !st.mains.includes(c)); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const ph = e.target.closest('.ph');
