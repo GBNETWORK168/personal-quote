@@ -26,7 +26,7 @@ if(!D){ picker(); return; }
 function picker(){
   document.body.classList.toggle('fem',gSex===2);
   $('#ttl').textContent='商品解說・選商品';
-  const groups={}; Object.keys(E).forEach(k=>{(groups[E[k].cat]=groups[E[k].cat]||[]).push(k)});
+  const NEW=['CIA','CIB','SDP'].filter(k=>E[k]); const groups={}; if(NEW.length) groups['🆕 新商品']=NEW; Object.keys(E).forEach(k=>{if(NEW.includes(k))return; (groups[E[k].cat]=groups[E[k].cat]||[]).push(k)});
   let h=(code?`<div class="card warn">此商品（${code}）的解說頁尚未建立，請從下方選擇。</div>`:'');
   h+=Object.keys(groups).map(g=>`<h2 class="h2">${g}</h2><div class="plist">`+groups[g].map(k=>{const d=E[k];
     const sx=d.sexOnly&&d.sexOnly!==gSex?` <span class="sx">${d.sexOnly==1?'男性':'女性'}專屬</span>`:'';
@@ -50,9 +50,9 @@ function draw(){
   $('#ttl').textContent=`${code} ${D.name}`;
   let inp='';
   let planRow=''; if(I.kind==='plan') planRow=`<div class="seg terms">${I.plans.map(p=>`<button data-p="${p.v}" class="${st.plan==p.v?'on':''}">${p.lbl}</button>`).join('')}</div>`;
-  else if(I.kind!=='none') inp=`<label>${I.label||'保額'}（${I.unit}）<div class="agebox"><button data-m="-1">−</button><b>${fm(st.sum)}</b><button data-m="1">＋</button></div></label>`;
+  else if(I.kind!=='none') inp=`<label>${I.label||'保額'}（${I.unit}）<div class="agebox"><button data-m="-1">−</button><input class="nin" data-in="m" type="number" inputmode="decimal" min="${I.min}" max="${I.max}" value="${st.sum}"><button data-m="1">＋</button></div></label>`;
   let h=`<section class="card ctl"><div class="row3">
-   <label>年齡<div class="agebox"><button data-a="-1">−</button><b>${st.age}</b><button data-a="1">＋</button></div></label>
+   <label>年齡<div class="agebox"><button data-a="-1">−</button><input class="nin" data-in="a" type="number" inputmode="numeric" min="0" value="${st.age}"><button data-a="1">＋</button></div></label>
    <label>性別<div class="seg">${D.sexOnly?`<button class="on">${D.sexOnly==1?'男性專屬':'女性專屬'}</button>`:`<button data-s="1" class="${st.sex==1?'on':''}">男</button><button data-s="2" class="${st.sex==2?'on':''}">女</button>`}</div></label>
    ${inp}</div>${planRow}
    ${D.terms&&D.terms.length>1?`<div class="seg terms">${D.terms.map(t=>`<button data-t="${t}" class="${st.term==t?'on':''}">${t} 年期</button>`).join('')}</div>`:''}
@@ -72,5 +72,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.dataset.t){st.term=+b.dataset.t;}
   if(b.dataset.m){st.sum=Math.min(I.max,Math.max(I.min, (I.stepFn?I.stepFn(st.sum,+b.dataset.m):st.sum+ +b.dataset.m*I.step)));}
   draw();});
+document.addEventListener('change',e=>{const t=e.target;if(!t.dataset||!t.dataset.in||!D)return; const v=parseFloat(t.value); if(isNaN(v)){draw();return;}
+  const [a0,a1]=ageRange();
+  if(t.dataset.in==='a') st.age=Math.min(Math.max(a1,a0),Math.max(0,Math.round(v)));
+  if(t.dataset.in==='m') st.sum=Math.min(I.max,Math.max(I.min,v));
+  draw();});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.in) e.target.blur();});
 draw();
 })();
