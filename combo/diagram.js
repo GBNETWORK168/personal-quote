@@ -58,19 +58,19 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   <div class="sec">當年 PFD 解約可拿回</div>${ln('保證解約金',ud(r.b))}${nz('y')?ln('增額繳清解約金',ud(r.y),1):''}${nz('e')?ln('解約紅利',ud(r.e),1):''}${nz('c')?ln('累積紅利',ud(r.c),1):''}
   ${ln('合計可拿回','<span class="bigv">'+u(r.X)+'</span><br><small>≈ '+t(r.X*fx)+'</small>',nz('y')||nz('e'))}
   ${ln('對比兩張已繳',r.X*fx>=tot?'<span class="ok">已拿回 ✓</span>':'<span class="x">尚差 '+t(tot-r.X*fx)+'</span>')}
-  <div class="sec">保障</div>${ln('PFD 身故保障',ud(r.W),nz('y')||nz('e'))}${ln(code+' 癌症保障',cov?'<span class="ok">✓ 仍有保障'+(cEnd?'（至 '+cEnd+' 歲）':'')+'</span>':'<span class="x">已到期</span>')}</div>`;
+  <div class="sec">保障</div>${ln('PFD 身故保障',ud(r.W),nz('y')||nz('e'))}${ln(code+' '+(D.kw||'癌症')+'保障',cov?'<span class="ok">✓ 仍有保障'+(cEnd?'（至 '+cEnd+' 歲）':'')+'</span>':'<span class="x">已到期</span>')}</div>`;
   const cat=(window.CATALOG||[]).find(z=>z.code===code)||{},ben=(cat.ben||[]).filter(z=>!/豁免|事後給付/.test(z)),rb=be?q.rows[be-1]:null,tb=be?C.rows[be-1].cum+rb.cum*fx:0,ba=be?age+be-1:0,last=q.rows[q.rows.length-1];
   const yP=q.rows[0].py,yC=C.rows[0].py,yT=yC+yP*fx,NG='';
   const sum=`<div class="s3"><div class="sc"><h4>① 繳費規劃</h4>
    <div><b>PFD</b> 繳 ${PT} 年（到 ${age+PT-1} 歲）</div><div class="bn" style="font-size:22px">${u(yP)}／年</div><div>≈ ${t(yP*fx)}</div>
    <div style="margin-top:6px"><b>${code}</b> 繳 ${T} 年（到 ${age+T-1} 歲）</div><div class="bn" style="font-size:22px">${t(yC)}／年</div>
    <div style="margin-top:6px;border-top:1px solid #e3e8ef;padding-top:6px">兩張合計 <b class="bn" style="font-size:24px">${t(yT)}</b>／年<br>約每月 <b>${t(yT/12)}</b></div></div>
-   <div class="sc"><h4>② 保障內容</h4><div><b>${code} 防癌險</b> 保額 ${D.S} 萬，保障到 <b>${cEnd||'—'} 歲</b></div><ul>${ben.map(z=>'<li>'+z+'</li>').join('')}</ul>
+   <div class="sc"><h4>② 保障內容</h4><div><b>${code} ${D.kn||'防癌險'}</b> 保額 ${D.S} 萬，保障到 <b>${cEnd||'—'} 歲</b></div><ul>${ben.map(z=>'<li>'+z+'</li>').join('')}</ul>
    <div style="margin-top:8px"><b>PFD 身故保障</b>（第 1 年）</div><div class="bn">${u(q.rows[0].W)}</div><div>≈ ${t(q.rows[0].W*fx)}，之後逐年增加${NG}</div></div>
    <div class="sc"><h4>③ 期滿還本・保障延續</h4>${be?`<div class="bn">第 ${be} 年｜${ba} 歲 還本</div>
    <div style="margin-top:6px">總領回（PFD 解約）</div><div class="bn" style="font-size:32px;color:#1e7d3c">${u(rb.X)}</div><div style="font-size:18px;font-weight:700">≈ ${t(rb.X*fx)}</div>
    <div style="margin-top:4px">對照累計總繳 <b>${t(tb)}</b></div>`:'<div class="bn">—</div>'}
-   <div style="margin-top:8px;border-top:1px solid #e3e8ef;padding-top:6px">🛡️ 還本後 ${code} 癌症保障仍延續到 <b style="font-size:22px">${cEnd} 歲</b>${be&&cEnd?'（再保障 '+(cEnd-ba)+' 年）':''}；PFD 身故保障持續，${last.age} 歲時約 ${u(last.W)}${NG}</div></div></div>
+   <div style="margin-top:8px;border-top:1px solid #e3e8ef;padding-top:6px">🛡️ 還本後 ${code} ${D.kw||'癌症'}保障仍延續到 <b style="font-size:22px">${cEnd} 歲</b>${be&&cEnd?'（再保障 '+(cEnd-ba)+' 年）':''}；PFD 身故保障持續，${last.age} 歲時約 ${u(last.W)}${NG}</div></div></div>
   <div class="ms"><div><span class="ic">✍️</span><b>${age} 歲</b>投保</div><div><span class="ic">💳</span><b>${age+Math.max(T,PT)-1} 歲</b>繳費期滿</div>${be?`<div><span class="ic">💰</span><b>${ba} 歲</b>★ 回本</div>`:''}<div><span class="ic">🛡️</span><b>${cEnd} 歲</b>${code} 保障到期</div><div><span class="ic">♾️</span><b>${last.age} 歲</b>PFD 身故保障</div></div>
   <div class="sub2">👇 點選或拖動圖上年度，看當年明細</div>`;
   d.innerHTML=`<h3>📊 保障示意圖／還本時間軸</h3>${sum}<div class="wrap"><div>${s}
@@ -81,7 +81,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   let drag=false;sv.onpointerdown=e=>{drag=true;sv.setPointerCapture&&sv.setPointerCapture(e.pointerId);pick(e);};sv.onpointermove=e=>{if(drag)pick(e);};sv.onpointerup=sv.onpointercancel=()=>{drag=false;};
   document.getElementById('dgP').onclick=()=>go(sel-1);document.getElementById('dgN').onclick=()=>go(sel+1);}
 function go(y){y=Math.max(1,Math.min(D.N,y));if(y!==sel){sel=y;paint();}}
-window.ComboDiagram=function(o,d){D=d;const c=(window.CATALOG||[]).find(x=>x.code===d.code),m=c&&/(\d+)\s*歲/.exec(c.cover||'');D.cEnd=m?+m[1]:0;
+window.ComboDiagram=function(o,d){D=d;const c=(window.CATALOG||[]).find(x=>x.code===d.code),m=c&&/(\d+)\s*歲/.exec(c.cover||'');D.cEnd=d.cEnd||(m?+m[1]:0);
   const lim=D.cEnd?D.cEnd-d.age+1:0;D.N=Math.min(d.q.rows.length,Math.max(30,d.Y,d.be,lim));
   const k=[d.age,d.code,d.T,d.Sp,d.fx,d.be,d.Y].join('|');if(k!==key){key=k;sel=d.be||d.Y;}ensure(o);paint();};
 window.ComboDiagramSel=y=>go(y);

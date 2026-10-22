@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.39 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.40 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
