@@ -271,3 +271,11 @@ body.fem .multibar{background:#fdeef3;color:#7a2445}
 .newi b{font-size:15px}.newi .nn{font-size:12px;line-height:1.25}.newi .nd{font-size:12px;color:#64748b}.newi .ng{font-size:12px;font-weight:700;color:#0f766e}
 .newi.on{background:#ecfdf5}
 .newi:disabled{opacity:.45;cursor:not-allowed}.newi:disabled .ng{color:#b45309}
+
+/* v1.41 新商品解說置頂 */
+.newx{margin-bottom:10px;padding:10px;border-radius:12px;background:#fff7e6;border:2px solid #f0b44c}
+.newxh{font-weight:800;font-size:17px;margin-bottom:6px;color:#9a5b00}
+.newxl{display:flex;flex-wrap:wrap;gap:8px}
+.newxa{flex:1 1 140px;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #e5c58a;border-left:5px solid #64748b;font-weight:700;font-size:15px;color:#1f2937;text-decoration:none}
+.newxa.m{border-left-color:#1d5fa8}.newxa.f{border-left-color:#d4588a}
+.xbtn.xnew{display:block;text-align:center;font-size:16px;padding:12px 14px;margin:0 0 10px;background:#c2410c;border-radius:12px}

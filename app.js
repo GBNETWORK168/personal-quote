@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.40 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.41 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -114,6 +114,7 @@ const NEW_PRODUCTS = [
   {code:'SDP', label:'重大傷病', launch:'2026-10-23'},
 ];
 const NEW_DAYS = 60;   // 上架後顯示 60 天
+const isNewP = c => NEW_PRODUCTS.some(n => n.code === c && (Date.parse(twToday()) - Date.parse(n.launch)) / 864e5 <= NEW_DAYS);   // v1.41
 const PORD = c => ({SDG:0, SDP:1, CIA:0, CIB:1, CLZ:2, CLX:3})[c] ?? 9;
 // v1.38：保額型癌症險累計 ≦500 萬（CIA／CIB／CLX／CLZ 投保規則「其他累計限額規定」）
 const CANCER_GRP = ['CIA','CIB','CLX','CLZ','CLQ'], CANCER_MAX = 500;
@@ -740,7 +741,10 @@ function render(){
   { const box = $('#newp'); if (box){ const td = twToday(), md = d => +d.slice(5,7)+'/'+ +d.slice(8,10);
     const list = NEW_PRODUCTS.filter(n => P.some(p=>p.code===n.code) && (Date.parse(td) - Date.parse(n.launch)) / 864e5 <= NEW_DAYS);
     box.hidden = !list.length;
-    box.innerHTML = '<div class="newhd">🆕 新商品上架</div><div class="newl">' + list.map(n => { const p = P.find(x=>x.code===n.code), e = pEl(p), on = st.mains.includes(n.code), pre = td < n.launch;
+    // v1.41：新商品解說放最上面（先看解說，再點下方報價）
+    const xl = '<div class="newx"><div class="newxh">📖 先看新商品解說</div><div class="newxl">' + list.map(n => { const p = P.find(x=>x.code===n.code), sx = p.sex || st.sex;
+      return EXPL.includes(n.code) ? `<a class="newxa${p.sex===1?' m':p.sex===2?' f':''}" href="explain.html?code=${n.code}&age=${st.age}&sex=${sx}">📖 ${n.code} ${n.label}</a>` : ''; }).join('') + '</div></div>';
+    box.innerHTML = xl + '<div class="newhd">🆕 新商品上架</div><div class="newl">' + list.map(n => { const p = P.find(x=>x.code===n.code), e = pEl(p), on = st.mains.includes(n.code), pre = td < n.launch;
       return `<button type="button" class="newi${p.sex===1?' m':p.sex===2?' f':''}${on?' on':''}" data-newp="${n.code}" ${e.ok||on?'':'disabled'}><b>${n.code}</b> <span class="nn">${p.name}</span><span class="nd">${n.label}｜${md(n.launch)} ${pre?'上市':'起'}</span><span class="ng">${on?'✓ 已選，看報價':e.ok?'點我報價 ›':'⚠ '+(e.sexMis?e.why:'投保年齡 '+ageRangeText(p))}</span></button>`; }).join('') + '</div>';
   } }
   // 常用快選（step2）
@@ -866,8 +870,9 @@ function panel(p, id){
   id = id || p.code;
   const s = defaultsFor(p, id); st.sel[id] = Object.assign({}, s, {terms:undefined, cumOther:undefined, grpOther:undefined});
   const [mn, mx, step] = limits(p, st.age, st.occ, s.hsv);
-  let h = `<div class="what"><b>這是甚麼？</b> 富邦人壽${p.name}（${p.code}）｜主約｜${p.cat}｜保障 ${p.cover}｜投保年齡 ${ageRangeText(p)}</div>`
-  if (EXPL.includes(p.code)) h += `<a class="xbtn" href="explain.html?code=${p.code}&age=${st.age}&sex=${st.sex}&sum=${s.sum||''}">📖 解說（圖示說明給客戶看）</a>`;
+  let h = (EXPL.includes(p.code) && isNewP(p.code)) ? `<a class="xbtn xnew" href="explain.html?code=${p.code}&age=${st.age}&sex=${st.sex}&sum=${s.sum||''}${s.term!=null?'&term='+s.term:''}">📖 新商品解說：${p.code} ${p.name}（先看這裡）</a>` : '';   // v1.41：新商品解說放報價最上面
+  h += `<div class="what"><b>這是甚麼？</b> 富邦人壽${p.name}（${p.code}）｜主約｜${p.cat}｜保障 ${p.cover}｜投保年齡 ${ageRangeText(p)}</div>`
+  if (EXPL.includes(p.code) && !isNewP(p.code)) h += `<a class="xbtn" href="explain.html?code=${p.code}&age=${st.age}&sex=${st.sex}&sum=${s.sum||''}">📖 解說（圖示說明給客戶看）</a>`;
   if (inum(id) > 1 || sibs(id).length > 1) h += `<div class="note">📑 同商品兩張：這是 <b>${lab(id)}</b>，保額／年期／繳別與附約各自設定；累計本險種最高保額兩張合計計算${s.cumOther?`（前面已 ${s.cumOther.toLocaleString()} ${UNIT[p.unit]}）`:''}。</div>`;
   if (!st.mains.includes(id)) h += `<div class="note">☐ 勾選左側方框即加入組合，並可勾選可附加的附約。</div>`;
   if (p.plans){
