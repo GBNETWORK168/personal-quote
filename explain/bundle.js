@@ -71,17 +71,27 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
   // ---------- 合併理賠範例 ----------
   const ex=[]; const note=[];
   { // v1.48：住院範例依年齡分段（SJR1 倍數僅用 repo 內有出處者：膽囊切除 20 倍＝條款附表第 764 項；其餘標「依附表倍數」不估算）
-    const HB=age<=6?{t:'小兒肺炎住院 5 天（未開刀）',room:1500,med:20000,days:5,op:null}
+    const ACC={t:'意外前臂（橈骨尺骨）骨折開刀，住院 3 天',room:2000,med:80000,days:3,op:'骨折開放性復位術',acc:1};
+    const HB0=age<=6?{t:'小兒肺炎住院 5 天（未開刀）',room:1500,med:20000,days:5,op:null}
       :age<=17?{t:'闌尾炎（盲腸炎）切除術，住院 4 天',room:2000,med:60000,days:4,op:'闌尾切除術'}
-      :age<=39?{t:'意外前臂（橈骨尺骨）骨折開刀，住院 3 天',room:2000,med:80000,days:3,op:'骨折開放性復位術'}
+      :age<=39?ACC
       :{t:'腹腔鏡膽囊切除術，住院 5 天',room:2500,med:120000,days:5,op:'腹腔鏡膽囊切除術',x:20};
+    const RUN=HB=>{
     const rows=[]; let sum=0; const room=HB.room, med=HB.med, days=HB.days; let hsvRoom=0, hsvMed=0;
     has('HSV').forEach(({c})=>{const l=HSVL[c.plan]; const r=Math.min(room,l.room)*days, m=Math.min(med,l.med), real=r+m, d=l.day*days; if(real>=d){hsvRoom=r;hsvMed=m;} rows.push([`HSV${c.plan}`, real>=d?`病房 ${F(r)}＋雜費 ${F(m)}（實支＞日額 ${F(d)}）`:`日額 ${F(l.day)}×${days}（日額＞實支 ${F(real)}）`, Math.max(real,d)]);});
     has('HSY').forEach(({c})=>{const l=HSYL[c.plan]; const r=Math.max(0,Math.min(room*days-Math.max(l.dR*days,hsvRoom),(l.R-l.dR)*days)), m=Math.max(0,Math.min(med-Math.max(l.dM,hsvMed),l.M-l.dM)); const noM=!hsvMed&&med<=l.dM;   // v1.51：未超過自負額時講清楚，不只寫 0（自負額取自 HSY 條款附表一）
       rows.push([`HSY${c.plan}`, noM?`醫療本次 ${W(med)}，未超過自負額 ${W(l.dM)}，HSY 不賠${r>0?`；病房差額 ${F(r)}`:''}`:`病房 ${F(r)}＋醫療 ${F(m)}（扣自負額或 HSV 已賠較大者）`, r+m]);});
     has('SJR1').forEach(({c})=>rows.push(['SJR1',!HB.op?'沒有手術，手術險不給付':HB.x?`${HB.op} ${HB.x} 倍：${F(c.sum)}×${HB.x}`:`${HB.op}：保額 ${F(c.sum)} × 條款附表倍數（範例未計入）`,HB.x?c.sum*HB.x:0]));
+    // v1.58：意外骨折範例加 ADH／TMR；住院範例加 HKR5（銘旭大帝回報 ADH 漏算）
+    const paid=rows.filter(r=>/^HS[VY]/.test(r[0])).reduce((t,r)=>t+r[2],0);   // 只扣實支型（HSV/HSY），定額型不扣
+    if(HB.acc){ has('ADH').forEach(({c})=>rows.push(['ADH',`橈骨與尺骨完全骨折 40%：${F(c.S)}×40% ＋ 關懷 2%`,c.S*0.4*1.02]));
+      has('ADM').forEach(({c})=>{const d=c.sum, fd=40, rest=Math.max(0,fd-days); rows.push(['ADM',`日額型：住院 ${F(d)}×${days} 天＋骨折日數表 40 天未住院部分 ${F(d)}×1/2×${rest} 天`,d*days+d*0.5*rest]);});
+      has('TMR').forEach(({c})=>{const left=Math.max(0,room*days+med-paid), p=Math.min(c.S,left); rows.push(['TMR',p>0?`實支型：自付 ${F(room*days+med)} 扣 HSV/HSY 已賠 ${F(paid)} 後實支（上限 ${F(c.S)}）`:`實支型：自付 ${F(room*days+med)} 已由 HSV/HSY 憑收據正本賠完，不重複賠（TMR 第五條）`,p]);}); }
+    has('HKR5').forEach(({c})=>{const d=c.sum; rows.push(['HKR5',`住院 ${F(d)}＋看護 ${F(d*0.5)}＋療養 ${F(d*0.5)}，×${days} 天${HB.op?`；${HB.op}另按附表比率（範例未計入）`:''}`,d*2*days]);});
     has('XWS5').forEach(({c})=>rows.push(['XWS5',age>=69?`老年住院 ${F(c.S*0.003)}×${days} 天`:`未滿 69 歲，老年住院不給付`,age>=69?c.S*0.003*days:0]));
     if(rows.some(r=>r[2]>0)||has('HSY').length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
+    };
+    RUN(HB0); if(!HB0.acc&&['ADH','ADM','TMR'].some(k=>has(k).length)) RUN(ACC);   // v1.58：有意外附約就一定出意外骨折範例
     // v1.51：只有 HSY（沒有 HSV）時，加一個超過自負額的大額範例；自負額／限額取自 HSY 條款附表一（每次限額 30 萬）
     if(has('HSY').length&&!has('HSV').length){ const big=250000, r2=[];
       has('HSY').forEach(({c})=>{const l=HSYL[c.plan], p=Math.min(Math.max(0,big-l.dM),l.M-l.dM); r2.push([`HSY${c.plan}`,`${W(big)} − 自負額 ${W(l.dM)}｜計劃 ${c.plan} 每次最多 ${W(l.M-l.dM)}`,p]);});
