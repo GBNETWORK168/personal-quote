@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.43 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.52 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -745,7 +745,7 @@ function render(){
     const xl = '<div class="newx"><div class="newxh">📖 先看新商品解說</div><div class="newxl">' + list.map(n => { const p = P.find(x=>x.code===n.code), sx = p.sex || st.sex;
       return EXPL.includes(n.code) ? `<a class="newxa${p.sex===1?' m':p.sex===2?' f':''}" href="explain.html?code=${n.code}&age=${st.age}&sex=${sx}">📖 ${n.code} ${n.label}</a>` : ''; }).join('') + '</div></div>';
     box.innerHTML = xl + '<div class="newhd">🆕 新商品上架</div><div class="newl">' + list.map(n => { const p = P.find(x=>x.code===n.code), e = pEl(p), on = st.mains.includes(n.code), pre = td < n.launch;
-      return `<button type="button" class="newi${p.sex===1?' m':p.sex===2?' f':''}${on?' on':''}" data-newp="${n.code}" ${e.ok||on?'':'disabled'}><b>${n.code}</b> <span class="nn">${p.name}</span><span class="nd">${n.label}｜${md(n.launch)} ${pre?'上市':'起'}</span><span class="ng">${on?'✓ 已選，看報價':e.ok?'點我報價 ›':'⚠ '+(e.sexMis?e.why:'投保年齡 '+ageRangeText(p))}</span></button>`; }).join('') + '</div>';
+      return `<button type="button" class="newi${p.sex===1?' m':p.sex===2?' f':''}${on?' on':''}" data-newp="${n.code}"${e.sexMis?` data-newsx="${p.sex}"`:''} ${e.ok||on||e.sexMis?'':'disabled'}><b>${n.code}</b> <span class="nn">${p.name}</span><span class="nd">${n.label}｜${md(n.launch)} ${pre?'上市':'起'}</span><span class="ng">${on?'✓ 已選，看報價':e.ok?'點我報價 ›':e.sexMis?`👉 切換為${p.sex===2?'女':'男'}性即可報價`:'⚠ 投保年齡 '+ageRangeText(p)}</span></button>`; }).join('') + '</div>';
   } }
   // 常用快選（step2）
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
@@ -1020,7 +1020,8 @@ document.addEventListener('click', e => {
   const md = e.target.closest('[data-mdup]');
   if (md){ const id = addDup(md.dataset.mdup); render(); if (id){ const el = document.getElementById('p-'+id.replace('#','_')); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); } return; }
   const np = e.target.closest('[data-newp]');
-  if (np){ const c = np.dataset.newp; if (!st.mains.includes(c)) toggle('m:'+c, true); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
+  if (np){ const c = np.dataset.newp; if (np.dataset.newsx) st.sex = +np.dataset.newsx;   // v1.52：性別不符時點一下自動切換性別再報價
+    if (!st.mains.includes(c)) toggle('m:'+c, true); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const qk = e.target.closest('[data-quick]');
   if (qk){ const c = qk.dataset.quick; toggle('m:'+c, !st.mains.includes(c)); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const ph = e.target.closest('.ph');

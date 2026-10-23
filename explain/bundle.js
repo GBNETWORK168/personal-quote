@@ -5,7 +5,7 @@ const F=n=>Math.round(n).toLocaleString('zh-TW');
 const W=n=>(n/1e4).toLocaleString('zh-TW')+' 萬';
 const HSVL={1:{room:1000,med:100000,surg:40000,op:15000,day:1000},2:{room:2000,med:200000,surg:60000,op:20000,day:2000},3:{room:3000,med:300000,surg:80000,op:25000,day:3000}};
 const HSYL={1:{dR:1000,R:3000,dM:100000,M:300000,dO:15000,O:25000},2:{dR:2000,R:3000,dM:200000,M:300000,dO:20000,O:25000}};
-const HAND=['XWS5','HSV','HSY','SJR1','SDG','CLZ','CLX','OLA6'];
+const HAND=['XWS5','HSV','HSY','SJR1','SDG','CLZ','CLX','CIA','CIB','OLA6'];
 const key=c=>{c=String(c||'').split('#')[0].toUpperCase(); if(/^HSV\d?$/.test(c))return 'HSV'; if(/^HSY\d?$/.test(c))return 'HSY'; return c;};
 window.EXPLAIN_BUNDLE=function(L,age,sex){
   const E=window.EXPLAIN||{}, $=s=>document.querySelector(s);
@@ -33,6 +33,10 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     if(k==='SJR1'){ need.手術.push({k,v:`保額 ${F(c.sum)} × 1～90 倍＝${F(c.sum)}～${F(c.sum*90)}`}); }
     if(k==='SDG'){ need.重症癌症.push({k,v:`重大傷病 ${F(c.S)}`}); tot.重症癌症+=c.S; need.身故.push({k,v:`至少 ${F(Math.max(c.S,c.tot*1.06))}`}); tot.身故+=Math.max(c.S,c.tot*1.06); need.豁免.push({k,v:'意外 2～6 級失能免繳主約'}); }
     if(k==='CLZ'||k==='CLX'){ need.重症癌症.push({k,v:`重度癌症 ${F(c.S)}＋特定癌症最高 ${F(c.S*0.5)}`}); tot.重症癌症+=c.S*1.5; need.身故.push({k,v:`繳滿後 年繳總和×1.06＝${F(c.tot*1.06)}`}); tot.身故+=c.tot*1.06; need.豁免.push({k,v:'重度癌症後免繳'}); }
+    // v1.52：CIA/CIB 依條款第十四、十五條、第二條第十九款手算
+    if(k==='CIA'||k==='CIB'){ const p=c.tot*1.06, sev=Math.max(c.S,p); need.重症癌症.push({k,v:`重度癌症至少 ${F(c.S)}${p>c.S?`（與已繳保費×1.06 取高，最高 ${F(p)}）`:''}＋特定癌症第 6 年起 ${F(c.S*0.5)}`}); tot.重症癌症+=sev+c.S*0.5;
+      need.身故.push({k,v:`保險年齡 16 歲起 已繳年繳總和×1.06（扣已領）、繳滿 ${F(p)}${age<16?'；16 歲前退還所繳保費':''}`}); tot.身故+=p; need.豁免.push({k,v:'繳費期間重度癌症或意外 1～6 級失能後免繳'});
+      need.重症癌症.push({k,v:`初期／輕度癌症 ${F(c.S*0.1)}（第 2 年起）`}); need.手術.push({k,v:`特定手術 ${F(c.S*0.02)}（限 1 次）`}); (need.其他保障=need.其他保障||[]).push({k,v:`特定傷病（限意外）${F(c.S*0.1)}`}); }
     if(k==='OLA6'){ need.身故.push({k,v:`第 4 年起 ${F(c.S)}`}); tot.身故+=c.S; }
     // v1.48：其餘商品依各自 explain/<CODE>.js 卡片（取自 DM／條款）自動歸類，不另算合計
     if(!HAND.includes(k)){ let cs=[]; try{cs=D.cards(c)||[]}catch(e){}
