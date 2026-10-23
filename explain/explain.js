@@ -62,20 +62,21 @@ function draw(){
   let inp='';
   let planRow=''; if(I.kind==='plan') planRow=`<div class="seg terms">${I.plans.map(p=>`<button data-p="${p.v}" class="${st.plan==p.v?'on':''}">${p.lbl}</button>`).join('')}</div>`;
   else if(I.kind!=='none') inp=`<label class="lsum">${(I.label||'保額')+((I.label||'').includes(I.unit)?'':'（'+I.unit+'）')}<div class="agebox"><button data-m="-1">−</button><input class="nin" data-in="m" type="number" inputmode="${I.round?'numeric':'decimal'}" step="${I.round||'any'}" min="${I.min}" max="${I.max}" value="${st.sum}"><button data-m="1">＋</button></div></label>`;
-  let h=`<section class="card ctl"><div class="row3">
+  let h=(D.key30&&ageOk?`<section class="k30"><b>⏱️ 30 秒重點</b>${D.key30(c).map(([t,i])=>`<button class="k30l" data-go="${i}">${t}<small>點一下看細節 ›</small></button>`).join('')}</section>`:'')+`<section class="card ctl"><div class="row3">
    <label>年齡<div class="agebox"><button data-a="-1">−</button><input class="nin" data-in="a" type="number" inputmode="numeric" min="0" value="${st.age}"><button data-a="1">＋</button></div></label>
    <label>性別<div class="seg">${D.sexOnly?`<button class="on">${D.sexOnly==1?'男性專屬':'女性專屬'}</button>`:`<button data-s="1" class="${st.sex==1?'on':''}">男</button><button data-s="2" class="${st.sex==2?'on':''}">女</button>`}</div></label>
    ${inp}</div>${planRow}
    ${D.terms&&D.terms.length>1?`<div class="seg terms">${D.terms.map(t=>`<button data-t="${t}" class="${st.term==t?'on':''}">${t} 年期</button>`).join('')}</div>`:''}
    <div class="prem">${!ageOk?`此年齡無法投保（${st.term?st.term+' 年期 ':''}投保年齡 ${a0}–${a1} 歲）`:pr?pr.txt:''}</div>
    ${D.warn&&D.warn(c)?`<div class="warn">${D.warn(c)}</div>`:''}</section>`;
-  h+=`<div class="tag1">${D.tagline}</div><section class="grid">`+D.cards(c).map(k=>`<div class="bc"><div class="ic">${k.ic}</div><div class="bt">${k.t}</div><div class="big">${k.big}</div><div class="ln">${k.line}</div>${k.sub?`<div class="sb">${k.sub}</div>`:''}</div>`).join('')+`</section>`;
+  h+=(D.key30?'':`<div class="tag1">${D.tagline}</div>`)+`<section class="grid">`+D.cards(c).map((k,i)=>`<div class="bc" id="bc${i}"><div class="ic">${k.ic}</div><div class="bt">${k.t}</div><div class="big">${k.big}</div><div class="ln">${k.line}</div>${k.sub?`<div class="sb">${k.sub}</div>`:''}</div>`).join('')+`</section>`;
   if(D.tl){const t=D.tl(c); if(t) h+=`<h2 class="h2">${t.title}</h2><div class="card">${t.svg}</div>`;}
   h+=`<h2 class="h2">💡 理賠範例（${D.exLabel?D.exLabel(c):I.kind==='plan'?'計劃 '+st.plan:'保額 '+(D.cur==='USD'?'US$ '+fm(st.sum):fm(st.sum)+' '+I.unit)}）</h2><section class="exs">`+D.examples(c).map(e=>`<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.calc}</div><div class="ep">${e.pay>0?(e.lbl||'賠')+' '+(D.cur==='USD'?'US$ '+fm(e.pay):fm(e.pay)+' 元'):(e.zero||'—')}</div>${e.note?`<div class="en">${e.note}</div>`:''}</div>`).join('')+`</section>`;
   h+=`<div class="src">資料來源：${D.src.join('；')}</div><div class="src"><a href="explain.html?age=${st.age}&sex=${st.sex}">📚 其他商品解說</a></div>`;
   $('#app').innerHTML=h;
 }
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!D)return;
+  if(b.dataset.go!=null){const el=document.getElementById('bc'+b.dataset.go); if(el){el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.remove('hl'); void el.offsetWidth; el.classList.add('hl');} return;}
   const [a0,a1]=ageRange();
   if(b.dataset.a){st.age=Math.min(Math.max(a1,a0),Math.max(0,st.age+ +b.dataset.a));}
   if(b.dataset.s){st.sex=+b.dataset.s;}

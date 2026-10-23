@@ -1,7 +1,7 @@
 /* v1.39（v1.41 修正第 6 年範例、補第 1 年重度與等待期）CIA 豪愛守護（男）／CIB 真馨守護（女）防癌終身健康保險 — 取自 CIA／CIB DM 公版 115.10.23、保單條款樣張 115.10.23、投保規則 115.10.23 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
 const TA={10:[0,65],20:[0,55],30:[0,45]};
-function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'💗', sexOnly:sex, tagline:o.tag, terms:[10,20,30], defTerm:1, ageOf:t=>TA[t]||TA[10],
+function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'💗', sexOnly:sex, tagline:o.tag, key30:c=>{const W=v=>v%10000===0?`${F(v/10000)} 萬`:`${F(v)} 元`; return [[`罹患重度癌症，至少領 ${W(c.S)}（第 2 年起）`,1],[`特定癌症再加 ${W(c.S*0.5)}（第 6 年起）`,2],['沒用到，身故或 95 歲領回已繳保費 106%（扣除已領）',5]];}, terms:[10,20,30], defTerm:1, ageOf:t=>TA[t]||TA[10],
   input:{kind:'sum', label:'保額', unit:'萬', min:50, max:500, step:10, round:1, def:100},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
   warn:()=>'<b>⏳ 等待期</b>：生效日起 30 日，癌症 90 日；特定手術 30 日（意外不受限，條款第二條第三款）<br><b>🚫 限制</b>：特定傷病限意外所致（條款第二條第八款）；不得附加防癌險附約；與依投保規則附表所列之癌症險累計 ≦500 萬；本險無解約金<br><b>💳 折扣</b>：首期匯款、金融機構轉帳、富邦信用卡、續期自行繳費折 1%（上限 1%）；保險年齡 18 歲起做健康檢查，次一保單年度續期再折 1%',
