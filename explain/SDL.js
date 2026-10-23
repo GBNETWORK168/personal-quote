@@ -1,6 +1,6 @@
 /* SDL 溢卡安心重大傷病一年定期健康保險附約 — 取自 SDL DM 公版 1140602、SDL 條款 1140602（第9～13條核對）、投保規則 1140602 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).SDL={name:'溢卡安心重大傷病一年定期健康保險附約', cat:'重大傷病', icon:'🪪', key30:c=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`拿到重大傷病卡，領 ${W(c.S)}（第 2 年起）`,0],[`重大燒燙傷、創傷再加 ${W(c.S*0.2)}`,1],[`心肌梗塞、繞道手術，也領 ${W(c.S)}`,2]];}, tagline:'一年期重大傷病：拿到重大傷病卡一次給保額，保證續保到 80 歲', ages:[0,65],
+(window.EXPLAIN=window.EXPLAIN||{}).SDL={name:'溢卡安心重大傷病一年定期健康保險附約', cat:'重大傷病', icon:'🪪', key30:c=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`拿到重大傷病卡，領 ${W(c.S)}（第 2 年起）`,0],[`重大燒燙傷、創傷再加 ${W(c.S*0.2)}`,1],[`急性心肌梗塞或繞道手術，領 ${W(c.S)}`,2]];}, tagline:'一年期重大傷病：拿到重大傷病卡一次給保額，保證續保到 80 歲', ages:[0,65],
   input:{kind:'sum', label:'保額', unit:'萬', min:30, max:200, step:10, def:100},
   prem:c=>{const f=c.H.rateRider('SDL',`f|${c.sex}`); if(f==null) return null; const R=(window.RIDER_RATES||{}).SDL, rr=R&&R.t[`r|${c.sex}`], n=rr&&rr[1][c.age+1-rr[0]];
     return {annual:f*c.sum/10, txt:`首年年繳 <b>NT$ ${F(f*c.sum/10)}</b>${n!=null?`・第 2 年續保約 ${F(n*c.sum/10)}`:''}（每年依年齡重算）`};},

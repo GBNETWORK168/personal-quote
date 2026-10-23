@@ -2,7 +2,7 @@
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
 const TA={10:[0,60],15:[0,55],20:[0,50],30:[0,40]}, K=1.06, CV=t=>t+35;
 const E=window.EXPLAIN=window.EXPLAIN||{};
-E.SDP={name:'溢卡呵護重大傷病保險', cat:'重大傷病', icon:'💳', key30:(c,K)=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`拿到重大傷病卡，領 ${W(c.S)}（第 2 年起）`,0],[`繳費期滿後每年領 ${K[4].big}（未理賠）`,4],['意外 2～6 級失能，保費免繳',6]];}, tagline:'重大傷病卡一次給付；繳費期滿後每年領生存保險金（繳 N 年保 N＋35 年）', terms:[10,15,20,30], defTerm:2, ageOf:t=>TA[t]||TA[10],
+E.SDP={name:'溢卡呵護重大傷病保險', cat:'重大傷病', icon:'💳', key30:(c,K)=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`拿到重大傷病卡，領 ${W(c.S)}（第 2 年起；期滿後扣已領生存金）`,0],[`繳費期滿後每年領 ${K[4].big}（未理賠）`,4],['意外 2～6 級失能，保費免繳',6]];}, tagline:'重大傷病卡一次給付；繳費期滿後每年領生存保險金（繳 N 年保 N＋35 年）', terms:[10,15,20,30], defTerm:2, ageOf:t=>TA[t]||TA[10],
   input:{kind:'sum', label:'保額', unit:'萬', min:10, max:500, step:10, def:100},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年繳／保 ${CV(c.term)} 年・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
   warn:()=>'僅可附加 ADG、ADH、TMR、XTY、CMR、CNR、HTA；累計最高 500 萬',
