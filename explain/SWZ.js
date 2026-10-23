@@ -11,7 +11,7 @@
     {ic:'1️⃣',t:'只賠一次',big:'領一項就結束',line:'重大疾病或特定傷病其中一項給付後附約終止',sub:''}],
   tl:c=>c.age>70?null:({title:'📈 保障期間',svg:EXPLAIN_TL(c,84,[{from:c.age,to:84,label:`💗 保到 84 歲・每年繳 ${F(c.annual)} 元`}],[[c.age,'投保'],[84,'屆滿']])}),
   examples:c=>[
-    {ic:'❤️',t:'第 1 年急性心肌梗塞（重度）',calc:`保額 ${F(c.S)}`,pay:Math.max(c.S,c.annual*1.1)},
+    ...(c.age>=35?[{ic:'❤️',t:'第 1 年急性心肌梗塞（重度）',calc:`保額 ${F(c.S)}`,pay:Math.max(c.S,c.annual*1.1)}]:[]),
     {ic:'🎗️',t:'第 1 年確診重度癌症',calc:`${F(c.S)}×10% 與 年繳×1.1 取高`,pay:Math.max(c.S*0.1,c.annual*1.1)},
     {ic:'🍺',t:'第 6 年嚴重肝硬化',calc:`保額 ${F(c.S)}`,pay:Math.max(c.S,c.annual*6*1.1)}],
   src:['SWZ DM 公版 113.09.23','SWZ 保單條款 113.09.23','SWZ 投保規則 112.09.28','SWZ 費率表']};

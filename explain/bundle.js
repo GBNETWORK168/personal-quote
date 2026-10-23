@@ -4,6 +4,7 @@
 const F=n=>Math.round(n).toLocaleString('zh-TW');
 const HSVL={1:{room:1000,med:100000,surg:40000,op:15000,day:1000},2:{room:2000,med:200000,surg:60000,op:20000,day:2000},3:{room:3000,med:300000,surg:80000,op:25000,day:3000}};
 const HSYL={1:{dR:1000,R:3000,dM:100000,M:300000,dO:15000,O:25000},2:{dR:2000,R:3000,dM:200000,M:300000,dO:20000,O:25000}};
+const HAND=['XWS5','HSV','HSY','SJR1','SDG','CLZ','CLX','OLA6'];
 const key=c=>{c=String(c||'').split('#')[0].toUpperCase(); if(/^HSV\d?$/.test(c))return 'HSV'; if(/^HSY\d?$/.test(c))return 'HSY'; return c;};
 window.EXPLAIN_BUNDLE=function(L,age,sex){
   const E=window.EXPLAIN||{}, $=s=>document.querySelector(s);
@@ -17,7 +18,9 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     c.H={fm:F, rateMain(){const R=(window.RATES||{})[k]; const r=R&&R[`${k}|${c.term}|${sex}`]; if(!r) return null; const v=r[1][age-r[0]]; return v==null?null:v;},
       rateRider(rc,kk){const R=(window.RIDER_RATES||{})[rc]; const r=R&&R.t[kk]; if(!r) return null; const v=r[1][age-r[0]]; return v==null?null:v;}};
     let pr=null; try{pr=D.prem?D.prem(c):null}catch(e){} c.annual=pr&&pr.annual||0; c.tot=c.annual*(c.term||0); return c;};
-  const P=L.map((x,i)=>{const k=key(x.c), D=E[k]; return {x,i,k,D,c:D?ctxOf(x,D):null};});
+  // v1.48：性別限定商品（CIA 男／CIB 女、CLZ 男／CLX 女）與被保人性別不符時，改用同系列對應性別商品解說並提示
+  const SWAP={CIA:'CIB',CIB:'CIA',CLZ:'CLX',CLX:'CLZ'}, swapped=[];
+  const P=L.map((x,i)=>{let k=key(x.c), D=E[k]; if(D&&D.sexOnly&&D.sexOnly!==sex&&SWAP[k]&&E[SWAP[k]]){swapped.push([k,SWAP[k]]); k=SWAP[k]; D=E[k];} return {x,i,k,D,c:D?ctxOf(x,D):null};});
   const has=k=>P.filter(p=>p.D&&p.k===k);
   // ---------- 依需求分類 ----------
   const other=[]; const need={住院:[],手術:[],重症癌症:[],身故:[],豁免:[]}, tot={住院:0,重症癌症:0,身故:0};
@@ -29,27 +32,44 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     if(k==='SDG'){ need.重症癌症.push({k,v:`重大傷病 ${F(c.S)}`}); tot.重症癌症+=c.S; need.身故.push({k,v:`至少 ${F(Math.max(c.S,c.tot*1.06))}`}); tot.身故+=Math.max(c.S,c.tot*1.06); need.豁免.push({k,v:'意外 2～6 級失能免繳主約'}); }
     if(k==='CLZ'||k==='CLX'){ need.重症癌症.push({k,v:`重度癌症 ${F(c.S)}＋特定癌症最高 ${F(c.S*0.5)}`}); tot.重症癌症+=c.S*1.5; need.身故.push({k,v:`繳滿後 年繳總和×1.06＝${F(c.tot*1.06)}`}); tot.身故+=c.tot*1.06; need.豁免.push({k,v:'重度癌症後免繳'}); }
     if(k==='OLA6'){ need.身故.push({k,v:`第 4 年起 ${F(c.S)}`}); tot.身故+=c.S; }
+    // v1.48：其餘商品依各自 explain/<CODE>.js 卡片（取自 DM／條款）自動歸類，不另算合計
+    if(!HAND.includes(k)){ let cs=[]; try{cs=D.cards(c)||[]}catch(e){}
+      const strip=t=>String(t||'').replace(/<[^>]+>/g,'').trim();
+      cs.forEach(q=>{const t=strip(q.t), v=strip(q.big), tv=t+' '+v; let n=null;
+        if(/免繳|豁免/.test(tv)) n='豁免'; else if(/身故/.test(t)) n='身故';
+        else if(/癌|重大傷病|重大疾病|特定傷病|特定重大/.test(t)&&!/住院|手術|門診/.test(t)) n='重症癌症';
+        else if(/手術/.test(t)) n='手術'; else if(/住院|病房|日額|醫療|療養|加護/.test(t)) n='住院';
+        if(n&&!(n==='豁免'&&/觸發條件/.test(t))) need[n].push({k,v:`${t}：${v}`}); });
+      if(!cs.length) other.push(x); }
   });
   const IC={住院:'🏥',手術:'🔪',重症癌症:'🎗️',身故:'🕊️',豁免:'🛡️'};
   const TT={住院:age>=69?`日額型每天合計 ${F(tot.住院)} 元＋實支另計`:'',重症癌症:tot.重症癌症?`確診最高合計 ${F(tot.重症癌症)} 元`:'',身故:tot.身故?`合計至少 ${F(tot.身故)} 元`:''};
   const yNT=L.reduce((a,x)=>a+(+x.y||0),0), yUS=L.reduce((a,x)=>a+(+x.u||0),0), pend=L.filter(x=>x.pd).length, nM=L.filter(x=>x.h<0).length;
   let h=`<section class="card bsum"><div class="bhd">${age} 歲・${sex==1?'男':'女'}｜主約 ${nM}・附約 ${L.length-nM}</div>
     <div class="bprem">首年實繳合計 <b>NT$ ${F(yNT)}</b>${yUS?` ＋ US$ <b>${F(yUS)}</b>`:''}<small>≈ 每月約 ${F(yNT/12)} 元${pend?`｜另 ${pend} 項待試算`:''}</small></div>
-    <div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}</div></section>`;
+    ${swapped.length?`<div class="warn">${swapped.map(([a,b])=>`${a} 限${E[a].sexOnly===1?'男':'女'}性投保，被保人為${sex==1?'男':'女'}性，以下改以 ${b} 解說；請回報價頁更換商品`).join('；')}</div>`:''}<div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}</div></section>`;
   h+=`<h2 class="h2">🧭 這一包保什麼</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這一包沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
   // ---------- 合併理賠範例 ----------
   const ex=[]; const note=[];
-  { const rows=[]; let sum=0; const room=2500, med=120000, days=5; let hsvRoom=0, hsvMed=0;
+  { // v1.48：住院範例依年齡分段（SJR1 倍數僅用 repo 內有出處者：膽囊切除 20 倍＝條款附表第 764 項；其餘標「依附表倍數」不估算）
+    const HB=age<=6?{t:'小兒肺炎住院 5 天（未開刀）',room:1500,med:20000,days:5,op:null}
+      :age<=17?{t:'闌尾炎（盲腸炎）切除術，住院 4 天',room:2000,med:60000,days:4,op:'闌尾切除術'}
+      :age<=39?{t:'意外前臂（橈骨尺骨）骨折開刀，住院 3 天',room:2000,med:80000,days:3,op:'骨折開放性復位術'}
+      :{t:'腹腔鏡膽囊切除術，住院 5 天',room:2500,med:120000,days:5,op:'腹腔鏡膽囊切除術',x:20};
+    const rows=[]; let sum=0; const room=HB.room, med=HB.med, days=HB.days; let hsvRoom=0, hsvMed=0;
     has('HSV').forEach(({c})=>{const l=HSVL[c.plan]; const r=Math.min(room,l.room)*days, m=Math.min(med,l.med), real=r+m, d=l.day*days; if(real>=d){hsvRoom=r;hsvMed=m;} rows.push([`HSV${c.plan}`, real>=d?`病房 ${F(r)}＋雜費 ${F(m)}（實支＞日額 ${F(d)}）`:`日額 ${F(l.day)}×${days}（日額＞實支 ${F(real)}）`, Math.max(real,d)]);});
     has('HSY').forEach(({c})=>{const l=HSYL[c.plan]; const r=Math.max(0,Math.min(room*days-Math.max(l.dR*days,hsvRoom),(l.R-l.dR)*days)), m=Math.max(0,Math.min(med-Math.max(l.dM,hsvMed),l.M-l.dM)); rows.push([`HSY${c.plan}`, `病房 ${F(r)}＋醫療 ${F(m)}（扣自負額或 HSV 已賠較大者）`, r+m]);});
-    has('SJR1').forEach(({c})=>rows.push(['SJR1',`腹腔鏡膽囊切除術 20 倍：${F(c.sum)}×20`,c.sum*20]));
+    has('SJR1').forEach(({c})=>rows.push(['SJR1',!HB.op?'沒有手術，手術險不給付':HB.x?`${HB.op} ${HB.x} 倍：${F(c.sum)}×${HB.x}`:`${HB.op}：保額 ${F(c.sum)} × 條款附表倍數（範例未計入）`,HB.x?c.sum*HB.x:0]));
     has('XWS5').forEach(({c})=>rows.push(['XWS5',age>=69?`老年住院 ${F(c.S*0.003)}×${days} 天`:`未滿 69 歲，老年住院不給付`,age>=69?c.S*0.003*days:0]));
-    if(rows.length){ ex.push({ic:'🏥',t:`住院 ${days} 天開刀（腹腔鏡膽囊切除術）`,d:`病房差額每天 ${F(room)}、自費醫材 ${F(med)}`,rows}); }
+    if(rows.length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
   }
-  { const rows=[]; const cx=sex==1?'大腸癌':'乳癌';
-    P.filter(p=>p.D&&(p.k==='CLZ'||p.k==='CLX')).forEach(({k,c})=>rows.push([k,`重度 ${F(c.S)}＋特定癌症 50% ${F(c.S*0.5)}；之後保費免繳`,c.S*1.5]));
+  { const rows=[]; const d6=age+6, CA=P.filter(p=>p.D&&['CLZ','CLX','CIA','CIB'].includes(p.k));
+    // v1.48：癌別依 window.CXS（有特定癌症加碼商品時）或 window.CX 的年齡／性別規則
+    const R=CA.length?window.CXR(sex,d6):{x:window.CX(sex,d6),sp:false}, cx=R.x, cxT=window.CXT(cx);
+    CA.forEach(({k,c})=>{const n6=Math.min(6,c.term), p6=c.annual*n6*1.06, sev=Math.max(c.S,p6);
+      rows.push([k,R.sp?`重度：保額 ${F(c.S)} 與已繳 ${n6} 年保費×1.06 取較高者 ${F(sev)}＋特定癌症 50% ${F(c.S*0.5)}；之後保費免繳`:`重度癌症：保額 ${F(c.S)} 與已繳 ${n6} 年保費×1.06 取較高者 ${F(sev)}（${cx}不在特定癌症清單，不加碼）；之後保費免繳`,R.sp?sev+c.S*0.5:sev]);});
     has('SDG').forEach(({c})=>{const v=Math.max(c.S,c.annual*Math.min(6,c.term)*1.06); rows.push(['SDG',`取得重大傷病卡，一次給 ${F(v)}`,v]);});
-    if(rows.length) ex.push({ic:'🎗️',t:`第 6 年後確診第二期${cx}`,d:'重度癌症＋取得健保重大傷病卡',rows});
+    if(rows.length) ex.push({ic:'🎗️',t:`第 6 年確診${cxT}（${d6} 歲）`,d:'重度癌症＋取得健保重大傷病卡',rows});
   }
   if(ex.length){ h+=`<h2 class="h2">💡 整包理賠範例</h2><section class="exs">`+ex.map(e=>{const s=e.rows.reduce((a,r)=>a+r[2],0); return `<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.d}</div>`+e.rows.map(r=>`<div class="exr"><span class="pc">${r[0]}</span><span class="exd">${r[1]}</span><b>${r[2]>0?F(r[2]):'—'}</b></div>`).join('')+`<div class="ep">合計賠 ${F(s)} 元</div></div>`;}).join('')+`</section>`;
     const A=[]; if(has('HSV').length) A.push('HSV 實支實付與住院日額二擇一，範例自動取較高者');

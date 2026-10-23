@@ -20,7 +20,7 @@ const L={1:{room:1000,med:100000,medTot:150000,surg:40000,op:15000,sp:7500,day:1
      ex.push({ic:'🦴',t:'舉例：橈骨尺骨骨折開刀（手術比率 47%）住院 3 天，自費醫材 5 萬＋自費手術 20 萬',calc:'<table style="width:100%;border-collapse:collapse;font-size:13px;text-align:right"><tr><th style="text-align:left">方案</th><th>HSV 賠</th><th>HSY 補</th><th>合計</th><th>自付</th></tr>'+P.map(p=>`<tr><td style="text-align:left">${p.n}</td><td>${F(p.v)}</td><td>${p.h?F(p.h):'—'}</td><td><b>${F(p.t)}</b></td><td>${F(T-p.t)}</td></tr>`).join('')+'</table>',pay:P[2].t,lbl:'HSV1＋HSY1 最多賠',note:'HSV 手術＝手術限額 × 47%（附表二第 96 項）；HSY 依收據把雜費＋手術合併，扣「自負額」或「HSV 已賠」較大者，不看手術比率'});}
     const room=Math.min(2500,l.room)*5, med=Math.min(120000,l.med), sum=room+med, day=l.day*5;
     ex.push({ic:'🏥',t:'住院 5 天：病房差額每天 2,500、自費醫材 12 萬',calc:`病房 ${F(room)} ＋ 雜費 ${F(med)} ＝ ${F(sum)}（日額只有 ${F(day)}，選實支較多）`,pay:Math.max(sum,day)});
-    ex.push({ic:'👁️',t:'門診白內障手術自付 3 萬',calc:`門診手術限額 ${F(l.op)} 元`,pay:Math.min(30000,l.op)});
+    ex.push({ic:c.age<50?'🩹':'👁️',t:c.age<50?'門診腹股溝疝氣修補手術自付 3 萬':'門診白內障手術自付 3 萬',calc:`門診手術限額 ${F(l.op)} 元`,pay:Math.min(30000,l.op)});
     const lim=Math.min(l.med/30*45,l.medTot);
     ex.push({ic:'🛌',t:'住院 45 天、自費醫療 50 萬',calc:`${F(l.med)} ÷ 30 × 45 天，最高 ${F(l.medTot)}`,pay:Math.min(500000,lim),note:'另可再報病房費差額'});
     return ex;},

@@ -12,7 +12,7 @@
   tl:c=>c.age>65?null:({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,100,[{from:c.age,to:c.payEnd,label:`💰 繳 20 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:100,label:'❤️ 重大疾病保障到 100 歲'},{from:c.payEnd,to:100,label:'✅ 繳費期滿後主約解約，附約照樣有效',color:'var(--c1)'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[100,'屆滿']])}),
   examples:c=>[
     {ic:'🎗️',t:`第 1 年（等待期後）確診${(x=>/白血病|淋巴瘤/.test(x)?x:'第二期'+x)(CX(c.sex,c.age+1))}`,calc:`年繳 ${F(c.annual)} × 1.06`,pay:c.annual*1.06},
-    {ic:'❤️',t:'第 10 年同時心肌梗塞（重度）和末期腎病變',calc:`只給一項：保額 ${F(c.sum)}`,pay:Math.max(c.sum,c.annual*10*1.06)},
+    ...(c.age+10>=35?[{ic:'❤️',t:'第 10 年同時心肌梗塞（重度）和末期腎病變',calc:`只給一項：保額 ${F(c.sum)}`,pay:Math.max(c.sum,c.annual*10*1.06)}]:[]),
     {ic:'🧠',t:'繳費期滿後解約 PFD，第 30 年腦中風後重度障礙',calc:`附約仍有效：保額 ${F(c.sum)}`,pay:Math.max(c.sum,c.annual*20*1.06)}],
   src:['FDF DM 公版 115.03.31（40 歲女 10 萬美元 年繳 2,740 美元範例）','FDF 保單條款 115.03.31（100 歲屆滿終止）','FDF 投保規則 115.03.31','繳費期滿後主約終止仍有效：保全科（YT 確認 2026-10-20）']};
 })();

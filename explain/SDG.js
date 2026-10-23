@@ -16,7 +16,7 @@
   examples:c=>{const a=c.annual;
     return [{ic:'🎗️',t:`第 5 年確診${CX(c.sex,c.age+5)}（重大傷病）`,calc:`保額 ${c.sum} 萬 vs 已繳 5 年×1.06＝${F(a*5*1.06)}`,pay:Math.max(c.S,a*5*1.06)},
      {ic:'🔥',t:'第 15 年燒燙傷達全身 20%',calc:`${F(Math.max(c.S,a*Math.min(15,c.term)*1.06))} ＋ 保額 20% ${F(c.S*0.2)}`,pay:Math.max(c.S,a*Math.min(15,c.term)*1.06)+c.S*0.2},
-     {ic:'❤️',t:'第 10 年冠狀動脈繞道手術',calc:`特定重大疾病，保額 ${c.sum} 萬`,pay:Math.max(c.S,a*Math.min(10,c.term)*1.06)},
+     c.age+10>=35?{ic:'❤️',t:'第 10 年冠狀動脈繞道手術',calc:`特定重大疾病，保額 ${c.sum} 萬`,pay:Math.max(c.S,a*Math.min(10,c.term)*1.06)}:{ic:'🎗️',t:`第 10 年確診${CXD(CX(c.sex,c.age+10),CX(c.sex,c.age+5))}（${c.age+10} 歲，重大傷病）`,calc:`重大傷病，保額 ${c.sum} 萬`,pay:Math.max(c.S,a*Math.min(10,c.term)*1.06)},
      {ic:'⏳',t:'第 1 年確診重大傷病',calc:`年繳總和 ${F(a)} × 1.06`,pay:a*1.06,note:'等待期後才算'}];},
   src:['SDG DM 公版 115.01.22（投保範例情境 1–5）','SDG 保單條款 115.01.22','SDG 投保規則 114.06.02']};
 })();

@@ -12,6 +12,6 @@
   tl:c=>({title:'📈 一年一保',svg:EXPLAIN_TL(c,70,[{from:c.age,to:c.age+1,label:`💰 第 1 年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:70,label:'🔄 保證續保到 70 歲'}],[[c.age,'投保'],[70,'續保上限']])}),
   examples:c=>[
     {ic:'🎗️',t:'第 1 年確診重度癌症',calc:'保額 10%',pay:c.S*0.1},
-    {ic:'🫀',t:'第 3 年心臟瓣膜開心手術',calc:`保額 ${F(c.S)}`,pay:c.S}],
+    ...(c.age+3>=35?[{ic:'🫀',t:'第 3 年心臟瓣膜開心手術',calc:`保額 ${F(c.S)}`,pay:c.S}]:[])],
   src:['SWW DM 公版','SWW 保單條款','SWW 投保規則','SWW 續保費率']};
 })();

@@ -29,7 +29,7 @@ function mk(code,o){ const U=o.usd, F=n=>U?'US$ '+fm(n):fm(n)+' 元', K=o.k;
     {ic:'🦴',t:'投保第 1 年確診類風濕關節炎（重大傷病）',calc:`第 1 年：年繳 ${F(c.annual)} × ${K}`,pay:c.annual*K},
     {ic:'🎗️',t:`第 5 年確診${CX(c.sex,c.age+5,1)}第一期，取得重大傷病證明`,calc:`保額 ${F(c.S)} 與 年繳總和×${K} 取高`,pay:Math.max(c.S,tot(c,5)*K)},
     {ic:'🔥',t:'第 15 年燒燙傷達全身 20% 以上',calc:`保額 ＋ 20% 加碼`,pay:Math.max(c.S,tot(c,15)*K)+c.S*0.2},
-    {ic:'🫀',t:'第 10 年冠狀動脈繞道手術',calc:`保額 ${F(c.S)}`,pay:Math.max(c.S,tot(c,10)*K)}];
+    c.age+10>=35?{ic:'🫀',t:'第 10 年冠狀動脈繞道手術',calc:`保額 ${F(c.S)}`,pay:Math.max(c.S,tot(c,10)*K)}:{ic:'🎗️',t:`第 10 年確診${CX(c.sex,c.age+10)}（${c.age+10} 歲），取得重大傷病證明`,calc:`保額 ${F(c.S)} 與 年繳總和×${K} 取高`,pay:Math.max(c.S,tot(c,10)*K)}];
     if(!o.rider) ex.push({ic:'🎁',t:o.endEx,calc:`保額 與 年繳總和×${K} 取高`,pay:Math.max(c.S,tot(c,c.term)*K),lbl:'領'});
     return ex;},
   src:o.src};}

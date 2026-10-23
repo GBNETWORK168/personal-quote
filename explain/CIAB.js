@@ -15,7 +15,9 @@ function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'�
     {ic:'🙌',t:'保費豁免',big:'免繳',line:'重度癌症或意外 1～6 級失能',sub:'之後續期保費全免，契約繼續有效'}],
   tl:c=>({title:'📈 保障終身（到 95 歲）',svg:EXPLAIN_TL(c,95,[{from:c.age,to:c.payEnd,label:`💰 繳費 ${c.term} 年（重度癌症可免繳）`},{from:c.age,to:c.age+1,label:'⏳ 第 1 年：給年繳總和×1.06',color:'#e8a33d'},{from:c.age+1,to:c.age+6,label:'📶 特定癌症加碼 10%→50%',color:'#c084fc'},{from:c.age+6,to:95,label:`🎗️ 重度癌症＋特定癌症＝${F(c.S*1.5)} 元`,color:'#9aa7b5'}],[[c.age,'投保'],[c.payEnd,'繳完'],[95,'祝壽']])}),
   examples:c=>{/* v1.42：特定手術範例年齡＝max(60, 投保年齡+1) */ const n6=Math.min(6,c.term), p6=c.annual*n6*1.06, sev=Math.max(c.S,p6);   // v1.41：年繳保費總和＝實際繳費年度數（第 6 年確診→已繳 6 年），條款第二條／DM p2
-    const ex=[{ic:'🎗️',t:`第 6 年確診第二期${CXS(sex,c.age+6)}`,calc:`重度：保額 ${F(c.S)} 與 已繳 ${n6} 年保費×1.06＝${F(p6)} 取高 ${F(sev)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:sev+c.S*0.5,note:'續期保費豁免'},
+    const R=CXR(sex,c.age+6);
+    const ex=[R.sp?{ic:'🎗️',t:`第 6 年確診${CXT(R.x)}（${c.age+6} 歲）`,calc:`重度：保額 ${F(c.S)} 與 已繳 ${n6} 年保費×1.06＝${F(p6)} 取高 ${F(sev)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:sev+c.S*0.5,note:'續期保費豁免'}
+      :{ic:'🎗️',t:`第 6 年確診${R.x}（${c.age+6} 歲，重度癌症）`,calc:`重度：保額 ${F(c.S)} 與 已繳 ${n6} 年保費×1.06＝${F(p6)} 取高 ${F(sev)}`,pay:sev,note:`${R.x}不在特定癌症清單，不加碼；續期保費豁免`},
     {ic:'🔧',t:`${Math.max(60,c.age+1)} 歲${o.exOp}`,calc:`保額 ${c.sum} 萬 × 2%`,pay:c.S*0.02},
     {ic:'🚗',t:'車禍嚴重頭部創傷成植物人',calc:`保額 ${c.sum} 萬 × 10%`,pay:c.S*0.1}];
     const net=c.tot*1.06-c.S*0.02;

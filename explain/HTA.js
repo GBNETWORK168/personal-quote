@@ -9,8 +9,8 @@ const T=[['👁️','人工水晶體植入術',1,'每眼每年 1 次，終身 2 
   cards:c=>T.map(([ic,t,b,sub])=>({ic,t,big:`${F(b*30000*c.sum)} 元`,line:`第 1 年 ${F(b*10000*c.sum)}・第 2 年 ${F(b*20000*c.sum)}・第 3 年起 ${F(b*30000*c.sum)}`,sub})),
   tl:c=>c.age>65?null:({title:'📈 保障期間',svg:EXPLAIN_TL(c,74,[{from:c.age,to:c.age+1,label:'1️⃣ 第 1 年給 1 倍',color:'var(--c1)'},{from:c.age+1,to:c.age+2,label:'2️⃣ 第 2 年給 2 倍',color:'var(--c1)'},{from:c.age+2,to:74,label:`🦾 第 3 年起給 3 倍・每年繳 ${F(c.annual)} 元`}],[[c.age,'投保'],[74,'屆滿']])}),
   examples:c=>{const u=c.sum; return [
-    {ic:'👁️',t:'第 5 年雙眼白內障，分兩次置換人工水晶體',calc:`${F(30000*u)} × 2 眼`,pay:60000*u},
-    {ic:'🫀',t:'第 2 年心肌梗塞，放心臟支架',calc:`第 2 年 ${F(60000*u)}`,pay:60000*u},
-    {ic:'🦵',t:'第 8 年右膝人工關節置換',calc:`${F(30000*u)}`,pay:30000*u}];},
+    {ic:'👁️',t:`${Math.max(65,c.age+5)} 歲雙眼白內障，分兩次置換人工水晶體`,calc:`${F(30000*u)} × 2 眼`,pay:60000*u},
+    {ic:'🫀',t:`${Math.max(55,c.age+2)} 歲心肌梗塞，放心臟支架`,calc:`${F(60000*u)}`,pay:60000*u},
+    {ic:'🦵',t:`${Math.max(65,c.age+8)} 歲右膝人工關節置換`,calc:`${F(30000*u)}`,pay:30000*u}];},
   src:['HTA DM 公版 114.01.13','HTA 保單條款 114.01.13（醫材補助給付表）','HTA 投保規則 114.11.10','HTA 費率表 113.08.05']};
 })();
