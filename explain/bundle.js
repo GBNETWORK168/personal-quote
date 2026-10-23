@@ -2,6 +2,7 @@
    各商品數字沿用 explain/<CODE>.js（皆取自 DM／條款）；HSV/HSY 限額同 HSV.js／HSY.js；SJR1 腹腔鏡膽囊切除術 20 倍取自 SJR1 條款 113.09.23 附表第 764 項 */
 (function(){
 const F=n=>Math.round(n).toLocaleString('zh-TW');
+const W=n=>(n/1e4).toLocaleString('zh-TW')+' 萬';
 const HSVL={1:{room:1000,med:100000,surg:40000,op:15000,day:1000},2:{room:2000,med:200000,surg:60000,op:20000,day:2000},3:{room:3000,med:300000,surg:80000,op:25000,day:3000}};
 const HSYL={1:{dR:1000,R:3000,dM:100000,M:300000,dO:15000,O:25000},2:{dR:2000,R:3000,dM:200000,M:300000,dO:20000,O:25000}};
 const HAND=['XWS5','HSV','HSY','SJR1','SDG','CLZ','CLX','OLA6'];
@@ -70,10 +71,15 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
       :{t:'腹腔鏡膽囊切除術，住院 5 天',room:2500,med:120000,days:5,op:'腹腔鏡膽囊切除術',x:20};
     const rows=[]; let sum=0; const room=HB.room, med=HB.med, days=HB.days; let hsvRoom=0, hsvMed=0;
     has('HSV').forEach(({c})=>{const l=HSVL[c.plan]; const r=Math.min(room,l.room)*days, m=Math.min(med,l.med), real=r+m, d=l.day*days; if(real>=d){hsvRoom=r;hsvMed=m;} rows.push([`HSV${c.plan}`, real>=d?`病房 ${F(r)}＋雜費 ${F(m)}（實支＞日額 ${F(d)}）`:`日額 ${F(l.day)}×${days}（日額＞實支 ${F(real)}）`, Math.max(real,d)]);});
-    has('HSY').forEach(({c})=>{const l=HSYL[c.plan]; const r=Math.max(0,Math.min(room*days-Math.max(l.dR*days,hsvRoom),(l.R-l.dR)*days)), m=Math.max(0,Math.min(med-Math.max(l.dM,hsvMed),l.M-l.dM)); rows.push([`HSY${c.plan}`, `病房 ${F(r)}＋醫療 ${F(m)}（扣自負額或 HSV 已賠較大者）`, r+m]);});
+    has('HSY').forEach(({c})=>{const l=HSYL[c.plan]; const r=Math.max(0,Math.min(room*days-Math.max(l.dR*days,hsvRoom),(l.R-l.dR)*days)), m=Math.max(0,Math.min(med-Math.max(l.dM,hsvMed),l.M-l.dM)); const noM=!hsvMed&&med<=l.dM;   // v1.51：未超過自負額時講清楚，不只寫 0（自負額取自 HSY 條款附表一）
+      rows.push([`HSY${c.plan}`, noM?`醫療本次 ${W(med)}，未超過自負額 ${W(l.dM)}，HSY 不賠${r>0?`；病房差額 ${F(r)}`:''}`:`病房 ${F(r)}＋醫療 ${F(m)}（扣自負額或 HSV 已賠較大者）`, r+m]);});
     has('SJR1').forEach(({c})=>rows.push(['SJR1',!HB.op?'沒有手術，手術險不給付':HB.x?`${HB.op} ${HB.x} 倍：${F(c.sum)}×${HB.x}`:`${HB.op}：保額 ${F(c.sum)} × 條款附表倍數（範例未計入）`,HB.x?c.sum*HB.x:0]));
     has('XWS5').forEach(({c})=>rows.push(['XWS5',age>=69?`老年住院 ${F(c.S*0.003)}×${days} 天`:`未滿 69 歲，老年住院不給付`,age>=69?c.S*0.003*days:0]));
-    if(rows.some(r=>r[2]>0)){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
+    if(rows.some(r=>r[2]>0)||has('HSY').length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
+    // v1.51：只有 HSY（沒有 HSV）時，加一個超過自負額的大額範例；自負額／限額取自 HSY 條款附表一（每次限額 30 萬）
+    if(has('HSY').length&&!has('HSV').length){ const big=250000, r2=[];
+      has('HSY').forEach(({c})=>{const l=HSYL[c.plan], p=Math.min(Math.max(0,big-l.dM),l.M-l.dM); r2.push([`HSY${c.plan}`,`${W(big)} − 自負額 ${W(l.dM)}｜計劃 ${c.plan} 每次最多 ${W(l.M-l.dM)}`,p]);});
+      ex.push({ic:'🧾',t:'住院開刀，醫療＋手術共 25 萬',d:'住院醫療、手術、前後門診合併成一筆計算',rows:r2}); }
   }
   { const rows=[]; const d6=age+5,   /* 第 6 保單年度＝投保年齡＋5 */ CA=P.filter(p=>p.D&&['CLZ','CLX','CIA','CIB'].includes(p.k));
     // v1.48：癌別依 window.CXS（有特定癌症加碼商品時）或 window.CX 的年齡／性別規則
@@ -86,7 +92,8 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
   if(ex.length){ h+=`<h2 class="h2">💡 合併理賠範例</h2><section class="exs">`+ex.map(e=>{const s=e.rows.reduce((a,r)=>a+r[2],0); return `<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.d}</div>`+e.rows.map(r=>`<div class="exr"><span class="pc">${r[0]}</span><span class="exd">${r[1]}</span><b>${r[2]>0?F(r[2]):'—'}</b></div>`).join('')+`<div class="ep">合計賠 ${F(s)} 元</div></div>`;}).join('')+`</section>`;
     const A=[]; if(has('HSV').length) A.push('HSV 實支實付與住院日額二擇一，範例自動取較高者');
     if(has('HSV').length&&has('HSY').length) A.push('HSV＋HSY 同一筆：先由 HSV 憑收據正本理賠，HSY 再扣「自負額」與「HSV 已賠」較大者（依 HSY 條款／DM 推算，實際以理賠審核為準）');
-    if(has('HSV').length||has('HSY').length) A.push('住院手術費依 HSV 手術比率另行實支，範例未計入；收據金額為假設');
+    if(has('HSY').length&&!has('HSV').length) A.push('搭配 HSV 時，HSV 已依收據賠付的部分可抵 HSY 自負額');
+    if(has('HSV').length) A.push('住院手術費依 HSV 手術比率另行實支，範例未計入；收據金額為假設');
     if(has('SDG').length&&ex.length>1) A.push('癌症範例假設已取得健保重大傷病卡，SDG 才給付');
     A.push('各張保單依各自條款分別理賠；上方合計為報價頁首年實繳，各商品解說內保費為未折扣標準費率');
     h+=`<div class="card bnote"><b>📝 合併計算假設</b><ul>${A.map(a=>`<li>${a}</li>`).join('')}</ul></div>`;
