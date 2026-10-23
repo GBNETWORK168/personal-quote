@@ -24,7 +24,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
   const P=L.map((x,i)=>{let k=key(x.c), D=E[k]; if(D&&D.sexOnly&&D.sexOnly!==sex&&SWAP[k]&&E[SWAP[k]]){swapped.push([k,SWAP[k]]); k=SWAP[k]; D=E[k];} return {x,i,k,D,c:D?ctxOf(x,D,k):null};});
   const has=k=>P.filter(p=>p.D&&p.k===k);
   // ---------- 依需求分類 ----------
-  const other=[]; const need={住院:[],手術:[],重症癌症:[],失能長照:[],身故:[],豁免:[]}, tot={住院:0,重症癌症:0,身故:0}, part={重症癌症:0,身故:0};
+  const other=[]; const need={住院:[],手術:[],重症癌症:[],失能長照:[],身故:[],豁免:[]}, tot={住院:0,重症癌症:0,身故:0}, pt=[], part={重症癌症:0,身故:0};
   const amt=v=>{const m=String(v).replace(/,/g,'').match(/^\s*(?:NT\$|US\$)?\s*([\d.]+)\s*(萬)?\s*(元)?\s*$/); return m&&!/US\$/.test(v)?(+m[1])*(m[2]?1e4:1):null;};
   P.forEach(({k,c,D,x})=>{ if(!D){ if(/豁免/.test(x.k||'')) need.豁免.push({k:x.c,v:'解說製作中'}); else other.push(x); return; }
     if(k==='XWS5'){ need.住院.push({k,v:`69 歲起每天 ${F(c.S*0.003)}`}); need.身故.push({k,v:`至少 ${F(Math.max(c.S,c.tot))}`}); tot.身故+=Math.max(c.S,c.tot); need.豁免.push({k,v:'2～6 級失能免繳主約'}); if(age>=69) tot.住院+=c.S*0.003; }
@@ -32,10 +32,10 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     if(k==='HSY'){ const l=HSYL[c.plan]; need.住院.push({k:'HSY'+c.plan,v:`扣自負額後：病房每天 ${F(l.R-l.dR)}、醫療每次 ${F(l.M-l.dM)}`}); need.手術.push({k:'HSY'+c.plan,v:`門診手術最多 ${F(l.O-l.dO)}（扣自負額）`}); }
     if(k==='SJR1'){ need.手術.push({k,v:`保額 ${F(c.sum)} × 1～90 倍＝${F(c.sum)}～${F(c.sum*90)}`}); }
     if(k==='SDG'){ need.重症癌症.push({k,v:`重大傷病 ${F(c.S)}`}); tot.重症癌症+=c.S; need.身故.push({k,v:`至少 ${F(Math.max(c.S,c.tot*1.06))}`}); tot.身故+=Math.max(c.S,c.tot*1.06); need.豁免.push({k,v:'意外 2～6 級失能免繳主約'}); }
-    if(k==='CLZ'||k==='CLX'){ need.重症癌症.push({k,v:`重度癌症 ${F(c.S)}＋特定癌症最高 ${F(c.S*0.5)}`}); tot.重症癌症+=c.S*1.5; need.身故.push({k,v:`繳滿後 年繳總和×1.06＝${F(c.tot*1.06)}`}); tot.身故+=c.tot*1.06; need.豁免.push({k,v:'重度癌症後免繳'}); }
+    if(k==='CLZ'||k==='CLX'){ need.重症癌症.push({k,v:`重度癌症 ${F(c.S)}＋特定癌症最高 ${F(c.S*0.5)}`}); tot.重症癌症+=c.S*1.5; need.身故.push({k,v:`繳滿後 年繳總和×1.06＝${F(c.tot*1.06)}`}); pt.push(k); tot.身故+=c.tot*1.06; need.豁免.push({k,v:'重度癌症後免繳'}); }
     // v1.52：CIA/CIB 依條款第十四、十五條、第二條第十九款手算
     if(k==='CIA'||k==='CIB'){ const p=c.tot*1.06, sev=Math.max(c.S,p); need.重症癌症.push({k,v:`重度癌症至少 ${F(c.S)}${p>c.S?`（與已繳保費×1.06 取高，最高 ${F(p)}）`:''}＋特定癌症第 6 年起 ${F(c.S*0.5)}`}); tot.重症癌症+=sev+c.S*0.5;
-      need.身故.push({k,v:`保險年齡 16 歲起 已繳年繳總和×1.06（扣已領）、繳滿 ${F(p)}${age<16?'；16 歲前退還所繳保費':''}`}); tot.身故+=p; need.豁免.push({k,v:'繳費期間重度癌症或意外 1～6 級失能後免繳'});
+      need.身故.push({k,v:`保險年齡 16 歲起 已繳年繳總和×1.06（扣已領）、繳滿 ${F(p)}${age<16?'；16 歲前退還所繳保費':''}`}); pt.push(k); tot.身故+=p; need.豁免.push({k,v:'繳費期間重度癌症或意外 1～6 級失能後免繳'});
       need.重症癌症.push({k,v:`初期／輕度癌症 ${F(c.S*0.1)}（第 2 年起）`}); need.手術.push({k,v:`特定手術 ${F(c.S*0.02)}（限 1 次）`}); (need.其他保障=need.其他保障||[]).push({k,v:`特定傷病（限意外）${F(c.S*0.1)}`}); }
     if(k==='OLA6'){ need.身故.push({k,v:`第 4 年起 ${F(c.S)}`}); tot.身故+=c.S; }
     // v1.48：其餘商品依各自 explain/<CODE>.js 卡片（取自 DM／條款）自動歸類，不另算合計
@@ -60,12 +60,14 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
   });
   const IC={住院:'🏥',手術:'🔪',重症癌症:'🎗️',失能長照:'♿',身故:'🕊️',豁免:'🛡️',其他保障:'📌'};
   const TL=n=>part[n]?'主要商品合計':'合計';
-  const TT={住院:age>=69?`日額型每天合計 ${F(tot.住院)} 元＋實支另計`:'',重症癌症:tot.重症癌症?`確診最高${TL('重症癌症')} ${F(tot.重症癌症)} 元`:'',身故:tot.身故?`${TL('身故')}至少 ${F(tot.身故)} 元`:''};
+  const TT={住院:age>=69?`日額型每天合計 ${F(tot.住院)} 元＋實支另計`:'',重症癌症:tot.重症癌症?`確診最高${TL('重症癌症')} ${F(tot.重症癌症)} 元`:'',身故:tot.身故?(pt.length?`繳費期滿後${TL('身故')} ${F(tot.身故)} 元`:`${TL('身故')}至少 ${F(tot.身故)} 元`):''};
+  // v1.53：CIA/CIB/CLZ/CLX 身故依已繳保費增加，合計以繳費期滿後計，灰字說明繳費期間
+  const PTN=pt.length?`<div class="ndl" style="color:#888;font-size:12px">繳費期間身故：${pt.join('、')} 給付已繳保費×1.06（扣已領）${age<16&&pt.some(k=>k==='CIA'||k==='CIB')?'；保險年齡 16 歲前退還所繳保費':''}</div>`:'';
   const yNT=L.reduce((a,x)=>a+(+x.y||0),0), yUS=L.reduce((a,x)=>a+(+x.u||0),0), pend=L.filter(x=>x.pd).length, nM=L.filter(x=>x.h<0).length;
   let h=`<section class="card bsum"><div class="bhd">${age} 歲・${sex==1?'男':'女'}｜主約 ${nM}・附約 ${L.length-nM}</div>
     <div class="bprem">首年實繳合計 <b>NT$ ${F(yNT)}</b>${yUS?` ＋ US$ <b>${F(yUS)}</b>`:''}<small>≈ 每月約 ${F(yNT/12)} 元${pend?`｜另 ${pend} 項待試算`:''}</small></div>
     ${swapped.length?`<div class="warn">${swapped.map(([a,b])=>`${a} 限${E[a].sexOnly===1?'男':'女'}性投保，被保人為${sex==1?'男':'女'}性，以下改以 ${b} 解說；請回報價頁更換商品`).join('；')}</div>`:''}<div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}</div></section>`;
-  h+=`<h2 class="h2">🧭 保障總覽</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這組沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
+  h+=`<h2 class="h2">🧭 保障總覽</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(n==='身故'?PTN:'')+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這組沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
   // ---------- 合併理賠範例 ----------
   const ex=[]; const note=[];
   { // v1.48：住院範例依年齡分段（SJR1 倍數僅用 repo 內有出處者：膽囊切除 20 倍＝條款附表第 764 項；其餘標「依附表倍數」不估算）
