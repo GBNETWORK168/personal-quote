@@ -12,7 +12,7 @@
     {ic:'🎂',t:'100 歲祝壽',big:`${F(Math.max(c.S,c.tot*1.06))} 元`,line:'活到 100 歲，保額與年繳總和×1.06 取高',sub:'以上各項只領一次，領完契約結束'},
     {ic:'🛡️',t:'意外 2～6 級失能免繳',big:'之後保費全免',line:`繳費期間（到 ${c.payEnd} 歲）意外失能 2～6 級`,sub:'只豁免主約'},
     {ic:'📆',t:'可改分期領',big:'6／12／24 個月',line:'第 2 年起確診，可約定按月分期給付',sub:'指定金額低於 20 萬或每月低於 2 萬改一次給'}],
-  tl:c=>({title:'📈 一生時間軸',svg:EXPLAIN_TL(c,100,[{from:c.age,to:c.payEnd,label:`💰 繳費 ${c.term} 年・意外 2–6 級失能免繳`},{from:c.age,to:c.age+1,label:'⏳ 第 1 年：給年繳總和×1.06',color:'#e8a33d'},{from:c.age+1,to:100,label:`🪪 重大傷病給 ${F(c.S)} 元`,color:'#9aa7b5'}],[[c.age,'投保'],[c.payEnd,'繳完'],[100,'祝壽']])}),
+  tl:c=>({title:'📈 一生時間軸',svg:EXPLAIN_TL(c,100,[{from:c.age,to:c.payEnd,label:`💰 繳費 ${c.term} 年・意外 2–6 級失能免繳`},{from:c.age,to:c.age+1,label:'⏳ 第 1 年：給年繳總和×1.06',color:'#e8a33d'},{from:c.age+1,to:100,label:`🪪 重大傷病給 ${F(c.S)} 元`,color:'#9aa7b5'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[100,'祝壽']])}),
   examples:c=>{const a=c.annual;
     return [{ic:'🎗️',t:`第 5 年確診${CX(c.sex,c.age+5)}（重大傷病）`,calc:`保額 ${c.sum} 萬 vs 已繳 5 年×1.06＝${F(a*5*1.06)}`,pay:Math.max(c.S,a*5*1.06)},
      {ic:'🔥',t:'第 15 年燒燙傷達全身 20%',calc:`${F(Math.max(c.S,a*Math.min(15,c.term)*1.06))} ＋ 保額 20% ${F(c.S*0.2)}`,pay:Math.max(c.S,a*Math.min(15,c.term)*1.06)+c.S*0.2},

@@ -9,7 +9,7 @@ window.EXPLAIN.XWS5 = {
     {from:c.age,to:c.payEnd,label:'💰 繳費 20 年・🛡️失能可免繳'},
     {from:Math.max(69,c.age),to:110,label:`🏥 69歲起每天 ${f(c.S*0.003)} 元`,color:'#e8a33d'},
     {from:c.age,to:110,label:'🕊️ 身故／完全失能保障終身',color:'#9aa7b5'}],
-    [[c.age,'投保'],[c.payEnd,'繳完'],[69,'住院起'],[110,'祝壽']])}),
+    [[c.age,'投保'],[c.payEnd,'繳費期滿'],[69,'住院起'],[110,'祝壽']])}),
   src:['XWS5 保單條款 115.01.22（第13–17條）','XWS5 DM 公版 115.01.22','XWS5 投保規則 113.07.01'],
   // b(ctx) → 卡片；ctx = {S:保額元, age, sex, annual:年繳(元), tot:年繳總和(20年), payEnd}
   cards: ctx => [

@@ -84,11 +84,11 @@ const ctxOf=(code,sex,age,T,sum)=>{const annual=FX[code].rates[String(T)][age]*s
 for(const [code,sex,age,T,sum,want] of [['CIA',1,60,10,100,1500000],['CIB',2,30,20,100,1500000],['CIA',1,65,10,500,7500000]]){
   const ex=X[code].examples(ctxOf(code,sex,age,T,sum))[0];eq(ex.pay,want,`解說 ${code} ${age}歲 ${T}年 ${sum}萬 第6年確診範例 ${want}`);
   ok(/已繳 6 年/.test(ex.calc),`解說 ${code} 範例文字寫已繳 6 年`);}
-for(const c of ['CIA','CIB']){const d=X[c];ok(/等待期間/.test(d.warn()),`解說 ${c} 有等待期`);ok(/無解約金/.test(d.warn()),`解說 ${c} 無解約金`);
+for(const c of ['CIA','CIB']){const d=X[c];ok(/等待期/.test(d.warn()),`解說 ${c} 有等待期`);ok(/無解約金/.test(d.warn()),`解說 ${c} 無解約金`);
   const cards=d.cards(ctxOf(c,FX[c].sex,30,20,100)).map(k=>k.t+k.line+k.sub).join('|');
   ok(/95 歲/.test(cards),`解說 ${c} 95歲祝壽`);ok(/取高/.test(cards)&&/第 1 年：年繳保費總和 ×1.06/.test(cards),`解說 ${c} 重度取高＋第1年規則`);
   ok(/嚴重頭部創傷、嚴重第三度燒燙傷/.test(cards),`解說 ${c} 特定傷病`);ok(/1～6 級失能/.test(cards),`解說 ${c} 豁免`);}
-ok(/9 項/.test(X.CIA.tagline)&&/11 項/.test(X.CIB.tagline),'解說 特定癌症 男 9 項／女 11 項');
+ok(/1\.5 倍/.test(X.CIA.tagline)&&/1\.5 倍/.test(X.CIB.tagline),'解說 特定癌症標語 1.5 倍');
 ok(!/大腸/.test(X.CIB.examples(ctxOf('CIB',2,30,20,100)).map(e=>e.t).join()),'解說 CIB 範例不用大腸癌（不在女性 11 項）');
 // ---------- 11b. v1.42 特定手術範例年齡不早於投保年齡、金額不變 ----------
 for(const [code,sex,age,T,want] of [['CIA',1,30,20,60],['CIA',1,65,10,66],['CIB',2,30,20,60],['CIB',2,59,10,60],['CIB',2,60,10,61]]){
