@@ -1,6 +1,6 @@
 /* ADH 骨力勇意外骨折傷害保險附約 — 取自 ADH DM 公版 1150101、ADH 條款 1150101（第8～13條、附表一～三核對）、投保規則 1140826 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).ADH={name:'骨力勇意外骨折傷害保險附約', cat:'意外傷害附約', icon:'🦴', tagline:'意外骨折按部位定額給付，脫臼、縫合、燒燙傷也有，搭大眾運輸身故 2 倍', ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).ADH={name:'骨力勇意外骨折傷害保險附約', cat:'意外傷害附約', icon:'🦴', key30:(c,K)=>[[`意外骨折依部位領 ${K[0].big}`,0],[`脫臼開刀領 ${K[2].big}`,2],[`意外身故領 ${K[5].big}，搭大眾運輸 2 倍${c.age<15?'（15 足歲起）':''}`,5]], tagline:'意外骨折按部位定額給付，脫臼、縫合、燒燙傷也有，搭大眾運輸身故 2 倍', ages:[0,70],
   input:{kind:'sum', label:'保額', unit:'萬', min:10, max:200, step:10, def:100},
   prem:c=>{const r=c.H.rateRider('ADH','1'); return r?{annual:r*c.sum, txt:`今年年繳 <b>NT$ ${F(r*c.sum)}</b>（職業第 1 類，一年期）`}:null;},
   warn:()=>'累計最高 200 萬且 ≦主約可附加額度 5 倍；保費依職業類別；15 足歲前無身故、失能給付',

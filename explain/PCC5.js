@@ -1,6 +1,6 @@
 /* PCC5 溢起防癌終身健康保險附約（保到 95 歲）— 取自 PCC5 DM 公版 1140701、PCC5 條款 1140701（附表核對）、投保規則 1140602 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).PCC5={name:'溢起防癌終身健康保險附約', cat:'防癌', icon:'🌅', tagline:'防癌保到 95 歲：確診一次金、住院、手術、放化療，重度癌症再給 8 年安寧照護金', ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).PCC5={name:'溢起防癌終身健康保險附約', cat:'防癌', icon:'🌅', key30:(c,K)=>[[`罹患重度癌症領 ${K[0].big}（第 21 年起 1.5 倍）`,0],[`癌症住院${K[1].big}`,1],[`重度癌症後再領安寧照護金，${K[4].big}（最多 8 年）`,4]], tagline:'防癌保到 95 歲：確診一次金、住院、手術、放化療，重度癌症再給 8 年安寧照護金', ages:[0,70],
   input:{kind:'sum', label:'投保單位', unit:'單位', min:1, max:6, step:1, def:1},
   exLabel:c=>`${c.sum} 單位`,
   prem:c=>{const r=c.H.rateRider('PCC5',`${c.sex}`); return r?{annual:r*c.sum, txt:`年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・繳到 95 歲`}:null;},

@@ -1,6 +1,6 @@
 /* HKR5 日安心住院醫療定額健康保險附約 — 取自 HKR5 DM 公版 1140221、HKR5 條款 1130819（第8～19條核對）、投保規則 1140221 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).HKR5={name:'日安心住院醫療定額健康保險附約', cat:'醫療（日額附約）', icon:'🛏️', tagline:'住院按日額定額給付＋手術按比率給付，2 年沒理賠再加 20%', ages:[0,65],
+(window.EXPLAIN=window.EXPLAIN||{}).HKR5={name:'日安心住院醫療定額健康保險附約', cat:'醫療（日額附約）', icon:'🛏️', key30:(c,K)=>[[`住院${K[0].big}，第 31 天起加倍`,0],[`住院手術領 ${K[3].big}`,3],['2 年沒理賠，下次理賠再加 20%',7]], tagline:'住院按日額定額給付＋手術按比率給付，2 年沒理賠再加 20%', ages:[0,65],
   input:{kind:'sum', label:'住院日額', unit:'元', min:100, max:2000, step:100, def:1000},
   exLabel:c=>`日額 ${F(c.sum)} 元`,
   prem:c=>{const r=c.H.rateRider('HKR5',`${c.sex}`); return r?{annual:r*c.sum/100, txt:`年繳 <b>NT$ ${F(r*c.sum/100)}</b>（未折扣）・繳到 90 歲，保費不隨年齡調整`}:null;},

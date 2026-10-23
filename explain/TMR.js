@@ -1,6 +1,6 @@
 /* TMR 享安寶意外傷害醫療保險給付附加條款（實支實付）— 取自 ADG/TMR DM 公版 1140428、TMR 條款 1130715、投保規則 1140811 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).TMR={name:'享安寶意外傷害醫療保險給付附加條款', cat:'意外傷害附約', icon:'🩹', tagline:'意外受傷的醫療費實支實付（附加在 ADG），脫臼開刀另給定額', ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).TMR={name:'享安寶意外傷害醫療保險給付附加條款', cat:'意外傷害附約', icon:'🩹', key30:(c,K)=>[[`意外受傷醫療費憑收據實支，${K[0].big}`,0],[`住加護病房，${K[1].big}`,1],[`海外意外就醫也能賠，${K[3].big}`,3]], tagline:'意外受傷的醫療費實支實付（附加在 ADG），脫臼開刀另給定額', ages:[0,70],
   input:{kind:'sum', label:'每次限額', unit:'萬', min:3, max:20, step:1, def:10},
   prem:c=>{const R=(window.RIDER_RATES||{}).TMR; if(!R) return null; const a=R.t['1'][1][0]+R.add['1']*(c.sum-3); return {annual:a, txt:`今年年繳 <b>NT$ ${F(a)}</b>（職業第 1 類，一年期）`};},
   warn:()=>'須同時投保 ADG；限額 3～20 萬且 ≦ADG 保額 10%（ADG 100 萬才能買 10 萬）',

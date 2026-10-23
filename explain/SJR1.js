@@ -1,6 +1,6 @@
 /* SJR1 增守護健康保險附約（手術）— 取自 SJR1 DM 公版 1130923、SJR1 條款 1130923、投保規則 1120701 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).SJR1={name:'增守護健康保險附約（手術）', cat:'醫療（手術附約）', icon:'🔪', tagline:'動手術按倍數定額給付：1,443 項手術＋44 項特定處置', ages:[0,65],
+(window.EXPLAIN=window.EXPLAIN||{}).SJR1={name:'增守護健康保險附約（手術）', cat:'醫療（手術附約）', icon:'🔪', key30:(c,K)=>[[`動手術依項目領 ${K[0].big}`,0],[`特定處置領 ${K[1].big}`,1],['保障到 90 歲',3]], tagline:'動手術按倍數定額給付：1,443 項手術＋44 項特定處置', ages:[0,65],
   input:{kind:'sum', label:'保額', unit:'元', min:800, max:3000, step:100, def:1000},
   exLabel:c=>`保額 ${F(c.sum)} 元`,
   prem:c=>{const r=c.H.rateRider('SJR1',`${c.sex}`); return r?{annual:r*c.sum/100, txt:`年繳 <b>NT$ ${F(r*c.sum/100)}</b>（未折扣）・繳到 90 歲`}:null;},

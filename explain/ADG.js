@@ -1,6 +1,6 @@
 /* ADG 享安寶意外傷害暨兒童傷害失能保險附約 — 取自 ADG/TMR DM 公版 1140428、ADG 條款 1140101、ADG/TMR 投保規則 1140811 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).ADG={name:'享安寶意外傷害暨兒童傷害失能保險附約', cat:'意外傷害附約', icon:'🚌', tagline:'意外身故／失能保障，搭大眾運輸再加 2 倍，可加買 TMR 實支實付', ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).ADG={name:'享安寶意外傷害暨兒童傷害失能保險附約', cat:'意外傷害附約', icon:'🚌', key30:(c,K)=>[[`意外身故領 ${K[0].big}${c.age<15?'（15 足歲起）':''}`,0],[`搭大眾運輸出事，領 ${K[1].big}（3 倍）`,1],[`意外失能領 ${K[3].big}`,3]], tagline:'意外身故／失能保障，搭大眾運輸再加 2 倍，可加買 TMR 實支實付', ages:[0,70],
   input:{kind:'sum', label:'保額', unit:'萬', min:30, max:2000, step:10, def:100},
   prem:c=>{const r=c.H.rateRider('ADG','1'); return r?{annual:r*c.sum, txt:`今年年繳 <b>NT$ ${F(r*c.sum)}</b>（職業第 1 類，一年期）`}:null;},
   warn:c=>c.age<15?'未滿 15 足歲：限保 1 萬元（月繳 2 萬），15 足歲前身故不給付（失能、燒燙傷照賠）':'15～60 歲累計最高 2,000 萬、61～70 歲 600 萬；保費依職業類別',

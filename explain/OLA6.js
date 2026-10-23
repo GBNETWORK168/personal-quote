@@ -1,6 +1,6 @@
 /* OLA6 金來寶小額終身壽險 — 取自 OLA6 DM 公版 1150101、OLA6 條款 1150101、投保規則 1150101 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW'); const TA={6:[0,84],10:[0,75],15:[0,65],20:[0,60]};
-(window.EXPLAIN=window.EXPLAIN||{}).OLA6={name:'金來寶小額終身壽險', cat:'壽險', icon:'🌱', key30:(c,K)=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`身故領 ${W(c.S)}（第 4 年起）`,0],['前 3 年身故，領回已繳保費 102.5%',1],[`活到 110 歲，領 ${W(c.S)}`,2]];}, tagline:'小額終身壽險：0～84 歲都能買，保費比一般終身壽險便宜', terms:[6,10,15,20], defTerm:3, ageOf:t=>TA[t]||[0,84],
+(window.EXPLAIN=window.EXPLAIN||{}).OLA6={name:'金來寶小額終身壽險', cat:'壽險', icon:'🌱', key30:(c,K)=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`身故領 ${W(c.S)}（第 4 年起${c.age<15?'；15 足歲前改給喪葬費用':''}）`,0],['前 3 年身故，領回已繳保費 102.5%',1],[`活到 110 歲，領 ${W(c.S)}`,2]];}, tagline:'小額終身壽險：0～84 歲都能買，保費比一般終身壽險便宜', terms:[6,10,15,20], defTerm:3, ageOf:t=>TA[t]||[0,84],
   input:{kind:'sum', label:'保額', unit:'萬', min:10, max:90, step:5, def:50},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
   warn:()=>'OLA 系列＋同業小額終老累計 ≦90 萬、每人限 4 張',

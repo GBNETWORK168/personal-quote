@@ -1,6 +1,6 @@
 /* CWR4 愛鑫安防癌終身健康保險附約 — 取自 CWR4 DM 公版 1151012、CWR4 條款 1151012（附表給付金額核對）、投保規則 1151012 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-(window.EXPLAIN=window.EXPLAIN||{}).CWR4={name:'愛鑫安防癌終身健康保險附約', cat:'防癌', icon:'🎗️', tagline:'終身防癌：確診一次金＋住院、手術、門診、放化療分項給付，第 21 年起一次金 1.5 倍', terms:[10,15,20], defTerm:2, ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).CWR4={name:'愛鑫安防癌終身健康保險附約', cat:'防癌', icon:'🎗️', key30:(c,K)=>[[`罹患重度癌症領 ${K[0].big}（第 21 年起 1.5 倍）`,0],[`癌症住院${K[1].big}`,1],[`癌症手術${K[2].big}`,2]], tagline:'終身防癌：確診一次金＋住院、手術、門診、放化療分項給付，第 21 年起一次金 1.5 倍', terms:[10,15,20], defTerm:2, ages:[0,70],
   input:{kind:'sum', label:'投保單位', unit:'單位', min:1, max:5, step:1, def:1},
   exLabel:c=>`${c.sum} 單位`,
   prem:c=>{const r=c.H.rateRider('CWR4',`${c.term}|${c.sex}`); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
