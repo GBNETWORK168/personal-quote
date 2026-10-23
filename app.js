@@ -955,9 +955,9 @@ function renderCart(it){
   $('#cartmini').innerHTML = G.length > 1 ? G.map(x => `<span class="cm m${x.g%4}">${mno(x.id)}${lab(x.id)} ${fmt(x.sub)}</span>`).join('') : '';
   $('#cartbody').innerHTML = G.map(x => `<div class="cg m${x.g%4}"><div class="cgh" data-goto="${x.id}">${mno(x.id)}<b>${lab(x.id)}</b><span>小計 NT$ ${fmt(x.sub)}${x.usd?`＋US$ ${fmt(x.usd)}`:''}</span></div>`
       + x.xs.map(y => `<div class="ci${y.sub?' sub':''}"><div>${y.sub?'└ ':''}${y.code} ${y.name}<small>${y.kind}｜${y.sub ? (y.amt || y.desc) : y.desc}</small></div><div style="text-align:right">${amtTxt(y)}<small>${y.pending||y.err?'':y.mode}</small></div></div>`).join('') + '</div>').join('')
-    + `<div class="ctot2">首年實繳合計 <b>NT$ ${fmt(tot)}</b>${usd?` ＋ US$ ${fmt(usd)}`:''}</div><div style="display:flex;gap:8px;margin-top:10px"><a class="xbtn bx2" href="${bundleUrl(it)}">📖 整包解說</a><button id="copy">複製文字（貼 LINE）</button><button id="clear">全部取消勾選</button></div>`;
+    + `<div class="ctot2">首年實繳合計 <b>NT$ ${fmt(tot)}</b>${usd?` ＋ US$ ${fmt(usd)}`:''}</div><div style="display:flex;gap:8px;margin-top:10px"><a class="xbtn bx2" href="${bundleUrl(it)}">📖 保障總覽</a><button id="copy">複製文字（貼 LINE）</button><button id="clear">全部取消勾選</button></div>`;
 }
-// v1.29 整包解說：把年齡、性別、每張主約＋附約（計劃／保額／年期／首年保費）帶到 explain.html?bundle=
+// v1.29 保障總覽（原整包解說）：把年齡、性別、每張主約＋附約（計劃／保額／年期／首年保費）帶到 explain.html?bundle=
 function bundleUrl(it){
   const L = (it||bundle()).map(x => { const o = Object.assign({}, x.bx||{c:x.code}); o.h = x.sub ? x.g : -1; o.g = x.g; o.n = x.name; o.k = x.kind; if (x.amt||x.desc) o.a = x.sub ? (x.amt||'') : x.desc; if (x.firstYear) o.y = Math.round(x.firstYear); if (x.usd) o.u = Math.round(x.usd); if (x.pending) o.pd = 1; if (x.err) o.e = 1; return o; });
   return `explain.html?age=${st.age}&sex=${st.sex}&bundle=` + encodeURIComponent(JSON.stringify(L));

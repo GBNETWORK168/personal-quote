@@ -7,7 +7,7 @@ window.CXR=(sex,d)=>(d<15||(sex===2&&d<25))?{x:window.CX(sex,d),sp:false}:{x:win
 window.CXT=x=>/白血病|淋巴瘤/.test(x)?x:'第二期'+x;
 // 同頁避免重複：與 y 相同時換另一個常見癌症
 window.CXD=(x,y)=>x!==y?x:({'急性白血病':'第二期以上淋巴瘤','第二期以上淋巴瘤':'急性白血病','大腸癌':'肺癌','肺癌':'大腸癌','乳癌':'大腸癌','甲狀腺癌':'第二期以上淋巴瘤','攝護腺癌':'大腸癌'}[x]||x);
-/* 解說頁通用模板 v1.32：explain.html?bundle=[...] 整包；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
+/* 解說頁通用模板 v1.32：explain.html?bundle=[...] 保障總覽；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
 (function(){
 const $=s=>document.querySelector(s), q=new URLSearchParams(location.search), E=window.EXPLAIN||{};
 const fm=n=>Math.round(n).toLocaleString('zh-TW');
@@ -29,7 +29,7 @@ window.EXPLAIN_TL=function(c,end,bars,pts){
   bars.forEach((b,i)=>{const y=top+i*40, x1=X(Math.max(b.from,a0)), x2=X(b.to); s+=`<rect x="${x1}" y="${y}" width="${Math.max(4,x2-x1)}" height="12" rx="6" fill="${b.color||'var(--c2)'}"/><text x="20" y="${y+30}" font-size="15" fill="#333">${b.label}</text>`;});
   return s+`</svg>`;
 };
-if(q.get('bundle')){ try{ window.EXPLAIN_BUNDLE(JSON.parse(q.get('bundle')), gAge, gSex); }catch(e){ console.error(e); $('#app').innerHTML='<div class="card warn">整包資料讀取失敗，請回報價頁重新按「📖 整包解說」。</div>'; } return; }
+if(q.get('bundle')){ try{ window.EXPLAIN_BUNDLE(JSON.parse(q.get('bundle')), gAge, gSex); }catch(e){ console.error(e); $('#app').innerHTML='<div class="card warn">保障總覽資料讀取失敗，請回報價頁重新按「📖 保障總覽」。</div>'; } return; }
 if(!D){ picker(); return; }
 // ---------- 商品選單 ----------
 function picker(){
