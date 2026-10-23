@@ -1,7 +1,7 @@
 /* HSY 全鑫一年期住院醫療（HSY1/2，具自負額）— 取自 HSY DM 公版 1140113、HSY 投保規則 1140113、HSY1-Y2 條款 1140113 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
 const L={1:{dR:1000,R:3000,dM:100000,M:300000,dO:15000,O:25000,dS:7500,S:12500,yr:750000},2:{dR:2000,R:3000,dM:200000,M:300000,dO:20000,O:25000,dS:10000,S:12500,yr:500000}};
-(window.EXPLAIN=window.EXPLAIN||{}).HSY={name:'全鑫一年期住院醫療（自負額實支實付）', cat:'醫療（實支實付附約）', icon:'🧾', tagline:'先扣自負額再實支實付：保費較省，大額醫療才用得到', ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).HSY={name:'全鑫一年期住院醫療（自負額實支實付）', cat:'醫療（實支實付附約）', icon:'🧾', key30:(c,K)=>[[`大額住院醫療憑收據，${K[1].big}`,1],['別張實支先賠的，可抵自負額',4],[`每年最多賠 ${K[5].big}`,5]], tagline:'先扣自負額再實支實付：保費較省，大額醫療才用得到', ages:[0,70],
   input:{kind:'plan', label:'計劃別', def:1, plans:[{v:1,lbl:'計劃 1'},{v:2,lbl:'計劃 2'}]},
   prem:c=>{const r=c.H.rateRider('HSY',`${c.plan}|${c.sex}`); return r?{annual:r, txt:`HSY${c.plan}・今年年繳 <b>NT$ ${F(r)}</b>（一年期，每年依年齡重算）`}:null;},
   cards:c=>{const l=L[c.plan]; return [

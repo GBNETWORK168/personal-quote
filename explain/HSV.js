@@ -1,7 +1,7 @@
 /* HSV 佳實在一年期住院醫療（HSV1/2/3）— 取自 HSV DM 公版 1140221、HSV1-V3 條款 1130715、HSV 投保規則 1140221 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
 const L={1:{room:1000,med:100000,medTot:150000,surg:40000,op:15000,sp:7500,day:1000,yr:750000},2:{room:2000,med:200000,medTot:300000,surg:60000,op:20000,sp:10000,day:2000,yr:1000000},3:{room:3000,med:300000,medTot:450000,surg:80000,op:25000,sp:12500,day:3000,yr:1500000}};
-(window.EXPLAIN=window.EXPLAIN||{}).HSV={name:'佳實在一年期住院醫療（實支實付）', cat:'醫療（實支實付附約）', icon:'🏥', tagline:'住院、手術、門診手術都能報收據；也可改選住院日額', ages:[0,70],
+(window.EXPLAIN=window.EXPLAIN||{}).HSV={name:'佳實在一年期住院醫療（實支實付）', cat:'醫療（實支實付附約）', icon:'🏥', key30:(c,K)=>[[`沒收據也能領：住院${K[6].big}`,6],[`住院醫療費實報實銷，${K[1].big}`,1],[`手術${K[2].big}`,2]], tagline:'住院、手術、門診手術都能報收據；也可改選住院日額', ages:[0,70],
   input:{kind:'plan', label:'計劃別', def:2, plans:[{v:1,lbl:'計劃 1'},{v:2,lbl:'計劃 2'},{v:3,lbl:'計劃 3'}]},
   prem:c=>{const r=c.H.rateRider('HSV',`${c.plan}|${c.sex}`); return r?{annual:r, txt:`HSV${c.plan}・今年年繳 <b>NT$ ${F(r)}</b>（一年期，每年依年齡重算）`}:null;},
   warn:c=>c.plan==3?'計劃 3 限職業第 1–3 類；第 4–6 類只能投保計劃 1、2（HSV1/2/3 擇一、限 1 單位）':'',

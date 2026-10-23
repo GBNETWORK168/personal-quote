@@ -1,7 +1,7 @@
 /* XWS5 解說資料：全部取自 XWS5_保單條款_1150122（第2、13–17條）與 XWS5_DM公版_1150122、投保規則_1130701 */
 window.EXPLAIN = window.EXPLAIN || {};
 window.EXPLAIN.XWS5 = {
-  code:'XWS5', name:'新平準終身壽險', cat:'壽險', icon:'🕊️', tagline:'一張壽險＋69歲起住院日額＋110歲祝壽', terms:[20], ages:[0,65],
+  code:'XWS5', name:'新平準終身壽險', cat:'壽險', icon:'🕊️', key30:(c,K)=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`69 歲起住院，每天領 ${W(c.S*0.003)}`,0],[`身故至少領 ${W(c.S)}（扣已領住院金）`,1],['2～6 級失能，保費免繳',3]];}, tagline:'一張壽險＋69歲起住院日額＋110歲祝壽', terms:[20], ages:[0,65],
   input:{kind:'sum', unit:'萬', min:5, max:2000, def:100, stepFn:(v,d)=>d>0?(v<10?10:v+10):(v-10<10?5:v-10)},
   prem: c => { const r=c.H.rateMain(); return r? {annual:r*c.sum, txt:`20 年期・年繳 <b>NT$ ${c.fm(r*c.sum)}</b>（未折扣）・20 年共 ${c.fm(r*c.sum*20)}`} : null; },
   warn: c => c.sum<10 ? '保額 5 萬須同時附加 HSV 住院附約；一般最低 10 萬' : '',

@@ -1,6 +1,6 @@
 /* SDG 醫保安心重大傷病終身健康保險 — 取自 SDG DM 公版 1150122、SDG 條款 1150122、投保規則 1140602 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW'); const TA={10:[0,60],15:[0,55],20:[0,50],30:[0,40]};
-(window.EXPLAIN=window.EXPLAIN||{}).SDG={name:'醫保安心重大傷病終身健康保險', cat:'重大傷病', icon:'🛡️', tagline:'拿到健保重大傷病卡（22 大類 300 多項）就一次給付，不用住院', terms:[10,15,20,30], defTerm:2, ageOf:t=>TA[t]||[0,60],
+(window.EXPLAIN=window.EXPLAIN||{}).SDG={name:'醫保安心重大傷病終身健康保險', cat:'重大傷病', icon:'🛡️', key30:(c,K)=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`拿到重大傷病卡，領 ${W(c.S)}（第 2 年起）`,0],[`重大燒燙傷、創傷再加 ${W(c.S*0.2)}（第 2 年起）`,1],[`身故至少領 ${W(c.S)}`,4]];}, tagline:'拿到健保重大傷病卡（22 大類 300 多項）就一次給付，不用住院', terms:[10,15,20,30], defTerm:2, ageOf:t=>TA[t]||[0,60],
   input:{kind:'sum', label:'保額', unit:'萬', min:10, max:500, step:10, def:100},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
   cards:c=>[
