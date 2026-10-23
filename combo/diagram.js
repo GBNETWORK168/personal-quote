@@ -76,7 +76,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   d.innerHTML=`<h3>📊 保障示意圖／還本時間軸</h3>${sum}<div class="wrap"><div>${s}
   <div class="lg"><span><i style="background:#f3d48a"></i>PFD 解約金</span><span><i style="background:#ff9b9b"></i>PFD 身故保障</span><span><i style="background:#9fc3ff"></i>PFD 累計已繳</span><span>（美元）</span></div>
   <div class="nav"><button type="button" id="dgP">◀</button><b>點選或拖動選年度</b><button type="button" id="dgN">▶</button></div></div>${c}</div>
-  <div class="ft">解約金含增額繳清及解約紅利（依最可能紅利情境）；台幣以匯率 ${fx} 換算。僅供試算參考，以公司正式建議書為準。</div>`;
+  <div class="ft">解約金含增額繳清及解約紅利（依中分紅情境）；台幣以匯率 ${fx} 換算。僅供試算參考，以公司正式建議書為準。</div>`;
   const sv=document.getElementById('dgSvg'),pick=e=>{const b=sv.getBoundingClientRect(),px=(e.clientX-b.left)*W/b.width;const y=Math.round((px-L)/((W-L-R)/(N-1)))+1;go(y);};
   let drag=false;sv.onpointerdown=e=>{drag=true;sv.setPointerCapture&&sv.setPointerCapture(e.pointerId);pick(e);};sv.onpointermove=e=>{if(drag)pick(e);};sv.onpointerup=sv.onpointercancel=()=>{drag=false;};
   document.getElementById('dgP').onclick=()=>go(sel-1);document.getElementById('dgN').onclick=()=>go(sel+1);}

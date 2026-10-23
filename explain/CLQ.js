@@ -2,7 +2,7 @@
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW')+' 元'; const TA={10:[55,80],15:[55,75],20:[55,70]};
 const pct=n=>n<=5?1:n<=10?1.05:n<=15?1.10:1.15, lp=n=>n<=5?0.10:n<=10?0.105:n<=15?0.11:0.115;
 (window.EXPLAIN=window.EXPLAIN||{}).CLQ={name:'樂活好心安癌症定期健康保險', cat:'癌症', icon:'🎗️', tagline:'55 歲起也能買的癌症險：重度癌症一次給，年數越久給越多（最高 115%）', terms:[10,15,20], defTerm:2, ageOf:t=>TA[t],
-  input:{kind:'sum', label:'保額', unit:'萬', min:10, max:100, step:10, def:100},
+  input:{kind:'sum', label:'保額', unit:'萬', min:10, max:100, step:10, round:1, def:100},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>${F(r*c.sum)}</b>（未折扣）`}:null;},
   cards:c=>[
     {ic:'🎗️',t:'重度癌症',big:F(c.S),line:'第 2～5 年給保額；6～10 年 105%、11～15 年 110%、16～20 年 115%',sub:`第 1 年：年繳×1.06（${F(c.annual*1.06)}）`},
@@ -12,7 +12,7 @@ const pct=n=>n<=5?1:n<=10?1.05:n<=15?1.10:1.15, lp=n=>n<=5?0.10:n<=10?0.105:n<=1
     return {title:'📈 重度癌症給付',svg:EXPLAIN_TL(c,e,[{from:c.age,to:e,label:`💰 每年 ${F(c.annual)}・🎗️ 癌症保障 ${c.term} 年`,color:'var(--c1)'}],P)};},
   examples:c=>[
     {ic:'🎗️',t:'第 1 年確診重度癌症',calc:`年繳 ${F(c.annual)} × 1.06`,pay:c.annual*1.06},
-    {ic:'🔹',t:`第 3 年確診初期${CX(c.sex,c.age+3,1)}`,calc:'保額 10%',pay:c.S*0.1},
-    {ic:'🎗️',t:`第 ${Math.min(c.term,12)} 年確診重度${CX(c.sex,c.age+Math.min(c.term,12))}`,calc:`保額 × ${pct(Math.min(c.term,12))*100}%`,pay:c.S*pct(Math.min(c.term,12))}],
+    {ic:'🔹',t:`第 3 年確診初期${CX(c.sex,c.age+2,1)}`,calc:'保額 10%',pay:c.S*0.1},
+    {ic:'🎗️',t:`第 ${Math.min(c.term,12)} 年確診重度${CX(c.sex,c.age+Math.min(c.term,12)-1)}`,calc:`保額 × ${pct(Math.min(c.term,12))*100}%`,pay:c.S*pct(Math.min(c.term,12))}],
   src:['CLQ DM 公版（60 歲男 100 萬 20 年 年繳 33,900 範例）','CLQ 保單條款 113.09.23','CLQ 投保規則']};
 })();

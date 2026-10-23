@@ -57,7 +57,7 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
 </div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>解約金<br>US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(back(x,t))}</td></tr>`;
-  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元；最可能紅利</div></details></div>';}
+  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元；中分紅</div></details></div>';}
 function splitHtml(c,age,rs,Y,fx,R){const {A,B}=c.sp,ntd=v=>`<br><span class="k">≈ NT$ ${f(v*fx)}</span>`;
   const bk=x=>0;
   const tot=t=>A.rows[t-1].cum+B.rows[t-1].cum+c.rcum(t),bb=t=>A.rows[t-1].X+B.rows[t-1].X,n=Math.min(A.rows.length,B.rows.length);
@@ -76,7 +76,7 @@ function splitHtml(c,age,rs,Y,fx,R){const {A,B}=c.sp,ntd=v=>`<br><span class="k"
 </div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>拿回 US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.min(n,Math.max(30,Y));t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(bb(t))}</td></tr>`;
-  return h+'</tbody></table><div class="k" style="font-size:12px">美元；最可能紅利</div></details></div>';}
+  return h+'</tbody></table><div class="k" style="font-size:12px">美元；中分紅</div></details></div>';}
 window.Combo2Run=run;
 const tab=b=>{$('tA').classList.toggle('on',!b);$('tB').classList.toggle('on',b);$('secA').hidden=b;$('secB').hidden=!b;
   if(b){color();window.pfdLoad().then(()=>{ok=true;run();}).catch(()=>{$('b_out').innerHTML='<div class="card no">載入失敗，請重新整理</div>';});}

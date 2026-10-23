@@ -44,7 +44,7 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
    <div class="be">✅ 第 ${be} 年回本</div></div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳</th><th>PFD 解約金</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(sv(t))}</td></tr>`;
-  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；最可能紅利</div></details></div>';
+  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；中分紅</div></details></div>';
   if(window.ComboDiagram)window.ComboDiagram(o,{age,fx,C,q,code,T,be,Y,Sp,S,kw:K.kw,kn:K.kn,cEnd:st.pk==='sdp'?age+T+35-1:0});}
 // v1.40 拆單：單張 30 萬做不到第 Y 年拿回時，PFD 拆兩張（A 張 30 萬＋B 張最低，0.1 萬一級），兩張第 Y 年都全部解約
 function split(qs,C,Y,fx){const A=qs.find(([s])=>s===qs[qs.length-1][0]);if(!A||!A[1].rows[Y-1])return null;
@@ -60,7 +60,7 @@ function splitHtml(sp,C,code,T,Y,fx,age){const {A,B}=sp,tot=t=>C.rows[t-1].cum+(
    <div class="be">✅ 第 ${be} 年回本（兩張 PFD 都全部解約）</div></div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳</th><th>兩張 PFD 解約金</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(sv(t))}</td></tr>`;
-  return h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；最可能紅利</div></details></div>';}
+  return h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；中分紅</div></details></div>';}
 window.ComboSplit=split;
 window.ComboRun=run;
 $('open').onclick=()=>{$('open').disabled=true;$('open').textContent='載入中…';ready=window.pfdLoad();

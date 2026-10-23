@@ -1,12 +1,12 @@
 // 依確診年齡／性別選常見癌症（範例用）。重度：<15 白血病；男 15–39 淋巴瘤、40–59 大腸癌、60+ 肺癌；女 15–29 淋巴瘤、30–59 乳癌、60+ 大腸癌。輕度：<40 甲狀腺癌；男 40–59 大腸癌、60+ 攝護腺癌；女 40+ 乳癌
-window.CX=(sex,d,mild)=>{if(mild) return d<40?'甲狀腺癌':(sex===1?(d<60?'大腸癌':'攝護腺癌'):'乳癌'); if(d<15) return '白血病'; return sex===1?(d<40?'淋巴瘤':d<60?'大腸癌':'肺癌'):(d<30?'淋巴瘤':d<60?'乳癌':'大腸癌');};
+window.CX=(sex,d,mild)=>{if(mild) return d<40?'甲狀腺癌':(sex===1?(d<60?'大腸癌':'攝護腺癌'):'乳癌'); if(d<15) return '急性白血病'; return sex===1?(d<40?'第二期以上淋巴瘤':d<60?'大腸癌':'肺癌'):(d<30?'第二期以上淋巴瘤':d<60?'乳癌':'大腸癌');};
 // 特定癌症（CIA／CIB／CLZ／CLX 加碼清單內）：男 <40 睪丸癌、40+ 大腸癌；女 <25 卵巢癌、25–39 子宮頸癌、40+ 乳癌
 window.CXS=(sex,d)=>sex===1?(d<40?'睪丸癌':'大腸癌'):(d<25?'卵巢癌':d<40?'子宮頸癌':'乳癌');
 // v1.48 寫實癌別：0–14 歲用 CX（白血病，不在特定癌症清單、不加碼）；女性 15–24 用 CX（淋巴瘤，不加碼）；其餘用特定癌症 CXS（加碼）
 window.CXR=(sex,d)=>(d<15||(sex===2&&d<25))?{x:window.CX(sex,d),sp:false}:{x:window.CXS(sex,d),sp:true};
 window.CXT=x=>/白血病|淋巴瘤/.test(x)?x:'第二期'+x;
 // 同頁避免重複：與 y 相同時換另一個常見癌症
-window.CXD=(x,y)=>x!==y?x:({'白血病':'淋巴瘤','淋巴瘤':'白血病','大腸癌':'肺癌','肺癌':'大腸癌','乳癌':'大腸癌','甲狀腺癌':'淋巴瘤','攝護腺癌':'大腸癌'}[x]||x);
+window.CXD=(x,y)=>x!==y?x:({'急性白血病':'第二期以上淋巴瘤','第二期以上淋巴瘤':'急性白血病','大腸癌':'肺癌','肺癌':'大腸癌','乳癌':'大腸癌','甲狀腺癌':'第二期以上淋巴瘤','攝護腺癌':'大腸癌'}[x]||x);
 /* 解說頁通用模板 v1.32：explain.html?bundle=[...] 整包；?code=XWS5&age=30&sex=1&sum=100&term=20&plan=2 ；無 code＝商品選單 */
 (function(){
 const $=s=>document.querySelector(s), q=new URLSearchParams(location.search), E=window.EXPLAIN||{};
@@ -59,7 +59,7 @@ function draw(){
   $('#ttl').textContent=`${code} ${D.name}`;
   let inp='';
   let planRow=''; if(I.kind==='plan') planRow=`<div class="seg terms">${I.plans.map(p=>`<button data-p="${p.v}" class="${st.plan==p.v?'on':''}">${p.lbl}</button>`).join('')}</div>`;
-  else if(I.kind!=='none') inp=`<label class="lsum">${(I.label||'保額')+((I.label||'').includes(I.unit)?'':'（'+I.unit+'）')}<div class="agebox"><button data-m="-1">−</button><input class="nin" data-in="m" type="number" inputmode="decimal" min="${I.min}" max="${I.max}" value="${st.sum}"><button data-m="1">＋</button></div></label>`;
+  else if(I.kind!=='none') inp=`<label class="lsum">${(I.label||'保額')+((I.label||'').includes(I.unit)?'':'（'+I.unit+'）')}<div class="agebox"><button data-m="-1">−</button><input class="nin" data-in="m" type="number" inputmode="${I.round?'numeric':'decimal'}" step="${I.round||'any'}" min="${I.min}" max="${I.max}" value="${st.sum}"><button data-m="1">＋</button></div></label>`;
   let h=`<section class="card ctl"><div class="row3">
    <label>年齡<div class="agebox"><button data-a="-1">−</button><input class="nin" data-in="a" type="number" inputmode="numeric" min="0" value="${st.age}"><button data-a="1">＋</button></div></label>
    <label>性別<div class="seg">${D.sexOnly?`<button class="on">${D.sexOnly==1?'男性專屬':'女性專屬'}</button>`:`<button data-s="1" class="${st.sex==1?'on':''}">男</button><button data-s="2" class="${st.sex==2?'on':''}">女</button>`}</div></label>
@@ -84,7 +84,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 document.addEventListener('change',e=>{const t=e.target;if(!t.dataset||!t.dataset.in||!D)return; const v=parseFloat(t.value); if(isNaN(v)){draw();return;}
   const [a0,a1]=ageRange();
   if(t.dataset.in==='a') st.age=Math.min(Math.max(a1,a0),Math.max(0,Math.round(v)));
-  if(t.dataset.in==='m') st.sum=Math.min(I.max,Math.max(I.min,v));
+  if(t.dataset.in==='m') st.sum=Math.min(I.max,Math.max(I.min,I.round?Math.round(v/I.round)*I.round:v));   // v1.49：有 round 的商品保額取整數單位
   draw();});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.in) e.target.blur();});
 draw();

@@ -63,7 +63,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     has('XWS5').forEach(({c})=>rows.push(['XWS5',age>=69?`老年住院 ${F(c.S*0.003)}×${days} 天`:`未滿 69 歲，老年住院不給付`,age>=69?c.S*0.003*days:0]));
     if(rows.length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
   }
-  { const rows=[]; const d6=age+6, CA=P.filter(p=>p.D&&['CLZ','CLX','CIA','CIB'].includes(p.k));
+  { const rows=[]; const d6=age+5,   /* 第 6 保單年度＝投保年齡＋5 */ CA=P.filter(p=>p.D&&['CLZ','CLX','CIA','CIB'].includes(p.k));
     // v1.48：癌別依 window.CXS（有特定癌症加碼商品時）或 window.CX 的年齡／性別規則
     const R=CA.length?window.CXR(sex,d6):{x:window.CX(sex,d6),sp:false}, cx=R.x, cxT=window.CXT(cx);
     CA.forEach(({k,c})=>{const n6=Math.min(6,c.term), p6=c.annual*n6*1.06, sev=Math.max(c.S,p6);

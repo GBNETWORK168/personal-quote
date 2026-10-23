@@ -454,7 +454,7 @@ function medState(){
 function insAge(bd){
   const b = new Date(bd), t = new Date();
   let y = t.getFullYear()-b.getFullYear(), m = t.getMonth()-b.getMonth(), d = t.getDate()-b.getDate();
-  if (d < 0) m -= 1; if (m < 0) { y -= 1; m += 12; }
+  if (d < 0) { m -= 1; d += 31; } if (m < 0) { y -= 1; m += 12; }
   const extra = (m > 6 || (m === 6 && d > 0)) ? 1 : 0;   // 零數超過六個月加一歲
   return y + extra;
 }
@@ -465,7 +465,7 @@ function defaultsFor(p, id){
   const terms = termsFor(p, st.age, plan);
   const hsv = !!p.minHSV && hsvOn(id);   // 只有 HSV 實際附加於此主約（這一張）才算
   const [mn, mx] = limits(p, st.age, st.occ, hsv);
-  let term = terms.includes(s.term) ? s.term : terms[terms.length-1];
+  let term = terms.includes(s.term) ? s.term : (terms.includes(20) ? 20 : terms[terms.length-1]);   // v1.49：預設 20 年期（與解說頁、DM 一致）
   let sum = s.sum != null ? s.sum : (p.unit==='day' ? Math.min(Math.max(1000,mn),mx) : p.soft || mn);
   const mode = p.modes.includes(s.mode) ? s.mode : p.modes[0];
   // 同商品第 2 張起：累計本險種最高保額扣掉排在前面的各張
