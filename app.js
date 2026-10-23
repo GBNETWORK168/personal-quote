@@ -1,4 +1,4 @@
-/* 富邦四季春快速報價 v1.52 — 計算引擎 + UI（純前端，無外部相依） */
+/* 富邦四季春快速報價 v1.54 — 計算引擎 + UI（純前端，無外部相依） */
 (function(){
 const P = window.PRODUCTS, RT = window.RATES;
 const fmt = n => n==null ? '-' : Math.round(n).toLocaleString('zh-TW');
@@ -1020,7 +1020,7 @@ document.addEventListener('click', e => {
   const md = e.target.closest('[data-mdup]');
   if (md){ const id = addDup(md.dataset.mdup); render(); if (id){ const el = document.getElementById('p-'+id.replace('#','_')); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); } return; }
   const np = e.target.closest('[data-newp]');
-  if (np){ const c = np.dataset.newp; if (np.dataset.newsx) st.sex = +np.dataset.newsx;   // v1.52：性別不符時點一下自動切換性別再報價
+  if (np){ const c = np.dataset.newp; if (np.dataset.newsx){ st.sex = +np.dataset.newsx; sexToast(c); }   // v1.52：性別不符時點一下自動切換性別再報價
     if (!st.mains.includes(c)) toggle('m:'+c, true); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   const qk = e.target.closest('[data-quick]');
   if (qk){ const c = qk.dataset.quick; toggle('m:'+c, !st.mains.includes(c)); render(); const el = document.getElementById('p-'+c); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); return; }
@@ -1091,5 +1091,11 @@ document.addEventListener('keydown', e => { if (e.target.id === 'q' && e.key ===
 document.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.grp')) return; const was = !!st.gopen[d.dataset.g]; if (was === d.open) return; st.gopen[d.dataset.g] = d.open; if (d.open && !d.querySelector('.prod')) render(); else save(); }, true);
 { const pend = CAT.filter(c=>c.kind==='main' ? !P.some(p=>p.code===c.code) : !RR[c.code]).map(c=>c.code);
   $('#ver').textContent = `可試算主約 ${P.length} 項：` + P.map(p=>p.code).join('、') + `｜可試算附約 ${CAT.filter(c=>c.kind!=='main'&&RR[c.code]).length} 項：` + CAT.filter(c=>c.kind!=='main'&&RR[c.code]).map(c=>c.code).join('、') + (pend.length ? '｜費率整理中：' + pend.join('、') : '｜全部商品皆可試算'); }
+// v1.54：點新商品自動切換性別後提示，並列出已選但性別不符的商品（報價卡上同步標示「性別不符」）
+function sexToast(nc){ const bad=[...new Set(st.mains.map(base))].filter(k=>k!==nc&&(P.find(p=>p.code===k)||{}).sex&&(P.find(p=>p.code===k)||{}).sex!==st.sex);
+  let t=document.getElementById('sxToast'); if(!t){ t=document.createElement('div'); t.id='sxToast'; t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:99;background:#1d2733;color:#fff;padding:10px 16px;border-radius:12px;font-size:15px;max-width:90vw;box-shadow:0 4px 16px rgba(0,0,0,.25);text-align:center'; document.body.appendChild(t); }
+  t.textContent=`已切換為${st.sex==1?'男':'女'}性，請確認其他商品`+(bad.length?`（${bad.join('、')} 性別不符，已標示）`:'');
+  t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>{t.style.display='none'},4000); }
 render();
 })();
+

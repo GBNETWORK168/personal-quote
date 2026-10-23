@@ -23,11 +23,13 @@ window.EXPLAIN_TL=function(c,end,bars,pts){
     let anc='middle', x0=x-w/2; if(x0<4){anc='start';x0=Math.max(4,x-6);} else if(x+w/2>596){anc='end';x0=Math.min(x+6,596)-w;}
     let r=0; while(rowsR[r]!=null&&rowsR[r]>x0) r++; rowsR[r]=x0+w; return {x,txt,anc,r,tx:anc==='start'?Math.max(4,x-6):anc==='end'?Math.min(596,x+6):x};});
   const nr=Math.max(1,rowsR.length), top=52+nr*24;
-  let s=`<svg viewBox="0 0 600 ${top+6+bars.length*40}" role="img">`;
+  let s=`<svg class="tls" viewBox="0 0 600 ${top+6+bars.length*40}" role="img">`;
   s+=`<line x1="${X(a0)}" y1="20" x2="${X(end)}" y2="20" stroke="#9aa7b5" stroke-width="3"/>`;
   L.forEach(o=>{s+=`<circle cx="${o.x}" cy="20" r="6" fill="var(--c1)"/>`+(o.r?`<line x1="${o.x}" y1="26" x2="${o.x}" y2="${30+o.r*24}" stroke="#c5ced8" stroke-width="1"/>`:'')+`<text x="${o.tx}" y="${44+o.r*24}" text-anchor="${o.anc}" font-size="15" fill="#333">${o.txt}</text>`;});
   bars.forEach((b,i)=>{const y=top+i*40, x1=X(Math.max(b.from,a0)), x2=X(b.to); s+=`<rect x="${x1}" y="${y}" width="${Math.max(4,x2-x1)}" height="12" rx="6" fill="${b.color||'var(--c2)'}"/><text x="20" y="${y+30}" font-size="15" fill="#333">${b.label}</text>`;});
-  return s+`</svg>`;
+  // v1.54：窄螢幕改用直式時間軸（字級 ≥14px）
+  const vt=`<ol class="vtl">`+P.map(([a,l])=>`<li><b>${a} 歲</b>${l?' '+l:''}</li>`).join('')+bars.map(b=>`<li class="bar"><i style="background:${b.color||'var(--c2)'}"></i>${Math.max(b.from,a0)}～${Math.min(b.to,end)} 歲｜${b.label}</li>`).join('')+`</ol>`;
+  return s+`</svg>`+vt;
 };
 if(q.get('bundle')){ try{ window.EXPLAIN_BUNDLE(JSON.parse(q.get('bundle')), gAge, gSex); }catch(e){ console.error(e); $('#app').innerHTML='<div class="card warn">保障總覽資料讀取失敗，請回報價頁重新按「📖 保障總覽」。</div>'; } return; }
 if(!D){ picker(); return; }
