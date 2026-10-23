@@ -56,7 +56,7 @@ function draw(){
   $('#ttl').textContent=`${code} ${D.name}`;
   let inp='';
   let planRow=''; if(I.kind==='plan') planRow=`<div class="seg terms">${I.plans.map(p=>`<button data-p="${p.v}" class="${st.plan==p.v?'on':''}">${p.lbl}</button>`).join('')}</div>`;
-  else if(I.kind!=='none') inp=`<label>${I.label||'保額'}（${I.unit}）<div class="agebox"><button data-m="-1">−</button><input class="nin" data-in="m" type="number" inputmode="decimal" min="${I.min}" max="${I.max}" value="${st.sum}"><button data-m="1">＋</button></div></label>`;
+  else if(I.kind!=='none') inp=`<label class="lsum">${(I.label||'保額')+((I.label||'').includes(I.unit)?'':'（'+I.unit+'）')}<div class="agebox"><button data-m="-1">−</button><input class="nin" data-in="m" type="number" inputmode="decimal" min="${I.min}" max="${I.max}" value="${st.sum}"><button data-m="1">＋</button></div></label>`;
   let h=`<section class="card ctl"><div class="row3">
    <label>年齡<div class="agebox"><button data-a="-1">−</button><input class="nin" data-in="a" type="number" inputmode="numeric" min="0" value="${st.age}"><button data-a="1">＋</button></div></label>
    <label>性別<div class="seg">${D.sexOnly?`<button class="on">${D.sexOnly==1?'男性專屬':'女性專屬'}</button>`:`<button data-s="1" class="${st.sex==1?'on':''}">男</button><button data-s="2" class="${st.sex==2?'on':''}">女</button>`}</div></label>

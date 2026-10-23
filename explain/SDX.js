@@ -18,7 +18,7 @@ function mk(code,o){ const U=o.usd, F=n=>U?'US$ '+fm(n):fm(n)+' 元', K=o.k;
     {ic:'🔥',t:'特定重大傷病加碼',big:'＋'+F(c.S*0.2),line:'燒燙傷 20% 以上、重大創傷、脊髓損傷，再加保額 20%',sub:''},
     {ic:'❤️',t:'特定重大疾病',big:F(c.S),line:'急性心肌梗塞（重度）、冠狀動脈繞道手術',sub:`與年繳總和×${K} 取高；等待期 90 天`},
     {ic:'🩺',t:'特定傷病',big:F(c.S),line:'主動脈外科置換、嚴重原發性肺動脈高血壓',sub:`與年繳總和×${K} 取高`}];
-    if(!o.rider){ L.push({ic:'🕊️',t:'身故／完全失能',big:'至少 '+F(Math.max(c.S,T*K)),line:`保額與年繳總和×${K} 取高`,sub:c.age<15?'未滿 15 足歲身故改給喪葬費用':''});
+    if(!o.rider){ L.push({ic:'🕊️',t:'身故／完全失能',big:(T*K>c.S?`${F(c.S)} 起，繳費期滿後至少 ${F(T*K)}`:'至少 '+F(c.S)),line:`保額與「已繳年繳保費總和×${K}」取較高者（不是加總）`,sub:c.age<15?'未滿 15 足歲身故改給喪葬費用':''});
       L.push({ic:'🎁',t:o.endT,big:'至少 '+F(Math.max(c.S,T*K)),line:`${o.endLine}，保額與年繳總和×${K} 取高`,sub:'以上各項只領一次，領完契約結束'});
       L.push({ic:'🙌',t:'意外 2～6 級失能免繳',big:'免繳',line:'繳費期間意外 180 天內 2～6 級失能',sub:'保障照樣有效'}); }
     else L.push(...o.riderCards(c,F));

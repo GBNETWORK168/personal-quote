@@ -10,7 +10,7 @@
     {ic:'🦵',t:'關節置換',big:F(c.S*3)+'/次',line:'全髖（股）關節、全膝關節置換或再置換',sub:'每年 2 次'},
     {ic:'⚠️',t:'意外失明／失聰',big:F(c.S*3),line:`意外一目失明 ${F(c.S*2)}；兩耳失聰 ${F(c.S*3)}`,sub:'各一次'},
     {ic:'🎁',t:'無理賠回饋',big:F(c.annual*10*0.3),line:'到 80 歲都沒申請，給年繳總和 30%',sub:'醫療給付總額保額×100'},
-    {ic:'🕊️',t:'身故',big:'至少 '+F(Math.max(c.S,c.tot)),line:'年繳總和、保額、保價金×比率 取最高',sub:''}],
+    {ic:'🕊️',t:'身故',big:(c.tot>c.S?`${F(c.S)}起，繳費期滿後至少 ${F(c.tot)}`:'至少 '+F(c.S)),line:'已繳年繳保費總和、保額、保價金×比率 三者取最高（不是加總）',sub:''}],
   tl:c=>({title:'📈 繳費與保障',svg:EXPLAIN_TL(c,80,[{from:c.age,to:c.payEnd,label:`💰 繳 10 年・每年 ${F(c.annual)}`,color:'var(--c1)'},{from:c.age,to:80,label:'👁️ 眼耳關節保障到 80 歲'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[80,'屆滿・回饋']])}),
   examples:c=>[
     {ic:'👁️',t:'兩眼分別做白內障手術',calc:`${fm(c.S*1.5)} × 2`,pay:c.S*3},
