@@ -3,7 +3,7 @@
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2;
 const load=src=>new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});
-const st={sex:1,T:20,Y:20,pk:'new'};
+const st={sex:1,T:20,Y:30,pk:'new'};
 const PK={new:{c:{1:'CIA',2:'CIB'},T:[20,10,30],s:[50,500],kw:'癌症',kn:'防癌險'},old:{c:{1:'CLZ',2:'CLX'},T:[20,10],s:[50,300],kw:'癌症',kn:'防癌險'}};
 const codeOf=()=>PK[st.pk].c[st.sex];window.ComboState=st;let ready=null,on=false;
 window.pfdLoad=()=>window.__pfdP||(window.__pfdP=Promise.all([load('combo/pfd_engine.js?v=c01'),load('combo/pfd_data.js?v=c01')]).catch(e=>{window.__pfdP=null;throw e;}));

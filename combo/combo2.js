@@ -4,7 +4,7 @@
 // 單張 30 萬做不到時才拆兩張 PFD（附約掛第 1 張），兩張都全部解約。
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2, KEEP=2, MINY=20;
-const st={sex:1,rd:'FDE',Y:20};let ok=false;
+const st={sex:1,rd:'FDE',Y:30};let ok=false;
 const color=()=>document.body.classList.toggle('f',st.sex===2);
 const seg=(id,k,num)=>$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{st[k]=num?+b.dataset.v:b.dataset.v;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(k==='sex')color();if(k==='Y')fillY();run();});
 seg('b_sex','sex',1);seg('b_rd','rd');seg('b_yb','Y',1);
