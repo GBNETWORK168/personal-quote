@@ -1,0 +1,18 @@
+name: daily-fx
+on:
+  schedule: [{cron: '30 1 * * 1-5'}]
+  workflow_dispatch:
+permissions: {contents: write}
+concurrency: {group: fx, cancel-in-progress: false}
+jobs:
+  fx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/fx.py
+      - run: |
+          git config user.name fx-bot; git config user.email fx-bot@users.noreply.github.com
+          git add data/fx.json
+          git diff --cached --quiet && exit 0
+          git commit -m "fx $(date -u +%F)"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin main && break; sleep 5; done
