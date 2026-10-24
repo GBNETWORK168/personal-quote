@@ -55,6 +55,7 @@ const H={fm, rateMain(sfx){const R=(window.RATES||{})[code]; const r=R&&R[`${cod
   rateRider(rc,key){const R=(window.RIDER_RATES||{})[rc]; const r=R&&R.t[key]; if(!r) return null; const v=r[1][st.age-r[0]]; return v==null?null:v;}};
 function draw(){
   document.body.classList.toggle('fem',st.sex===2);
+  let autoT=''; if(D.terms&&D.ageOf){const [b0,b1]=ageRange(); if(st.age<b0||st.age>b1){const t=D.terms.slice().reverse().find(t=>{const [x,y]=D.ageOf(t); return st.age>=x&&st.age<=y;}); if(t){autoT=`👉 ${st.age} 歲不能投保 ${st.term} 年期，已自動改為 ${t} 年期`; st.term=t;}}}   // v1.60：年齡超過所選年期時自動換可投保年期，避免顯示 0 元
   const [a0,a1]=ageRange(); const ageOk=st.age>=a0&&st.age<=a1;
   const c={age:st.age, sex:st.sex, term:st.term, sum:st.sum, plan:st.plan, S:(st.sum||0)*(I.unit==='萬'?1e4:1), payEnd:st.age+(st.term||0), H, fm};
   const pr=ageOk&&D.prem? D.prem(c) : null; c.annual=pr&&pr.annual||0; c.tot=c.annual*(st.term||0);
@@ -67,7 +68,7 @@ function draw(){
    <label>性別<div class="seg">${D.sexOnly?`<button class="on">${D.sexOnly==1?'男性專屬':'女性專屬'}</button>`:`<button data-s="1" class="${st.sex==1?'on':''}">男</button><button data-s="2" class="${st.sex==2?'on':''}">女</button>`}</div></label>
    ${inp}</div>${planRow}
    ${D.terms&&D.terms.length>1?`<div class="seg terms">${D.terms.map(t=>`<button data-t="${t}" class="${st.term==t?'on':''}">${t} 年期</button>`).join('')}</div>`:''}
-   <div class="prem">${!ageOk?`此年齡無法投保（${st.term?st.term+' 年期 ':''}投保年齡 ${a0}–${a1} 歲）`:pr?pr.txt:''}</div>
+   ${autoT?`<div class="prem" style="color:#b45309">${autoT}</div>`:''}<div class="prem">${!ageOk?`此年齡無法投保（${st.term?st.term+' 年期 ':''}投保年齡 ${a0}–${a1} 歲）`:pr?pr.txt:''}</div>
    ${D.warn&&D.warn(c)?`<div class="warn">${D.warn(c)}</div>`:''}</section>`;
   h+=(D.key30?'':`<div class="tag1">${D.tagline}</div>`)+`<section class="grid">`+D.cards(c).map((k,i)=>`<div class="bc" id="bc${i}"><div class="ic">${k.ic}</div><div class="bt">${k.t}</div><div class="big">${k.big}</div><div class="ln">${k.line}</div>${k.sub?`<div class="sb">${k.sub}</div>`:''}</div>`).join('')+`</section>`;
   if(D.tl){const t=D.tl(c); if(t) h+=`<h2 class="h2">${t.title}</h2><div class="card">${t.svg}</div>`;}
