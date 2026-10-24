@@ -1,6 +1,6 @@
 // 搭配專區 第二組：PFD 20 年期＋FDE 或 FDF（美元），最可能紅利（M），紅利選增額繳清。PFD 用 engine.js（ENG.quote），附約保費用 QuoteEngine.rQuote。
 // 全部解約版（YT 2026-10-20 向保全科確認）：FDE／FDF 20 年繳費期滿後不受主約影響，PFD 全部解約後附約仍持續有效至 100 歲。
-// 第 Y 年 PFD 全部解約，拿回當年解約金（含增額繳清與解約紅利）；找最低 PFD 保額使拿回 ≥ PFD＋附約累計已繳。附約 >2 萬時須 ≦PFD 保額（1 倍）。
+// 第 Y 年 PFD 全部解約，領回當年解約金（含增額繳清與解約紅利）；找最低 PFD 保額使領回 ≥ PFD＋附約累計已繳。附約 >2 萬時須 ≦PFD 保額（1 倍）。
 // 單張 30 萬做不到時才拆兩張 PFD（附約掛第 1 張），兩張都全部解約。
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2, KEEP=2, MINY=20;
@@ -40,7 +40,7 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
   const x=c.hit;
   if(!x&&c.sp){o.innerHTML=splitHtml(c,age,rs,Y,fx,R);return;}
   if(!x){let e=null;for(let y=MINY;y<=maxY()&&e==null;y++)if(c.qs.some(q=>c.okY(q,y)))e=y;
-    o.innerHTML=`<div class="card big"><div class="no">第 ${Y} 年拿回：PFD 買到 ${M.smax} 萬美元也做不到</div><div class="be" style="color:var(--d)">${e?'最早可以：第 '+e+' 年':'到 100 歲都做不到'}</div>${e?`<div style="text-align:center"><button type="button" id="b_goE" style="font-size:18px;padding:8px 16px;border:0;border-radius:10px;background:var(--d);color:#fff">改成第 ${e} 年</button></div>`:''}</div>`;
+    o.innerHTML=`<div class="card big"><div class="no">第 ${Y} 年領回：PFD 買到 ${M.smax} 萬美元也做不到</div><div class="be" style="color:var(--d)">${e?'最早可以：第 '+e+' 年':'到 100 歲都做不到'}</div>${e?`<div style="text-align:center"><button type="button" id="b_goE" style="font-size:18px;padding:8px 16px;border:0;border-radius:10px;background:var(--d);color:#fff">改成第 ${e} 年</button></div>`:''}</div>`;
     if(e)$('b_goE').onclick=()=>{st.Y=e;fillY();run();};return;}
   const tot=t=>x.rows[t-1].cum+c.rcum(t),be=x.rows.findIndex((r,i)=>back(x,i+1)>=tot(i+1))+1,yr=x.p1+c.rp;
   const ntd=v=>`<br><span class="k">≈ NT$ ${f(v*fx)}</span>`;
@@ -50,10 +50,10 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
     <div><div class="k">PFD 年繳（20 年）</div><b>US$ ${f(x.p1)}</b>${ntd(x.p1)}</div>
     <div><div class="k">${R} ${rs} 萬 年繳（20 年）</div><b>US$ ${f(c.rp)}</b>${ntd(c.rp)}</div>
     <div><div class="k">兩張合計年繳</div><b>US$ ${f(yr)}</b>${ntd(yr)}</div>
-    <div><div class="k">第 ${Y} 年</div>已繳 <b>US$ ${f(tot(Y))}</b><br>拿回 <b>US$ ${f(back(x,Y))}</b></div>
+    <div><div class="k">第 ${Y} 年</div>已繳 <b>US$ ${f(tot(Y))}</b><br>領回 <b>US$ ${f(back(x,Y))}</b></div>
    </div>
    <div class="be">✅ 第 ${be} 年回本</div>
-   <div class="k" style="text-align:center">PFD 全部解約拿回；${R} ${rs} 萬美元繳費期滿，繼續保障到 100 歲</div>
+   <div class="k" style="text-align:center">PFD 全部解約領回；${R} ${rs} 萬美元繳費期滿，繼續保障到 100 歲</div>
 </div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>解約金<br>US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(back(x,t))}</td></tr>`;
@@ -70,11 +70,11 @@ function splitHtml(c,age,rs,Y,fx,R){const {A,B}=c.sp,ntd=v=>`<br><span class="k"
     <div><div class="k">${R} ${rs} 萬 年繳（20 年）</div><b>US$ ${f(c.rp)}</b>${ntd(c.rp)}</div>
     <div><div class="k">三張合計年繳</div><b>US$ ${f(yr)}</b>${ntd(yr)}</div>
    </div>
-   <div class="grid" style="margin-top:8px"><div style="grid-column:1/3"><div class="k">第 ${Y} 年</div>已繳 <b>US$ ${f(tot(Y))}</b>　拿回 <b>US$ ${f(bb(Y))}</b></div></div>
+   <div class="grid" style="margin-top:8px"><div style="grid-column:1/3"><div class="k">第 ${Y} 年</div>已繳 <b>US$ ${f(tot(Y))}</b>　領回 <b>US$ ${f(bb(Y))}</b></div></div>
    ${be?`<div class="be">✅ 第 ${be} 年回本</div>`:''}
-   <div class="k" style="text-align:center">兩張 PFD 全部解約拿回；${R} ${rs} 萬美元繼續保障到 100 歲</div>
+   <div class="k" style="text-align:center">兩張 PFD 全部解約領回；${R} ${rs} 萬美元繼續保障到 100 歲</div>
 </div>
-  <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>拿回 US$</th></tr></thead><tbody>`;
+  <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>領回 US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.min(n,Math.max(30,Y));t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(bb(t))}</td></tr>`;
   return h+'</tbody></table><div class="k" style="font-size:12px">美元；中分紅</div></details></div>';}
 window.Combo2Run=run;

@@ -29,25 +29,25 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
   let Sp=null,q=null;for(const [s,x] of qs)if(okY(x,Y)){Sp=s;q=x;break;}
   if(Sp==null){const sp=split(qs,C,Y,fx);if(sp){o.innerHTML=splitHtml(sp,C,code,T,Y,fx,age);return;}
     let e=null;for(let y=MINY;y<=maxY()&&e==null;y++)if(qs.some(([,x])=>okY(x,y)))e=y;
-    o.innerHTML=`<div class="card big"><div class="no">第 ${Y} 年拿回：PFD 買到 ${M.smax} 萬美元也做不到</div><div class="be" style="color:var(--d)">${e?'最早可以：第 '+e+' 年':'到 100 歲都做不到'}</div>${e?`<div style="text-align:center"><button type="button" id="goE" style="font-size:18px;padding:8px 16px;border:0;border-radius:10px;background:var(--d);color:#fff">改成第 ${e} 年</button></div>`:''}</div>`;
+    o.innerHTML=`<div class="card big"><div class="no">第 ${Y} 年領回：PFD 買到 ${M.smax} 萬美元也做不到</div><div class="be" style="color:var(--d)">${e?'最早可以：第 '+e+' 年':'到 100 歲都做不到'}</div>${e?`<div style="text-align:center"><button type="button" id="goE" style="font-size:18px;padding:8px 16px;border:0;border-radius:10px;background:var(--d);color:#fff">改成第 ${e} 年</button></div>`:''}</div>`;
     if(e)$('goE').onclick=()=>{st.Y=e;fillY();run();};return;}
   const tot=t=>C.rows[t-1].cum+q.rows[t-1].cum*fx, sv=t=>q.rows[t-1].X*fx, be=q.rows.findIndex((r,i)=>sv(i+1)>=tot(i+1))+1;
   const yrBoth=C.first+q.p1*fx, cat=(window.CATALOG||[]).find(z=>z.code===code)||{}, mE=/(\d+)\s*歲/.exec(cat.cover||''), cEnd=st.pk==='new'?95:(mE?+mE[1]:0), isN=st.pk==='new', Sw=S*1e4;
-  // v1.61：20／25／30 年拿回對照（同一套最小保額邏輯，單張不夠才拆兩張）
+  // v1.61：20／25／30 年領回對照（同一套最小保額邏輯，單張不夠才拆兩張）
   const cmp=[20,25,30].filter(y=>y<=maxY()).map(y=>{for(const [s,x] of qs)if(okY(x,y))return {y,mo:(C.first+x.p1*fx)/12,S:s+' 萬',X:x.rows[y-1].X*fx};
     const sp=split(qs,C,y,fx);return sp?{y,mo:(C.first+(sp.A.q.p1+sp.B.q.p1)*fx)/12,S:sp.A.S+'＋'+sp.B.S+' 萬',X:(sp.A.q.rows[y-1].X+sp.B.q.rows[y-1].X)*fx}:{y};});
   const g='style="color:#7a8594;font-size:13px"', c106=(cRows(code,age,S,T,1).rows||C.rows)[T-1].cum*1.06;   // 條款：年繳保費總和（未折扣，同 explain/CIAB.js c.tot）
   let h=`<div class="card big">
-   <div class="one">每月 ${f(yrBoth/12)} 元，${K.kw}保障 ${S} 萬到 ${cEnd} 歲，${age+Y-1} 歲時兩張保單繳的錢全部拿回。</div>
+   <div class="one">每月 ${f(yrBoth/12)} 元，${K.kw}保障 ${S} 萬到 ${cEnd} 歲，${age+Y-1} 歲時兩張保單繳的錢全部領回。</div>
    <div class="k">PFD 保額</div><div class="v">${Sp} 萬美元</div><div ${g}>第 1 年身故約 US$ ${f(q.rows[0].W)}，逐年增加</div>
    <div class="grid" style="margin-top:8px">
     <div><div class="k">PFD 年繳（20 年）</div><b>US$ ${f(q.p1)}</b><br><span class="k">≈ NT$ ${f(q.p1*fx)}</span></div>
     <div><div class="k">${code} 年繳（${T} 年）</div><b>NT$ ${f(C.first)}</b></div>
     <div><div class="k">兩張合計年繳</div><b>NT$ ${f(yrBoth)}</b></div>
-    <div><div class="k">第 ${Y} 年</div>已繳 <b>NT$ ${f(tot(Y))}</b><br>解約拿回 <b>NT$ ${f(sv(Y))}</b></div>
+    <div><div class="k">第 ${Y} 年</div>已繳 <b>NT$ ${f(tot(Y))}</b><br>解約領回 <b>NT$ ${f(sv(Y))}</b></div>
    </div>
    <div class="be">✅ 第 ${be} 年回本</div></div>
-  <div class="card"><b>幾年拿回？</b><table class="cmp"><thead><tr><th>第幾年</th><th>月繳</th><th>PFD 保額<br>(美元)</th><th>拿回 NT$</th></tr></thead><tbody>${cmp.map(r=>`<tr class="${r.y===Y?'hit':''}" data-y="${r.y}"><td>${r.y} 年</td>${r.mo?`<td>${f(r.mo)}</td><td>${r.S}</td><td>${f(r.X)}</td>`:'<td colspan="3">做不到</td>'}</tr>`).join('')}</tbody></table></div>
+  <div class="card"><b>幾年領回？</b><table class="cmp"><thead><tr><th>第幾年</th><th>月繳</th><th>PFD 保額<br>(美元)</th><th>領回 NT$</th></tr></thead><tbody>${cmp.map(r=>`<tr class="${r.y===Y?'hit':''}" data-y="${r.y}"><td>${r.y} 年</td>${r.mo?`<td>${f(r.mo)}</td><td>${r.S}</td><td>${f(r.X)}</td>`:'<td colspan="3">做不到</td>'}</tr>`).join('')}</tbody></table></div>
   ${isN?`<div class="card"><b>${code} ${K.kn}</b>
    <ul class="pts"><li>重度癌症至少 ${f(Sw)}，之後保費免繳</li><li>特定癌症最高 ${f(Sw*1.5)} <span ${g}>（第 6 年起）</span></li><li>初期癌症 ${f(Sw*0.1)}</li><li>特定手術 ${f(Sw*0.02)}</li><li>特定傷病 ${f(Sw*0.1)} <span ${g}>（意外）</span></li><li>身故／95 歲祝壽：已繳×1.06 <span ${g}>（扣除已領）</span></li></ul>
    <div class="c106">🎁 106% 不白繳<b>NT$ ${f(c106)}</b><span ${g}>沒用到，身故或 95 歲領回（扣除已領）</span></div></div>`:''}
@@ -56,7 +56,7 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
   o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；中分紅</div></details></div>';
   if(window.ComboDiagram)window.ComboDiagram(o,{age,fx,C,q,code,T,be,Y,Sp,S,kw:K.kw,kn:K.kn,cEnd,isN});
   o.querySelectorAll('table.cmp tr[data-y]').forEach(r=>r.onclick=()=>{st.Y=+r.dataset.y;fillY();run();});}
-// v1.40 拆單：單張 30 萬做不到第 Y 年拿回時，PFD 拆兩張（A 張 30 萬＋B 張最低，0.1 萬一級），兩張第 Y 年都全部解約
+// v1.40 拆單：單張 30 萬做不到第 Y 年領回時，PFD 拆兩張（A 張 30 萬＋B 張最低，0.1 萬一級），兩張第 Y 年都全部解約
 function split(qs,C,Y,fx){const A=qs.find(([s])=>s===qs[qs.length-1][0]);if(!A||!A[1].rows[Y-1])return null;
   for(const [s,x] of qs){const a=A[1].rows[Y-1],b=x.rows[Y-1];if(b&&(a.X+b.X)*fx>=C.rows[Y-1].cum+(a.cum+b.cum)*fx)return {A:{S:A[0],q:A[1]},B:{S:s,q:x}};}return null;}
 function splitHtml(sp,C,code,T,Y,fx,age){const {A,B}=sp,tot=t=>C.rows[t-1].cum+(A.q.rows[t-1].cum+B.q.rows[t-1].cum)*fx,sv=t=>(A.q.rows[t-1].X+B.q.rows[t-1].X)*fx;
