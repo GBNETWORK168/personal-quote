@@ -1,5 +1,5 @@
 // 搭配專區 v1.40：新版男女癌 CIA／CIB、CLZ／CLX＋PFD（不做 SDP＋PFD，YT 確認 2026-10-22）（單張 30 萬做不到才拆兩張 PFD）
-// 原 v0.2：癌症險（男 CLZ／女 CLX）＋PFD，只用 M（最可能紅利）情境。CLZ/CLX 用四季春引擎；PFD 用張仕鎮已驗證 engine.js，按開始才載入
+// 原 v0.2：癌症險（男 CLZ／女 CLX）＋PFD，只用 M 情境。CLZ/CLX 用四季春引擎；PFD 用張仕鎮已驗證 engine.js，按開始才載入
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2;
 const load=src=>new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});
@@ -47,13 +47,13 @@ function run(){const age=+$('age').value,S=+$('clzS').value,fx=+$('fx').value,Y=
     <div><div class="k">第 ${Y} 年</div>已繳 <b>NT$ ${f(tot(Y))}</b><br>解約領回 <b>NT$ ${f(sv(Y))}</b></div>
    </div>
    <div class="be">✅ 第 ${be} 年回本</div></div>
-  <div class="card"><b>幾年領回？</b><table class="cmp"><thead><tr><th>第幾年</th><th>月繳</th><th>PFD 保額<br>(美元)</th><th>領回 NT$</th></tr></thead><tbody>${cmp.map(r=>`<tr class="${r.y===Y?'hit':''}" data-y="${r.y}"><td>${r.y} 年</td>${r.mo?`<td>${f(r.mo)}</td><td>${r.S}</td><td>${f(r.X)}</td>`:'<td colspan="3">做不到</td>'}</tr>`).join('')}</tbody></table></div>
+  <div class="card"><b>幾年領回？</b><table class="cmp"><thead><tr><th>領回年份</th><th>月繳</th><th>PFD 保額<br>(美元)</th><th>領回 NT$</th></tr></thead><tbody>${cmp.map(r=>`<tr class="${r.y===Y?'hit':''}" data-y="${r.y}"><td>第${r.y}年領回</td>${r.mo?`<td>${f(r.mo)}</td><td>${r.S}</td><td>${f(r.X)}</td>`:'<td colspan="3">做不到</td>'}</tr>`).join('')}</tbody></table></div>
   ${isN?`<div class="card"><b>${code} ${K.kn}</b>
    <ul class="pts"><li>重度癌症至少 ${f(Sw)}，之後保費免繳</li><li>特定癌症最高 ${f(Sw*1.5)} <span ${g}>（第 6 年起）</span></li><li>初期癌症 ${f(Sw*0.1)}</li><li>特定手術 ${f(Sw*0.02)}</li><li>特定傷病 ${f(Sw*0.1)} <span ${g}>（意外）</span></li><li>身故／95 歲祝壽：已繳×1.06 <span ${g}>（扣除已領）</span></li></ul>
    <div class="c106">🎁 106% 不白繳<b>NT$ ${f(c106)}</b><span ${g}>沒用到，身故或 95 歲領回（扣除已領）</span></div></div>`:''}
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳</th><th>PFD 解約金</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(sv(t))}</td></tr>`;
-  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；中分紅</div></details></div>';
+  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣</div></details></div>';
   if(window.ComboDiagram)window.ComboDiagram(o,{age,fx,C,q,code,T,be,Y,Sp,S,kw:K.kw,kn:K.kn,cEnd,isN});
   o.querySelectorAll('table.cmp tr[data-y]').forEach(r=>r.onclick=()=>{st.Y=+r.dataset.y;fillY();run();});}
 // v1.40 拆單：單張 30 萬做不到第 Y 年領回時，PFD 拆兩張（A 張 30 萬＋B 張最低，0.1 萬一級），兩張第 Y 年都全部解約
@@ -70,7 +70,7 @@ function splitHtml(sp,C,code,T,Y,fx,age){const {A,B}=sp,tot=t=>C.rows[t-1].cum+(
    <div class="be">✅ 第 ${be} 年回本（兩張 PFD 都全部解約）</div></div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳</th><th>兩張 PFD 解約金</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(sv(t))}</td></tr>`;
-  return h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣；中分紅</div></details></div>';}
+  return h+'</tbody></table><div class="k" style="font-size:12px">金額：新台幣</div></details></div>';}
 window.ComboSplit=split;
 window.ComboRun=run;
 // v1.61：手機按試算後收起輸入區、結果捲到最上面

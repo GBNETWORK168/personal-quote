@@ -56,7 +56,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   ${ln('兩張已繳','<span class="bigv">'+t(tot)+'</span>')}${ln('PFD 解約可領回','<span class="bigv">'+t(r.X*fx)+'</span>')}
   ${ln('差額',r.X*fx>=tot?'<span class="ok">＋'+t(r.X*fx-tot)+'</span>':'<span class="x">−'+t(tot-r.X*fx)+'</span>')}
   <details><summary>展開明細</summary><div class="sec">累計已繳</div>${ln('PFD',ud(pU))}${ln(code,t(cC))}
-  <div class="sec">當年 PFD 解約可領回</div>${ln('保證解約金',ud(r.b))}${nz('y')?ln('增額繳清解約金',ud(r.y),1):''}${nz('e')?ln('解約紅利',ud(r.e),1):''}${nz('c')?ln('累積紅利',ud(r.c),1):''}${ln('合計',u(r.X))}
+  <div class="sec">當年 PFD 解約可領回</div>${ln('基本解約金',ud(r.b))}${nz('y')?ln('增額繳清解約金',ud(r.y),1):''}${nz('e')?ln('其他解約金',ud(r.e),1):''}${nz('c')?ln('累積金額',ud(r.c),1):''}${ln('合計',u(r.X))}
   <div class="sec">保障</div>${ln('PFD 身故保障',ud(r.W),nz('y')||nz('e'))}${ln(code+' '+(D.kw||'癌症')+'保障',cov?'<span class="ok">✓ 仍有保障'+(cEnd?'（至 '+cEnd+' 歲）':'')+'</span>':'<span class="x">已到期</span>')}</details></div>`;
   const cat=(window.CATALOG||[]).find(z=>z.code===code)||{},ben=(cat.ben||[]).filter(z=>!/豁免|事後給付/.test(z)),rb=be?q.rows[be-1]:null,tb=be?C.rows[be-1].cum+rb.cum*fx:0,ba=be?age+be-1:0,last=q.rows[q.rows.length-1];
   const SW=D.S*1e4,yP=q.rows[0].py,yC=C.rows[0].py,yT=yC+yP*fx,NG='';
@@ -73,7 +73,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   d.innerHTML=`<h3>📊 保障示意圖／回本時間軸</h3>${sum}<div class="wrap"><div>${s}
   <div class="lg"><span><i style="background:#d4a64a"></i>PFD 解約金</span><span><i style="background:#e57373"></i>PFD 身故保障</span><span><i style="background:#3d6fb5"></i>PFD 累計已繳</span><span>（美元）</span></div>
   <div class="nav"><button type="button" id="dgP">◀</button><b>點選或拖動選年度</b><button type="button" id="dgN">▶</button></div></div>${c}</div>
-  <div class="ft">解約金含增額繳清及解約紅利（依中分紅情境）；台幣以匯率 ${fx} 換算。僅供試算參考，以公司正式建議書為準。</div>`;
+  <div class="ft">台幣以 1 美元＝${fx} 換算。</div>`;
   const sv=document.getElementById('dgSvg'),pick=e=>{const b=sv.getBoundingClientRect(),px=(e.clientX-b.left)*W/b.width;const y=Math.round((px-L)/((W-L-R)/(N-1)))+1;go(y);};
   let drag=false;sv.onpointerdown=e=>{drag=true;sv.setPointerCapture&&sv.setPointerCapture(e.pointerId);pick(e);};sv.onpointermove=e=>{if(drag)pick(e);};sv.onpointerup=sv.onpointercancel=()=>{drag=false;};
   document.getElementById('dgP').onclick=()=>go(sel-1);document.getElementById('dgN').onclick=()=>go(sel+1);}

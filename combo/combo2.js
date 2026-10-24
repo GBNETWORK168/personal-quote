@@ -1,6 +1,6 @@
-// 搭配專區 第二組：PFD 20 年期＋FDE 或 FDF（美元），最可能紅利（M），紅利選增額繳清。PFD 用 engine.js（ENG.quote），附約保費用 QuoteEngine.rQuote。
+// 搭配專區 第二組：PFD 20 年期＋FDE 或 FDF（美元），M 情境，增額繳清。PFD 用 engine.js（ENG.quote），附約保費用 QuoteEngine.rQuote。
 // 全部解約版（YT 2026-10-20 向保全科確認）：FDE／FDF 20 年繳費期滿後不受主約影響，PFD 全部解約後附約仍持續有效至 100 歲。
-// 第 Y 年 PFD 全部解約，領回當年解約金（含增額繳清與解約紅利）；找最低 PFD 保額使領回 ≥ PFD＋附約累計已繳。附約 >2 萬時須 ≦PFD 保額（1 倍）。
+// 第 Y 年 PFD 全部解約，領回當年解約金（含增額繳清）；找最低 PFD 保額使領回 ≥ PFD＋附約累計已繳。附約 >2 萬時須 ≦PFD 保額（1 倍）。
 // 單張 30 萬做不到時才拆兩張 PFD（附約掛第 1 張），兩張都全部解約。
 (function(){
 const $=id=>document.getElementById(id), f=n=>Math.round(n).toLocaleString('zh-TW'), SC=2, KEEP=2, MINY=20;
@@ -45,7 +45,7 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
   const tot=t=>x.rows[t-1].cum+c.rcum(t),be=x.rows.findIndex((r,i)=>back(x,i+1)>=tot(i+1))+1,yr=x.p1+c.rp;
   const ntd=v=>`<br><span class="k">≈ NT$ ${f(v*fx)}</span>`;
   let h=`<div class="card big">
-   <div class="k">PFD 要買</div><div class="v">${x.S} 萬美元</div>
+   <div class="k">PFD 保額</div><div class="v">${x.S} 萬美元</div>
    <div class="grid" style="margin-top:8px">
     <div><div class="k">PFD 年繳（20 年）</div><b>US$ ${f(x.p1)}</b>${ntd(x.p1)}</div>
     <div><div class="k">${R} ${rs} 萬 年繳（20 年）</div><b>US$ ${f(c.rp)}</b>${ntd(c.rp)}</div>
@@ -57,7 +57,7 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
 </div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>解約金<br>US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(back(x,t))}</td></tr>`;
-  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元；中分紅</div></details></div>';}
+  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元</div></details></div>';}
 function splitHtml(c,age,rs,Y,fx,R){const {A,B}=c.sp,ntd=v=>`<br><span class="k">≈ NT$ ${f(v*fx)}</span>`;
   const bk=x=>0;
   const tot=t=>A.rows[t-1].cum+B.rows[t-1].cum+c.rcum(t),bb=t=>A.rows[t-1].X+B.rows[t-1].X,n=Math.min(A.rows.length,B.rows.length);
@@ -76,7 +76,7 @@ function splitHtml(c,age,rs,Y,fx,R){const {A,B}=c.sp,ntd=v=>`<br><span class="k"
 </div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>領回 US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.min(n,Math.max(30,Y));t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(bb(t))}</td></tr>`;
-  return h+'</tbody></table><div class="k" style="font-size:12px">美元；中分紅</div></details></div>';}
+  return h+'</tbody></table><div class="k" style="font-size:12px">美元</div></details></div>';}
 window.Combo2Run=run;
 const tab=b=>{$('tA').classList.toggle('on',!b);$('tB').classList.toggle('on',b);$('secA').hidden=b;$('secB').hidden=!b;
   if(b){color();window.pfdLoad().then(()=>{ok=true;run();}).catch(()=>{$('b_out').innerHTML='<div class="card no">載入失敗，請重新整理</div>';});}
