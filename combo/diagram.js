@@ -57,7 +57,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   <div class="sec">累計已繳</div>${ln('PFD',ud(pU))}${ln(code,t(cC))}${ln('兩張合計','<span class="bigv">'+t(tot)+'</span>')}
   <div class="sec">當年 PFD 解約可領回</div>${ln('基本解約金',ud(r.b))}${nz('y')?ln('增額繳清解約金',ud(r.y),1):''}${nz('e')?ln('其他解約金',ud(r.e),1):''}${nz('c')?ln('累積金額',ud(r.c),1):''}
   ${ln('合計可領回','<span class="bigv">'+u(r.X)+'</span><br><small>≈ '+t(r.X*fx)+'</small>',nz('y')||nz('e'))}
-  ${ln('對比兩張已繳',r.X*fx>=tot?'<span class="ok">可領回 ✓</span>':'<span class="x">尚差 '+t(tot-r.X*fx)+'</span>')}
+  ${r.X*fx>=tot?'<div class="ok" style="margin:6px 0;line-height:1.6">可選擇：壽險保障繼續 '+u(r.W)+'（≈'+t(r.W*fx)+'）<br>或 可領回 '+u(r.X)+'（≈'+t(r.X*fx)+'）</div>':ln('對比兩張已繳','<span class="x">尚差 '+t(tot-r.X*fx)+'</span>')}
   <div class="sec">保障</div>${ln('PFD 身故保障',ud(r.W),nz('y')||nz('e'))}${ln(code+' '+(D.kw||'癌症')+'保障',cov?'<span class="ok">✓ 仍有保障'+(cEnd?'（至 '+cEnd+' 歲）':'')+'</span>':'<span class="x">已到期</span>')}</div>`;
   const cat=(window.CATALOG||[]).find(z=>z.code===code)||{},ben=(cat.ben||[]).filter(z=>!/豁免|事後給付/.test(z)),rb=be?q.rows[be-1]:null,tb=be?C.rows[be-1].cum+rb.cum*fx:0,ba=be?age+be-1:0,last=q.rows[q.rows.length-1];
   const yP=q.rows[0].py,yC=C.rows[0].py,yT=yC+yP*fx,NG='';
