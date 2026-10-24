@@ -39,7 +39,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   if(PT<N)s+=`<rect x="${x(PT)}" y="${tl0}" width="${x(N)-x(PT)}" height="${tl1-tl0}" rx="4" fill="#2a4a73"/>`;
   if(be)s+=`<rect x="${x(be)}" y="${tl0}" width="${x(N)-x(be)}" height="${tl1-tl0}" rx="4" fill="#d4a64a" opacity=".85"/>`;
   s+=`<text x="${(x(1)+x(Math.min(PT,N)))/2}" y="${tl1-7}" fill="#fff" font-size="13" text-anchor="middle">繳費期 1–${PT} 年</text>`;
-  if(be)s+=`<text x="${Math.min(x(be)+6,W-R-70)}" y="${tl1-7}" fill="#0f2340" font-size="13" font-weight="700">領回後保障延續</text>`;
+  if(be)s+=`<text x="${Math.min(x(be)+6,W-R-70)}" y="${tl1-7}" fill="#0f2340" font-size="13" font-weight="700">回本後保障延續</text>`;
   for(let y=1;y<=N;y++){const mj=y===1||y%5===0;s+=`<line x1="${x(y)}" x2="${x(y)}" y1="${tl1}" y2="${tl1+(mj?6:3)}" stroke="#c9d3e3"/>`;if(mj)s+=`<text x="${x(y)}" y="${tl1+18}" fill="#c9d3e3" font-size="11" text-anchor="middle">${y}</text>`;}
   const pin=(y,lab,col,row)=>`<line x1="${x(y)}" x2="${x(y)}" y1="${tl0-4}" y2="${c1}" stroke="${col}" stroke-dasharray="3 3"/><text x="${Math.max(L,Math.min(x(y),W-R-40))}" y="${row}" fill="${col}" font-size="12" font-weight="700" text-anchor="middle">${lab}</text>`;
   s+=pin(PT,'繳費期滿','#9fc3ff',12);if(be)s+=pin(be,'★領回 第'+be+'年','#f3d48a',27);
