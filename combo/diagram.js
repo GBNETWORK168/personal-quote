@@ -28,29 +28,29 @@ function ensure(o){if(!document.getElementById('dgCss')){const s=document.create
 function nz(k){return D.q.rows.some(r=>r[k]);}
 function paint(){const b=document.getElementById('dgBtn'),d=document.getElementById('dg');if(!b||!d)return;
   b.textContent=open?'▲ 收合保障示意圖':'📊 看保障示意圖';d.hidden=!open;if(!open)return;
-  const {age,fx,C,q,code,T,be,cEnd}=D,N=D.N,PT=q.rows.reduce((m,r)=>r.py?r.t:m,0);
+  const {age,fx,C,q,code,T,be,cEnd}=D,N=D.N,PT=q.rows.reduce((m,r)=>r.py?r.t:m,0),PM=Math.max(T,PT);
   // SVG：上半時間軸＋下半身故保障／解約金曲線（美元）
   const W=640,L=44,R=12,H=250,x=y=>L+(y-1)*(W-L-R)/(N-1),tl0=34,tl1=58,c0=82,c1=H-22;
   const mx=Math.max(...q.rows.slice(0,N).map(r=>Math.max(r.W,r.X,r.cum)))||1,yy=v=>c1-(v/mx)*(c1-c0);
   const pl=k=>q.rows.slice(0,N).map((r,i)=>`${x(i+1).toFixed(1)},${yy(r[k]).toFixed(1)}`).join(' ');
   const cy=cEnd?Math.min(N,cEnd-age+1):0;
   let s=`<svg viewBox="0 0 ${W} ${H}" id="dgSvg" role="img" aria-label="保單年度時間軸">`;
-  s+=`<rect x="${x(1)}" y="${tl0}" width="${x(Math.min(PT,N))-x(1)}" height="${tl1-tl0}" rx="4" fill="#3d6fb5"/>`;
-  if(PT<N)s+=`<rect x="${x(PT)}" y="${tl0}" width="${x(N)-x(PT)}" height="${tl1-tl0}" rx="4" fill="#2a4a73"/>`;
+  s+=`<rect x="${x(1)}" y="${tl0}" width="${x(Math.min(PM,N))-x(1)}" height="${tl1-tl0}" rx="4" fill="#3d6fb5"/>`;
+  if(PM<N)s+=`<rect x="${x(PM)}" y="${tl0}" width="${x(N)-x(PM)}" height="${tl1-tl0}" rx="4" fill="#2a4a73"/>`;
   if(be)s+=`<rect x="${x(be)}" y="${tl0}" width="${x(N)-x(be)}" height="${tl1-tl0}" rx="4" fill="#d4a64a" opacity=".85"/>`;
-  s+=`<text x="${(x(1)+x(Math.min(PT,N)))/2}" y="${tl1-7}" fill="#fff" font-size="13" text-anchor="middle">繳費期 1–${PT} 年</text>`;
+  s+=`<text x="${(x(1)+x(Math.min(PM,N)))/2}" y="${tl1-7}" fill="#fff" font-size="13" text-anchor="middle">繳費期 1–${PM} 年</text>`;
   if(be)s+=`<text x="${Math.min(x(be)+6,W-R-70)}" y="${tl1-7}" fill="#0f2340" font-size="13" font-weight="700">回本後保障延續</text>`;
   for(let y=1;y<=N;y++){const mj=y===1||y%5===0;s+=`<line x1="${x(y)}" x2="${x(y)}" y1="${tl1}" y2="${tl1+(mj?6:3)}" stroke="#c9d3e3"/>`;if(mj)s+=`<text x="${x(y)}" y="${tl1+18}" fill="#c9d3e3" font-size="11" text-anchor="middle">${y}</text>`;}
-  const pin=(y,lab,col,row)=>`<line x1="${x(y)}" x2="${x(y)}" y1="${tl0-4}" y2="${c1}" stroke="${col}" stroke-dasharray="3 3"/><text x="${Math.max(L,Math.min(x(y),W-R-40))}" y="${row}" fill="${col}" font-size="12" font-weight="700" text-anchor="middle">${lab}</text>`;
-  s+=pin(PT,'繳費期滿','#9fc3ff',12);if(be)s+=pin(be,'★領回 第'+be+'年','#f3d48a',27);
-  if(cy)s+=pin(cy,code+' 到期 '+cEnd+'歲','#ff9b9b',cy===PT||Math.abs(x(cy)-x(PT))<70?27:12);
+  const pin=(y,lab,col,row,an)=>`<line x1="${x(y)}" x2="${x(y)}" y1="${tl0-4}" y2="${c1}" stroke="${col}" stroke-dasharray="3 3"/><text x="${Math.max(L,Math.min(x(y)+(an=='start'?3:an=='end'?-3:0),W-R-40))}" y="${row}" fill="${col}" font-size="12" font-weight="700" text-anchor="${an||'middle'}">${lab}</text>`;
+  s+=T===PT?pin(PT,'繳費期滿','#9fc3ff',12):pin(PT,'PFD 繳費期滿','#9fc3ff',12,T>PT?'end':'start')+pin(T,code+' 繳費期滿','#9fc3ff',12,T>PT?'start':'end');if(be)s+=pin(be,'★領回 第'+be+'年','#f3d48a',27);
+  if(cy)s+=pin(cy,code+' 到期 '+cEnd+'歲','#ff9b9b',cy===PM||Math.abs(x(cy)-x(PM))<70?27:12);
   s+=`<line x1="${L}" x2="${W-R}" y1="${c1}" y2="${c1}" stroke="#5a6f8f"/><text x="${L-4}" y="${c0+4}" fill="#c9d3e3" font-size="10" text-anchor="end">${f(mx/1e3)}k</text><text x="${L-4}" y="${c1}" fill="#c9d3e3" font-size="10" text-anchor="end">0</text>`;
   s+=`<polyline points="${pl('cum')}" fill="none" stroke="#9fc3ff" stroke-width="2" stroke-dasharray="5 4"/><polyline points="${pl('W')}" fill="none" stroke="#ff9b9b" stroke-width="2.5"/><polyline points="${pl('X')}" fill="none" stroke="#f3d48a" stroke-width="2.5"/>`;
   const r=q.rows[sel-1];s+=`<line x1="${x(sel)}" x2="${x(sel)}" y1="${tl0-2}" y2="${c1}" stroke="#fff" stroke-width="2"/><circle cx="${x(sel)}" cy="${(tl0+tl1)/2}" r="9" fill="#fff" stroke="#d4a64a" stroke-width="3"/>`;
   s+=`<circle cx="${x(sel)}" cy="${yy(r.W)}" r="4" fill="#ff9b9b"/><circle cx="${x(sel)}" cy="${yy(r.X)}" r="4" fill="#f3d48a"/>`;
   s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="transparent" id="dgHit"/></svg>`;
   const a=age+sel-1,cC=C.rows[sel-1].cum,pU=r.cum,tot=cC+pU*fx,cov=cEnd?a<=cEnd:true;
-  const tags=[];if(sel<=PT)tags.push('繳費期');if(sel===PT)tags.push('繳費期滿');if(be&&sel===be)tags.push('★ 領回年');if(be&&sel>be)tags.push('可領回');
+  const tags=[];if(sel<=PM)tags.push('繳費期');if(sel===PT||sel===T)tags.push(T===PT?'繳費期滿':(sel===PT?'PFD':code)+' 繳費期滿');if(be&&sel===be)tags.push('★ 領回年');if(be&&sel>be)tags.push('可領回');
   const ln=(k,v,ng)=>`<div class="ln"><span>${k}</span><b>${v}</b></div>`;
   const ud=v=>`${u(v)}<br><small>≈ ${t(v*fx)}</small>`;
   let c=`<div class="cd"><div class="hd"><span class="yr">第 ${sel} 年</span><span class="ag">${a} 歲</span>${tags.map(z=>`<span class="tag">${z}</span>`).join(' ')}</div>
@@ -71,7 +71,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
    <div style="margin-top:6px">總領回（PFD 解約）</div><div class="bn" style="font-size:32px;color:#1e7d3c">${u(rb.X)}</div><div style="font-size:18px;font-weight:700">≈ ${t(rb.X*fx)}</div>
    <div style="margin-top:4px">對照累計總繳 <b>${t(tb)}</b></div>`:'<div class="bn">—</div>'}
    <div style="margin-top:8px;border-top:1px solid #e3e8ef;padding-top:6px">🛡️ 領回後 ${code} ${D.kw||'癌症'}保障仍延續到 <b style="font-size:22px">${cEnd} 歲</b>${be&&cEnd?'（再保障 '+(cEnd-ba)+' 年）':''}；PFD 身故保障持續，${last.age} 歲時約 ${u(last.W)}${NG}</div></div></div>
-  <div class="ms"><div><span class="ic">✍️</span><b>${age} 歲</b>投保</div><div><span class="ic">💳</span><b>${age+Math.max(T,PT)-1} 歲</b>繳費期滿</div>${be?`<div><span class="ic">💰</span><b>${ba} 歲</b>★ 回本</div>`:''}<div><span class="ic">🛡️</span><b>${cEnd} 歲</b>${code} 保障到期</div><div><span class="ic">♾️</span><b>${last.age} 歲</b>PFD 身故保障</div></div>
+  <div class="ms"><div><span class="ic">✍️</span><b>${age} 歲</b>投保</div><div><span class="ic">💳</span><b>${age+PM-1} 歲</b>繳費期滿</div>${be?`<div><span class="ic">💰</span><b>${ba} 歲</b>★ 回本</div>`:''}<div><span class="ic">🛡️</span><b>${cEnd} 歲</b>${code} 保障到期</div><div><span class="ic">♾️</span><b>${last.age} 歲</b>PFD 身故保障</div></div>
   <div class="sub2">👇 點選或拖動圖上年度，看當年明細</div>`;
   d.innerHTML=`<h3>📊 保障示意圖／領回時間軸</h3>${sum}<div class="wrap"><div>${s}
   <div class="lg"><span><i style="background:#f3d48a"></i>PFD 解約金</span><span><i style="background:#ff9b9b"></i>PFD 身故保障</span><span><i style="background:#9fc3ff"></i>PFD 累計已繳</span><span>（美元）</span></div>
