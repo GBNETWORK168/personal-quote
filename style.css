@@ -303,3 +303,11 @@ input,button,select,textarea,table{font:inherit}
 .pcb{padding:0 12px 10px;font-size:14px;line-height:1.6}.pcb ul{margin:4px 0;padding-left:18px}
 .pcs{font-size:12px;color:#666;margin-top:4px}
 .pctb{border-collapse:collapse;font-size:12px;margin-top:6px;width:100%}.pctb th,.pctb td{border:1px solid #d6e4f5;padding:2px 4px;text-align:right}
+/* v1.71 富邦產物 可勾選 */
+.pcpick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 8px;padding:8px;border-radius:8px;background:#f5f7fa}
+.pcpick.on{background:#e8f4ec}
+.pcpick label{font-weight:600;display:flex;align-items:center;gap:4px}
+.pcpick select{padding:4px 6px;border-radius:6px;border:1px solid #ccc;font-size:14px}
+.pcy{margin-left:auto;font-weight:700;color:#0a6b3a}
+.pcc.pcon>summary{background:#eef8f1}
+.cg.pcg .pcs{color:#888;font-size:12px;padding:2px 8px 6px}

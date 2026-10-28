@@ -63,10 +63,13 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
   const TT={住院:age>=69?`日額型每天合計 ${F(tot.住院)} 元＋實支另計`:'',重症癌症:tot.重症癌症?`確診最高${TL('重症癌症')} ${F(tot.重症癌症)} 元`:'',身故:tot.身故?(pt.length?`繳費期滿後${TL('身故')} ${F(tot.身故)} 元`:`${TL('身故')}至少 ${F(tot.身故)} 元`):''};
   // v1.53：CIA/CIB/CLZ/CLX 身故依已繳保費增加，合計以繳費期滿後計，灰字說明繳費期間
   const PTN=pt.length?`<div class="ndl" style="color:#888;font-size:12px">繳費期間身故：${pt.join('、')} 給付已繳保費×1.06（扣已領）${age<16&&pt.some(k=>k==='CIA'||k==='CIB')?'；保險年齡 16 歲前退還所繳保費':''}</div>`:'';
-  const yNT=L.reduce((a,x)=>a+(+x.y||0),0), yUS=L.reduce((a,x)=>a+(+x.u||0),0), pend=L.filter(x=>x.pd).length, nM=L.filter(x=>x.h<0).length;
-  let h=`<section class="card bsum"><div class="bhd">${age} 歲・${sex==1?'男':'女'}｜主約 ${nM}・附約 ${L.length-nM}</div>
-    <div class="bprem">首年實繳合計 <b>NT$ ${F(yNT)}</b>${yUS?` ＋ US$ <b>${F(yUS)}</b>`:''}<small>≈ 每月約 ${F(yNT/12)} 元${pend?`｜另 ${pend} 項待試算`:''}</small></div>
-    ${swapped.length?`<div class="warn">${swapped.map(([a,b])=>`${a} 限${E[a].sexOnly===1?'男':'女'}性投保，被保人為${sex==1?'男':'女'}性，以下改以 ${b} 解說；請回報價頁更換商品`).join('；')}</div>`:''}<div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}</div></section>`;
+  // v1.71 富邦產物（報價頁 &pc= 帶入；保費為 DM 印製數字，null＝另計不入合計）
+  let PCI=[]; try{ PCI=JSON.parse(new URLSearchParams(location.search).get('pc')||'[]')||[]; }catch(e){}
+  const pcT=PCI.reduce((a,x)=>a+(+x.y||0),0), pcX=PCI.filter(x=>x.y==null).length;
+  const yNT=L.reduce((a,x)=>a+(+x.y||0),0)+pcT, yUS=L.reduce((a,x)=>a+(+x.u||0),0), pend=L.filter(x=>x.pd).length, nM=L.filter(x=>x.h<0).length;
+  let h=`<section class="card bsum"><div class="bhd">${age} 歲・${sex==1?'男':'女'}｜主約 ${nM}・附約 ${L.length-nM}${PCI.length?`・富邦產物 ${PCI.length}`:''}</div>
+    <div class="bprem">首年實繳合計 <b>NT$ ${F(yNT)}</b>${yUS?` ＋ US$ <b>${F(yUS)}</b>`:''}<small>≈ 每月約 ${F(yNT/12)} 元${pend?`｜另 ${pend} 項待試算`:''}${pcX?`｜富邦產物 ${pcX} 項另計`:''}</small></div>
+    ${swapped.length?`<div class="warn">${swapped.map(([a,b])=>`${a} 限${E[a].sexOnly===1?'男':'女'}性投保，被保人為${sex==1?'男':'女'}性，以下改以 ${b} 解說；請回報價頁更換商品`).join('；')}</div>`:''}<div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}${PCI.map(x=>`<span class="bchip m">${x.n}</span>`).join('')}</div></section>`;
   h+=`<h2 class="h2">🧭 保障總覽</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(n==='身故'?PTN:'')+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這組沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
   // ---------- 合併理賠範例 ----------
   const ex=[]; const note=[];
@@ -126,6 +129,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
       b+=`<div class="src">資料來源：${D.src.join('；')}</div><a class="src" href="explain.html?code=${k}&age=${age}&sex=${sex}${c.plan?'&plan='+c.plan:''}${c.sum?'&sum='+c.sum:''}${c.term?'&term='+c.term:''}">🔍 單獨打開（可調整）</a>`;
     }catch(e){ b='<div class="ndl none">📝 解說製作中</div>'; }
     return `<details class="bp">${head}${b}</details>`;}).join('');
+  if(PCI.length) h+=`<h2 class="h2">🏢 富邦產物</h2>`+PCI.map(x=>`<details class="bp"><summary><span class="pic">🏢</span><span class="st"><b>${x.n}</b> ${x.t||''}<small>富邦產物｜${x.p}｜首年 ${x.y!=null?'NT$ '+F(x.y):'另計'}</small></span></summary><div class="ndl">${x.b||''}</div>${x.y==null?'<div class="ndl" style="color:#888;font-size:12px">另計：DM 無此年齡／計畫之印製保費，未計入合計</div>':''}</details>`).join('');
   h+=`<div class="src"><a href="index.html">← 回報價修改組合</a></div>`;
   $('#app').innerHTML=h;
 };

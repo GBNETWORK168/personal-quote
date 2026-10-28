@@ -946,28 +946,30 @@ function mtree(it){
 }
 let _lastTot = null;
 function renderCart(it){
-  const c = $('#cart'); it = it || bundle();
-  if (!it.length){ c.classList.add('hidden'); $('#cartsum').innerHTML = '<span class="ct0">尚未勾選主約<small>勾主約後這裡即時合計保費</small></span>'; $('#cartmini').innerHTML = ''; $('#cartbody').innerHTML = ''; _lastTot = null; const bl = $('#bxlink'); if (bl) bl.classList.add('hidden'); return; }
+  const c = $('#cart'); it = it || bundle(); if (window.PCQ) window.PCQ.draw(); const pcI = pcItems(), pcT = pcI.reduce((a,x)=>a+(x.y||0),0);
+  if (!it.length && !pcI.length){ c.classList.add('hidden'); $('#cartsum').innerHTML = '<span class="ct0">尚未勾選主約<small>勾主約後這裡即時合計保費</small></span>'; $('#cartmini').innerHTML = ''; $('#cartbody').innerHTML = ''; _lastTot = null; const bl = $('#bxlink'); if (bl) bl.classList.add('hidden'); return; }
   c.classList.remove('hidden');
-  const tot = it.reduce((a,x)=>a+(x.firstYear||0),0), usd = it.reduce((a,x)=>a+(x.usd||0),0), pend = it.filter(x=>x.pending).length, err = it.filter(x=>x.err).length;
+  const tot = it.reduce((a,x)=>a+(x.firstYear||0),0) + pcT, usd = it.reduce((a,x)=>a+(x.usd||0),0), pend = it.filter(x=>x.pending).length, err = it.filter(x=>x.err).length;
   const nM = it.filter(x=>x.kind==='主約').length, G = groupsOf(it);
   $('#bxlink').href = bundleUrl(it); $('#bxlink').classList.remove('hidden');
-  $('#cartsum').innerHTML = `<span class="ctl">首年實繳合計｜主約 ${nM}・附約 ${it.length-nM}</span><span class="ctot">NT$ <b id="ctot">${fmt(tot)}</b>${usd?` ＋ US$ <b>${fmt(usd)}</b>`:''}</span><small>≈ 每月約 ${fmt(tot/12)} 元${pend?`｜另 ${pend} 項待試算`:''}</small>${err?`<small class="e">${err} 項設定不符未計</small>`:''}`;
+  $('#cartsum').innerHTML = `<span class="ctl">首年實繳合計｜主約 ${nM}・附約 ${it.length-nM}${pcI.length?`・富邦產物 ${pcI.length}`:''}</span><span class="ctot">NT$ <b id="ctot">${fmt(tot)}</b>${usd?` ＋ US$ <b>${fmt(usd)}</b>`:''}</span><small>≈ 每月約 ${fmt(tot/12)} 元${pend?`｜另 ${pend} 項待試算`:''}${pcI.some(x=>x.y==null)?`｜富邦產物 ${pcI.filter(x=>x.y==null).length} 項另計`:''}</small>${err?`<small class="e">${err} 項設定不符未計</small>`:''}`;
   if (_lastTot != null && _lastTot !== tot){ const b = $('#ctot'); if (b){ b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); } }
   _lastTot = tot;
-  $('#cartmini').innerHTML = G.length > 1 ? G.map(x => `<span class="cm m${x.g%4}">${mno(x.id)}${lab(x.id)} ${fmt(x.sub)}</span>`).join('') : '';
+  $('#cartmini').innerHTML = G.length > 1 || (G.length && pcI.length) ? G.map(x => `<span class="cm m${x.g%4}">${mno(x.id)}${lab(x.id)} ${fmt(x.sub)}</span>`).join('') + (pcI.length?`<span class="cm pcm">富邦產物 ${fmt(pcT)}</span>`:'') : '';
   $('#cartbody').innerHTML = G.map(x => `<div class="cg m${x.g%4}"><div class="cgh" data-goto="${x.id}">${mno(x.id)}<b>${lab(x.id)}</b><span>小計 NT$ ${fmt(x.sub)}${x.usd?`＋US$ ${fmt(x.usd)}`:''}</span></div>`
       + x.xs.map(y => `<div class="ci${y.sub?' sub':''}"><div>${y.sub?'└ ':''}${y.code} ${y.name}<small>${y.kind}｜${y.sub ? (y.amt || y.desc) : y.desc}</small></div><div style="text-align:right">${amtTxt(y)}<small>${y.pending||y.err?'':y.mode}</small></div></div>`).join('') + '</div>').join('')
+    + (pcI.length ? `<div class="cg pcg"><div class="cgh" data-goto="pc"><b>富邦產物</b><span>小計 NT$ ${fmt(pcT)}</span></div>` + pcI.map(y => `<div class="ci"><div>${y.n}<small>富邦產物｜${y.plan}</small></div><div style="text-align:right">${y.y!=null?fmt(y.y):'另計'}<small>${y.y!=null?'年繳':''}</small></div></div>`).join('') + (pcI.some(y=>y.y==null)?'<div class="pcs">另計：DM 無此年齡／計畫之印製保費，未計入合計</div>':'') + '</div>' : '')
     + `<div class="ctot2">首年實繳合計 <b>NT$ ${fmt(tot)}</b>${usd?` ＋ US$ ${fmt(usd)}`:''}</div><div style="display:flex;gap:8px;margin-top:10px"><a class="xbtn bx2" href="${bundleUrl(it)}">📖 保障總覽</a><button id="copy">複製文字（貼 LINE）</button><button id="clear">全部取消勾選</button></div>`;
 }
 // v1.29 保障總覽（原整包解說）：把年齡、性別、每張主約＋附約（計劃／保額／年期／首年保費）帶到 explain.html?bundle=
 function bundleUrl(it){
   const L = (it||bundle()).map(x => { const o = Object.assign({}, x.bx||{c:x.code}); o.h = x.sub ? x.g : -1; o.g = x.g; o.n = x.name; o.k = x.kind; if (x.amt||x.desc) o.a = x.sub ? (x.amt||'') : x.desc; if (x.firstYear) o.y = Math.round(x.firstYear); if (x.usd) o.u = Math.round(x.usd); if (x.pending) o.pd = 1; if (x.err) o.e = 1; return o; });
-  return `explain.html?age=${st.age}&sex=${st.sex}&bundle=` + encodeURIComponent(JSON.stringify(L));
+  const Q = pcItems().map(x => ({n:x.n, p:x.plan, y:x.y, b:x.b, t:x.t}));
+  return `explain.html?age=${st.age}&sex=${st.sex}&bundle=` + encodeURIComponent(JSON.stringify(L)) + (Q.length ? '&pc=' + encodeURIComponent(JSON.stringify(Q)) : '');
 }
 function cartText(){
-  const it = bundle(), tot = it.reduce((a,x)=>a+(x.firstYear||0),0), usd = it.reduce((a,x)=>a+(x.usd||0),0), pend = it.filter(x=>x.pending).length, G = groupsOf(it), multi = G.length > 1;
-  return `【富邦保費試算】${st.age}歲${st.sex==1?'男':'女'}\n` + G.map(g => g.xs.map(x=>`${x.sub?'　└':multi?(g.g+1)+'. ':'・'}${x.code} ${x.name}｜${x.sub ? (x.amt || x.desc) : x.desc}｜${x.pending?'保費待試算':x.err?'設定不符':x.mode+' '+fmt(x.paid)+(x.cur==='USD'?' 美元':' 元')}`).join('\n') + (multi ? `\n　小計（首年）${fmt(g.sub)} 元` : '')).join('\n') + `\n首年實繳合計：${fmt(tot)} 元${usd?`＋${fmt(usd)} 美元`:''}${pend?`（不含 ${pend} 項待試算）`:''}\n※僅供參考，以公司正式建議書為準`;
+  const it = bundle(), pcI = pcItems(), tot = it.reduce((a,x)=>a+(x.firstYear||0),0) + pcI.reduce((a,x)=>a+(x.y||0),0), usd = it.reduce((a,x)=>a+(x.usd||0),0), pend = it.filter(x=>x.pending).length, G = groupsOf(it), multi = G.length > 1;
+  return `【富邦保費試算】${st.age}歲${st.sex==1?'男':'女'}\n` + G.map(g => g.xs.map(x=>`${x.sub?'　└':multi?(g.g+1)+'. ':'・'}${x.code} ${x.name}｜${x.sub ? (x.amt || x.desc) : x.desc}｜${x.pending?'保費待試算':x.err?'設定不符':x.mode+' '+fmt(x.paid)+(x.cur==='USD'?' 美元':' 元')}`).join('\n') + (multi ? `\n　小計（首年）${fmt(g.sub)} 元` : '')).join('\n') + pcI.map(x=>`\n・富邦產物 ${x.n}｜${x.plan}｜${x.y!=null?'年繳 '+fmt(x.y)+' 元':'保費另計'}`).join('') + `\n首年實繳合計：${fmt(tot)} 元${usd?`＋${fmt(usd)} 美元`:''}${pend?`（不含 ${pend} 項待試算）`:''}\n※僅供參考，以公司正式建議書為準`;
 }
 
 // HSV 附約實際附加在哪張主約上；XWS5「最低 5 萬」只在 HSV 掛在 XWS5 時成立
@@ -1055,7 +1057,7 @@ document.addEventListener('click', e => {
   const jp = e.target.closest('[data-jump]');
   if (jp){ document.getElementById(jp.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'}); return; }
   if (e.target.id==='cartopen'){ $('#cart').classList.toggle('open'); e.target.textContent = $('#cart').classList.contains('open') ? '明細 ▼' : '明細 ▲'; return; }
-  if (e.target.id==='clear'){ st.mains=[]; st.riders={}; st.multi=false; st.rfocus=null; for (const k of Object.keys(st.sel)) if (k.includes('#')) delete st.sel[k]; render(); return; }
+  if (e.target.id==='clear'){ if (window.PCQ) window.PCQ.clear(); st.mains=[]; st.riders={}; st.multi=false; st.rfocus=null; for (const k of Object.keys(st.sel)) if (k.includes('#')) delete st.sel[k]; render(); return; }
   const h5 = e.target.closest('[data-hsv5]');
   if (h5){ attachHsv(h5.dataset.hsv5, true); render(); return; }
   const ht = e.target.closest('[data-hsvto]');
@@ -1121,5 +1123,9 @@ function sexToast(nc){ const bad=[...new Set(st.mains.map(base))].filter(k=>k!==
 }
 // 測試用：列出目前可投保商品代號
 window.__okCodes = () => [...P.map(p => [p.code, pEl(p).ok]), ...CAT.map(c => [c.code, catElig(c, st.age, st.sex, st.occ, st.pAge).ok])].filter(x => x[1] === true).map(x => x[0]).filter((c, i, s) => s.indexOf(c) === i);
+// v1.71 富邦產物（pc.js）串接：年齡／性別／職業給 pc.js，勾選後重算右側合計
+function pcItems(){ return window.PCQ ? window.PCQ.items() : []; }
+window.__stv = () => ({age:st.age, sex:st.sex, occ:st.occ});
+window.__pcRender = () => renderCart();
 render();
 })();
