@@ -32,7 +32,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     if(k==='HSY'){ const l=HSYL[c.plan]; need.住院.push({k:'HSY'+c.plan,v:`扣自負額後：病房每天 ${F(l.R-l.dR)}、醫療每次 ${F(l.M-l.dM)}`}); need.手術.push({k:'HSY'+c.plan,v:`門診手術最多 ${F(l.O-l.dO)}（扣自負額）`}); }
     if(k==='SJR1'){ need.手術.push({k,v:`保額 ${F(c.sum)} × 1～90 倍＝${F(c.sum)}～${F(c.sum*90)}`}); }
     if(k==='SDG'){ need.重症癌症.push({k,v:`重大傷病 ${F(c.S)}`}); tot.重症癌症+=c.S; need.身故.push({k,v:`至少 ${F(Math.max(c.S,c.tot*1.06))}`}); tot.身故+=Math.max(c.S,c.tot*1.06); need.豁免.push({k,v:'意外 2～6 級失能免繳主約'}); }
-    if(k==='CLZ'||k==='CLX'){ need.重症癌症.push({k,v:`重度癌症 ${F(c.S)}＋特定癌症最高 ${F(c.S*0.5)}`}); tot.重症癌症+=c.S*1.5; need.身故.push({k,v:`繳滿後 年繳總和×1.06＝${F(c.tot*1.06)}`}); pt.push(k); tot.身故+=c.tot*1.06; need.豁免.push({k,v:'重度癌症後免繳'}); }
+    if(k==='CLZ'||k==='CLX'){ need.重症癌症.push({k,v:`重度癌症 ${F(c.S)}＋特定癌症最高 ${F(c.S*0.5)}`}); need.重症癌症.push({k,v:`初期／輕度癌症 ${F(c.S*0.1)}（第 2 年起）`}); tot.重症癌症+=c.S*1.5; need.身故.push({k,v:`繳滿後 年繳總和×1.06＝${F(c.tot*1.06)}`}); pt.push(k); tot.身故+=c.tot*1.06; need.豁免.push({k,v:'重度癌症後免繳'}); }
     // v1.52：CIA/CIB 依條款第十四、十五條、第二條第十九款手算
     if(k==='CIA'||k==='CIB'){ const p=c.tot*1.06, sev=Math.max(c.S,p); need.重症癌症.push({k,v:`重度癌症至少 ${F(c.S)}${p>c.S?`（與已繳保費×1.06 取高，最高 ${F(p)}）`:''}＋特定癌症第 6 年起 ${F(c.S*0.5)}`}); tot.重症癌症+=sev+c.S*0.5;
       need.身故.push({k,v:`保險年齡 16 歲起 已繳年繳總和×1.06（扣已領）、繳滿 ${F(p)}${age<16?'；16 歲前退還所繳保費':''}`}); pt.push(k); tot.身故+=p; need.豁免.push({k,v:'繳費期間重度癌症或意外 1～6 級失能後免繳'});
@@ -46,7 +46,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
         // v1.50：新增失能長照；住院先於手術；擴充醫材／放化療／移植等關鍵字；未歸類卡片進「其他保障」，不再默默丟掉
         if(/免繳|豁免|觸發條件/.test(tv)) n='豁免'; else if(/身故/.test(t)) n='身故';
         else if(/長期照顧|長照|失智|失能|扶助|關懷金|每月給付|燒燙傷(?!中心)/.test(t)) n='失能長照';
-        else if(/癌|重大傷病|重大疾病|特定傷病|特定重大|放射線|化學治療|放化療|標靶|免疫|質子|粒子|基因檢測/.test(t)&&!/住院|門診/.test(t)) n='重症癌症';
+        else if(/癌|重大傷病|重大疾病|特定傷病|特定重大|放射線|化學治療|放化療|標靶|免疫|質子|粒子|基因檢測/.test(t)&&!/住院|門診/.test(t)&&/\d.*(元|萬)|US\$|^[\d,.]+$/.test(v)) n='重症癌症';
         else if(/住院/.test(t)) n='住院';
         else if(/手術|植入|置換|支架|調節器|ECMO|移植|復位|縫合|骨折|醫材/.test(t)) n='手術';
         else if(/病房|日額|醫療|療養|加護|燒燙傷中心|門診/.test(t)) n='住院';
