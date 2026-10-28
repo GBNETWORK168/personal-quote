@@ -283,3 +283,14 @@ body.fem .multibar{background:#fdeef3;color:#7a2445}
 /* v1.43 字體統一：正黑體 */
 html,body{font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Noto Sans CJK TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 input,button,select,textarea,table{font:inherit}
+
+/* v1.69 職業 */
+.row>label{position:relative}
+#job{font-size:16px}
+.jobs{position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;border:1px solid #d0d7e2;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.12);max-height:60vh;overflow:auto}
+.jobs:empty{display:none}
+.jobs button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:9px 10px;border:0;border-bottom:1px solid #eef1f5;background:#fff;font-size:14px;color:#222}
+.jobs button small{display:block;color:#98a2b0;font-size:11px}
+.jobs b{white-space:nowrap;color:#2a5bd7}
+.jobs b.d{color:#d32f2f}
+.occwarn{background:#fdecea;color:#c62828;border:1px solid #f5c2c0;border-radius:8px;padding:7px 10px;font-size:14px;font-weight:600;margin-bottom:8px}

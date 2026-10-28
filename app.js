@@ -21,6 +21,7 @@ const twToday = () => (window.__TODAY || new Intl.DateTimeFormat('en-CA',{timeZo
 const isStopped = c => !!STOPSALE[c] && twToday() >= STOPSALE[c];
 const stopSoon = c => !!STOPSALE[c] && !isStopped(c);
 function pEl(p){
+  { const b = OCC.block(p.code, p.cat, st.occT); if (b) return b; }
   if (isStopped(p.code)) return {ok:false, stop:true, why:'已停售（10/23 起不受理新契約）'};
   if (!eligible(p, st.age)) return {ok:false, why:'投保年齡 '+ageRangeText(p)};
   if (p.occMax && st.occ > p.occMax) return {ok:false, why:`投保職業類別限 1${p.occMax>1?'～'+p.occMax:''} 類`};
@@ -123,6 +124,7 @@ const FAV = code => PRI(code) <= 3;   // 標「常用」（v1.19.1：SDG 也標�
 const CAT = window.CATALOG || [];
 const KIND = {main:'主約', rider:'附約', waiver:'豁免附約'};
 function catElig(c, age, sex, occ, pAge){
+  { const b = OCC.block(c.code, c.cat, st.occT); if (b) return b; }
   if (c.sex && c.sex !== sex) return {ok:false, why:c.sex===1?'男性專屬商品':'女性專屬商品'};
   if (c.occx && c.occx.includes(occ)) return {ok:false, why:`職業第 ${c.occx.join('、')} 類不可附加`};
   const par = c.ages.filter(x => x.who === 'parent');
@@ -399,7 +401,7 @@ try { const o = JSON.parse(localStorage.getItem('fbq2')||'{}'); Object.assign(st
 if ((st.mains||[]).length > 1) st.multi = true;
 // v1.12：附約逐張主約附加 st.riders＝{附約:[主約…]}、st.rsel 以 '附約@主約' 為鍵（舊版 {附約:主約} 自動轉換）
 for (const [c, h] of Object.entries(st.riders || {})){ if (!Array.isArray(h)){ st.riders[c] = h ? [h] : []; if (h && st.rsel[c] && !st.rsel[c+'@'+h]) st.rsel[c+'@'+h] = st.rsel[c]; } }
-const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,pAge:st.pAge,pSex:st.pSex,lifeEx:st.lifeEx,spec:st.spec,mains:st.mains,riders:st.riders,sel:st.sel,rsel:st.rsel,gopen:st.gopen,multi:!!st.multi}));
+const save = () => localStorage.setItem('fbq2', JSON.stringify({age:st.age,sex:st.sex,occ:st.occ,occT:st.occT||'',job:st.job||'',jobNote:st.jobNote||'',pAge:st.pAge,pSex:st.pSex,lifeEx:st.lifeEx,spec:st.spec,mains:st.mains,riders:st.riders,sel:st.sel,rsel:st.rsel,gopen:st.gopen,multi:!!st.multi}));
 const riderCodes = () => Object.keys(st.riders);
 const attached = c => st.riders[c] || [];
 const instList = () => Object.entries(st.riders).flatMap(([c, hs]) => hs.map(h => [c, h]));
@@ -709,7 +711,8 @@ function render(){
   document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', +b.dataset.v === st.sex));
   // v1.15：被保險人性別配色（男＝藍、女＝玫瑰色系）
   document.body.classList.toggle('fem', st.sex === 2); { const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = st.sex === 2 ? '#a3325c' : '#0a4f8f'; }
-  $('#occ').value = st.occ;
+  $('#occ').value = st.occT ? 'D' : st.occ;
+  { const w = $('#occwarn'), t = st.occT; w.hidden = !t; w.textContent = t === 'X' ? `⛔ 拒保職業${st.job ? '：'+st.job : ''}（全部商品不承保）` : t === 'D' ? `⚠ D 類${st.job ? '：'+st.job : ''}　傷害險、醫療險不承保${st.jobNote ? '｜'+st.jobNote : ''}` : ''; }
   $('#page').value = st.pAge == null ? '' : st.pAge;
   if ($('#lifeex')) $('#lifeex').value = st.lifeEx == null ? '' : st.lifeEx;
   const sp = st.spec || {};
@@ -733,7 +736,7 @@ function render(){
   const rc = riderCodes();
   const ik = instKeys(); rOk.forEach(x => x.rs = riderState(x.c.code, st.mains, ik));
   const nAttach = rOk.filter(x => x.rs.ok).length;
-  $('#cnt').textContent = `${st.age} 歲${st.sex==1?'男':'女'}｜職業第 ${st.occ} 類`;
+  $('#cnt').textContent = `${st.age} 歲${st.sex==1?'男':'女'}｜${st.occT==='X'?'拒保職業':st.occT==='D'?'職業 D 類':'職業第 '+st.occ+' 類'}`;
   $('#sumMain').textContent = ok.length + mAll.length; $('#sumRider').textContent = rOk.length;
   $('#subMain').textContent = mAll.length ? `可試算 ${ok.length}｜費率整理中 ${mAll.length}` : `全部可試算 ${ok.length}`;
   $('#subRider').textContent = st.mains.length ? `已勾主約可搭 ${nAttach} 項` : '先勾主約，才能勾附約';
@@ -1077,7 +1080,7 @@ document.addEventListener('change', e => {
   if (d.pd){ st.sel[d.pd].payDisc = t.checked; render(); return; }
   if (t.id==='age'){ st.age = Math.max(0, Math.min(85, parseInt(t.value)||0)); render(); }
   if (t.id==='page'){ const v = t.value.trim(); st.pAge = v==='' ? null : Math.max(0, Math.min(99, parseInt(v)||0)); render(); }
-  if (t.id==='occ'){ st.occ = +t.value; render(); }
+  if (t.id==='occ'){ if (t.value === 'D'){ st.occT = 'D'; st.occ = 6; } else { st.occT = ''; st.occ = +t.value; } st.job = ''; st.jobNote = ''; $('#job').value = ''; render(); }
   if (t.id==='specon'){ st.spec.on = t.checked; render(); return; }
   if (t.id==='specpar'){ st.spec.par = t.checked; render(); return; }
   if (t.id==='lifeex'){ const v = t.value.trim(); st.lifeEx = v==='' ? null : Math.max(0, parseFloat(v)||0); render(); }
@@ -1096,6 +1099,27 @@ function sexToast(nc){ const bad=[...new Set(st.mains.map(base))].filter(k=>k!==
   let t=document.getElementById('sxToast'); if(!t){ t=document.createElement('div'); t.id='sxToast'; t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:99;background:#1d2733;color:#fff;padding:10px 16px;border-radius:12px;font-size:15px;max-width:90vw;box-shadow:0 4px 16px rgba(0,0,0,.25);text-align:center'; document.body.appendChild(t); }
   t.textContent=`已切換為${st.sex==1?'男':'女'}性，請確認其他商品`+(bad.length?`（${bad.join('、')} 性別不符，已標示）`:'');
   t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>{t.style.display='none'},4000); }
+// v1.69 輸入職業（選填）→ 建議職業與類別，點選自動帶入
+{
+  const box = () => $('#jobs');
+  const show = () => { const q = $('#job').value.trim(); if (!q){ box().innerHTML = ''; return; }
+    const rs = OCC.search(q, 8);
+    box().innerHTML = rs.length ? rs.map((r, i) => { const t = OCC.typeOf(r); return `<button type="button" data-job="${i}"><span>${r.job}<small>${r.cat}${r.sub ? '／'+r.sub : ''}</small></span><b class="${t?'d':''}">${t==='X'?'拒保':t==='D'?'D 類':'第 '+r.cls+' 類'}</b></button>`; }).join('') : '<button type="button" disabled><span>查無，請手動選類別</span></button>';
+    box()._rs = rs; };
+  document.addEventListener('input', e => { if (e.target.id === 'job' && !e.isComposing) show(); });
+  document.addEventListener('compositionend', e => { if (e.target.id === 'job') show(); });
+  document.addEventListener('focusin', e => { if (e.target.id === 'job') show(); });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-job]');
+    if (b){ const r = box()._rs[+b.dataset.job], t = OCC.typeOf(r);
+      st.occT = t; st.occ = t ? 6 : (+r.cls || 1); st.job = r.job; st.jobNote = t === 'D' ? (r.note || '') : '';
+      $('#job').value = r.job; box().innerHTML = ''; render(); return; }
+    if (!e.target.closest('#jobs') && e.target.id !== 'job') box().innerHTML = '';
+  });
+  document.addEventListener('keydown', e => { if (e.target.id === 'job' && e.key === 'Escape') box().innerHTML = ''; });
+  if (st.job) $('#job').value = st.job;
+}
+// 測試用：列出目前可投保商品代號
+window.__okCodes = () => [...P.map(p => [p.code, pEl(p).ok]), ...CAT.map(c => [c.code, catElig(c, st.age, st.sex, st.occ, st.pAge).ok])].filter(x => x[1] === true).map(x => x[0]).filter((c, i, s) => s.indexOf(c) === i);
 render();
 })();
-
