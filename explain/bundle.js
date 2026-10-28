@@ -95,6 +95,16 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
       has('TMR').forEach(({c})=>{const left=Math.max(0,room*days+med-paid), p=Math.min(c.S,left); rows.push(['TMR',p>0?`實支型：自付 ${F(room*days+med)} 扣 HSV/HSY 已賠 ${F(paid)} 後實支（上限 ${F(c.S)}）`:`實支型：自付 ${F(room*days+med)} 已由 HSV/HSY 憑收據正本賠完，不重複賠（TMR 第五條）`,p]);}); }
     has('HKR5').forEach(({c})=>{const d=c.sum; rows.push(['HKR5',`住院 ${F(d)}＋看護 ${F(d*0.5)}＋療養 ${F(d*0.5)}，×${days} 天${HB.op?`；${HB.op}另按附表比率（範例未計入）`:''}`,d*2*days]);});
     has('XWS5').forEach(({c})=>rows.push(['XWS5',age>=69?`老年住院 ${F(c.S*0.003)}×${days} 天`:`未滿 69 歲，老年住院不給付`,age>=69?c.S*0.003*days:0]));
+    // v1.73：富邦產物併入理賠範例（依所選計畫；金額取自 DM／條款）
+    const PI=x=>'ABCD'.indexOf((String(x.p).match(/計畫([A-D])/)||[])[1]), orig=has('HSV').length||has('HSY').length||has('TMR').length;
+    PCI.forEach(x=>{const i=PI(x), s=x.s||x.n; if(i<0) return;
+      if(/健康守護/.test(x.n)){const d=[1000,2000,3000][i]; rows.push([s,`住院 ${F(d)}×${days} 天＋看顧 ${F(d*0.5)}×${days} 天${HB.op?`；外科手術 ${F(d*30)}×附表比率（範例未計入）`:''}${HB.acc?'':'（假設已過首年 30 日等待期）'}`,d*1.5*days,1]);}
+      if(/兒童/.test(x.n)&&HB.acc){const d=[1000,1500,2000][i], q=[500,750,1000][i], cap=[30000,45000,60000][i], rest=Math.max(0,40-days), fr=Math.min(cap,d*0.5*rest), lv=days>=3?3000:0;
+        rows.push([s,`傷害住院 ${F(d)}×${days} 天＋安心療養 ${F(q)}×${days} 天${lv?'＋生活補助 3,000':''}＋骨折未住院 ${F(d)}×1/2×${rest} 天（橈骨與尺骨 40 天）`,d*days+q*days+lv+fr,1]);
+        if(/加選/.test(x.p)){const lim=[30000,40000,50000][i], p=orig?0:Math.min(lim,room*days+med); rows.push([s,(orig?`傷害醫療實支：限收據正本，正本已交 HSV/HSY/TMR，不重複賠`:`傷害醫療實支 每次上限 ${F(lim)}`)+`；傷害骨折 ${['1','1.5','2'][i]} 萬×骨折表比例（範例未計入）`,p,1]);}}
+      if(/十全大補/.test(x.n)&&HB.acc){const d=[500,600,700,1200][i]; rows.push([s,`傷害住院 ${F(d)}×${days} 天`,d*days,1]);}
+      if(/璀璨/.test(x.n)&&HB.acc){const d=[500,1500,1500][i]; rows.push([s,`傷害住院 ${F(d)}×${days} 天`,d*days,1]);}
+    });
     if(rows.some(r=>r[2]>0)||has('HSY').length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
     };
     RUN(HB0); if(!HB0.acc&&['ADH','ADM','TMR'].some(k=>has(k).length)) RUN(ACC);   // v1.58：有意外附約就一定出意外骨折範例
@@ -109,9 +119,13 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     CA.forEach(({k,c})=>{const n6=Math.min(6,c.term), p6=c.annual*n6*1.06, sev=Math.max(c.S,p6);
       rows.push([k,R.sp?`重度：保額 ${F(c.S)} 與已繳 ${n6} 年保費×1.06 取較高者 ${F(sev)}＋特定癌症 50% ${F(c.S*0.5)}；之後保費免繳`:`重度癌症：保額 ${F(c.S)} 與已繳 ${n6} 年保費×1.06 取較高者 ${F(sev)}（${cx}不在特定癌症清單，不加碼）；之後保費免繳`,R.sp?sev+c.S*0.5:sev]);});
     has('SDG').forEach(({c})=>{const v=Math.max(c.S,c.annual*Math.min(6,c.term)*1.06); rows.push(['SDG',`取得重大傷病卡，一次給 ${F(v)}`,v]);});
+    PCI.forEach(x=>{const s=x.s||x.n;
+      if(/防癌/.test(x.n)) rows.push([s,'初次罹患癌症 5 萬（已過 90 日等待期）',50000,1]);
+      if(/愛藥/.test(x.n)) rows.push([s,`若使用標靶藥物：依實際標靶藥費實支（3 年累計上限 ${/計畫B/.test(x.p)?'500':'300'} 萬；範例未計入）`,0,1]);
+      if(/健康守護/.test(x.n)) rows.push([s,'若住院：癌症住院實支（範例未住院，未計入）',0,1]);});
     if(rows.length) ex.push({ic:'🎗️',t:`第 6 年確診${cxT}（${d6} 歲）`,d:'重度癌症＋取得健保重大傷病卡',rows});
   }
-  if(ex.length){ h+=`<h2 class="h2">💡 合併理賠範例</h2><section class="exs">`+ex.map(e=>{const s=e.rows.reduce((a,r)=>a+r[2],0); return `<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.d}</div>`+e.rows.map(r=>`<div class="exr"><span class="pc">${r[0]}</span><span class="exd">${r[1]}</span><b>${r[2]>0?F(r[2]):'—'}</b></div>`).join('')+`<div class="ep">合計賠 ${F(s)} 元</div></div>`;}).join('')+`</section>`;
+  if(ex.length){ h+=`<h2 class="h2">💡 合併理賠範例</h2><section class="exs">`+ex.map(e=>{const s=e.rows.reduce((a,r)=>a+r[2],0); return `<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.d}</div>`+e.rows.map(r=>`<div class="exr"><span class="pc${r[3]?' pcx':''}">${r[0]}</span><span class="exd">${r[1]}</span><b>${r[2]>0?F(r[2]):'—'}</b></div>`).join('')+`<div class="ep">合計賠 ${F(s)} 元</div></div>`;}).join('')+`</section>`;
     const A=[]; if(has('HSV').length) A.push('HSV 實支實付與住院日額二擇一，範例自動取較高者');
     if(has('HSV').length&&has('HSY').length) A.push('HSV＋HSY 同一筆：先由 HSV 憑收據正本理賠，HSY 再扣「自負額」與「HSV 已賠」較大者（依 HSY 條款／DM 推算，實際以理賠審核為準）');
     if(has('HSY').length&&!has('HSV').length) A.push('搭配 HSV 時，HSV 已依收據賠付的部分可抵 HSY 自負額');
