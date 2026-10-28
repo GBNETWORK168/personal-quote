@@ -294,3 +294,12 @@ input,button,select,textarea,table{font:inherit}
 .jobs b{white-space:nowrap;color:#2a5bd7}
 .jobs b.d{color:#d32f2f}
 .occwarn{background:#fdecea;color:#c62828;border:1px solid #f5c2c0;border-radius:8px;padding:7px 10px;font-size:14px;font-weight:600;margin-bottom:8px}
+/* v1.70 富邦產物 */
+.pcsec h2{color:#1565c0}
+.pcc{border:1px solid #d6e4f5;border-radius:10px;margin:8px 0;background:#f7fbff}
+.pcc summary{padding:10px 12px;cursor:pointer;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pct{font-size:12px;color:#1565c0;background:#e3f0ff;border-radius:6px;padding:1px 6px}
+.pcok{font-size:12px;color:#2e7d32}.pcno{font-size:12px;color:#999}
+.pcb{padding:0 12px 10px;font-size:14px;line-height:1.6}.pcb ul{margin:4px 0;padding-left:18px}
+.pcs{font-size:12px;color:#666;margin-top:4px}
+.pctb{border-collapse:collapse;font-size:12px;margin-top:6px;width:100%}.pctb th,.pctb td{border:1px solid #d6e4f5;padding:2px 4px;text-align:right}
