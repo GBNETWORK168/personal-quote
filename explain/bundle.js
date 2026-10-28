@@ -58,6 +58,9 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
       ['身故','重症癌症'].forEach(n=>{ if(!need[n].some(r=>r.k===k)) return; const a=pv[n]||[]; if(a.length) tot[n]+=n==='身故'?Math.min(...a):Math.max(...a); else part[n]++; });
       if(!hit) other.push(x); }
   });
+  // v1.72 富邦產物併入分類框（綠色產險標籤）；只有癌症一次金（初次罹癌）與壽險重症一次金同類，計入重症癌症合計
+  { let q=[]; try{ q=JSON.parse(new URLSearchParams(location.search).get('pc')||'[]')||[]; }catch(e){}
+    q.forEach(x=>(x.c||[]).forEach(([n,v,lump])=>{ (need[n]=need[n]||[]).push({k:x.s||x.n,v:`${v}<small style="color:#888">（${x.p}）</small>`,pc:1}); if(lump&&n==='重症癌症') tot.重症癌症+=lump; })); }
   const IC={住院:'🏥',手術:'🔪',重症癌症:'🎗️',失能長照:'♿',身故:'🕊️',豁免:'🛡️',其他保障:'📌'};
   const TL=n=>part[n]?'主要商品合計':'合計';
   const TT={住院:age>=69?`日額型每天合計 ${F(tot.住院)} 元＋實支另計`:'',重症癌症:tot.重症癌症?`確診最高${TL('重症癌症')} ${F(tot.重症癌症)} 元`:'',身故:tot.身故?(pt.length?`繳費期滿後${TL('身故')} ${F(tot.身故)} 元`:`${TL('身故')}至少 ${F(tot.身故)} 元`):''};
@@ -70,7 +73,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
   let h=`<section class="card bsum"><div class="bhd">${age} 歲・${sex==1?'男':'女'}｜主約 ${nM}・附約 ${L.length-nM}${PCI.length?`・富邦產物 ${PCI.length}`:''}</div>
     <div class="bprem">首年實繳合計 <b>NT$ ${F(yNT)}</b>${yUS?` ＋ US$ <b>${F(yUS)}</b>`:''}<small>≈ 每月約 ${F(yNT/12)} 元${pend?`｜另 ${pend} 項待試算`:''}${pcX?`｜富邦產物 ${pcX} 項另計`:''}</small></div>
     ${swapped.length?`<div class="warn">${swapped.map(([a,b])=>`${a} 限${E[a].sexOnly===1?'男':'女'}性投保，被保人為${sex==1?'男':'女'}性，以下改以 ${b} 解說；請回報價頁更換商品`).join('；')}</div>`:''}<div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}${PCI.map(x=>`<span class="bchip m">${x.n}</span>`).join('')}</div></section>`;
-  h+=`<h2 class="h2">🧭 保障總覽</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(n==='身故'?PTN:'')+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這組沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
+  h+=`<h2 class="h2">🧭 保障總覽</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(n==='身故'?PTN:'')+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc${r.pc?' pcx':''}">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這組沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
   // ---------- 合併理賠範例 ----------
   const ex=[]; const note=[];
   { // v1.48：住院範例依年齡分段（SJR1 倍數僅用 repo 內有出處者：膽囊切除 20 倍＝條款附表第 764 項；其餘標「依附表倍數」不估算）

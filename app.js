@@ -964,7 +964,7 @@ function renderCart(it){
 // v1.29 保障總覽（原整包解說）：把年齡、性別、每張主約＋附約（計劃／保額／年期／首年保費）帶到 explain.html?bundle=
 function bundleUrl(it){
   const L = (it||bundle()).map(x => { const o = Object.assign({}, x.bx||{c:x.code}); o.h = x.sub ? x.g : -1; o.g = x.g; o.n = x.name; o.k = x.kind; if (x.amt||x.desc) o.a = x.sub ? (x.amt||'') : x.desc; if (x.firstYear) o.y = Math.round(x.firstYear); if (x.usd) o.u = Math.round(x.usd); if (x.pending) o.pd = 1; if (x.err) o.e = 1; return o; });
-  const Q = pcItems().map(x => ({n:x.n, p:x.plan, y:x.y, b:x.b, t:x.t}));
+  const Q = pcItems().map(x => ({n:x.n, p:x.plan, y:x.y, b:x.b, t:x.t, s:x.s, c:x.c}));
   return `explain.html?age=${st.age}&sex=${st.sex}&bundle=` + encodeURIComponent(JSON.stringify(L)) + (Q.length ? '&pc=' + encodeURIComponent(JSON.stringify(Q)) : '');
 }
 function cartText(){
