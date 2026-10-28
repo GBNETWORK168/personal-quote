@@ -57,7 +57,10 @@ function run(){if(!ok)return;const o=$('b_out'),age=+$('b_age').value,rs=+$('b_r
 </div>
   <div class="card"><details><summary>看每年明細</summary><table><thead><tr><th>第幾年<br>(歲)</th><th>累計已繳<br>US$</th><th>解約金<br>US$</th></tr></thead><tbody>`;
   for(let t=1;t<=Math.max(30,Y);t++)h+=`<tr class="${t===be||t===Y?'hit':''}"><td>${t} (${age+t-1})</td><td>${f(tot(t))}</td><td>${f(back(x,t))}</td></tr>`;
-  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元</div></details></div>';}
+  o.innerHTML=h+'</tbody></table><div class="k" style="font-size:12px">美元</div></details></div>';
+  /* v1.68：FDE／FDF 也有保障示意圖（附約 20 年繳、保到 100 歲；金額以美元，C 以台幣餵 diagram） */
+  if(window.ComboDiagram){const C={rows:x.rows.map((r,i)=>({cum:c.rcum(i+1)*fx,py:i<20?c.rp*fx:0}))};
+    window.ComboDiagram(o,{age,fx,C,q:x,code:R,T:20,be,Y,Sp:x.S,S:rs,kw:R==='FDE'?'重大傷病':'重大疾病',kn:R==='FDE'?'重大傷病險':'重大疾病險',cEnd:100,usd:1});}}
 function splitHtml(c,age,rs,Y,fx,R){const {A,B}=c.sp,ntd=v=>`<br><span class="k">≈ NT$ ${f(v*fx)}</span>`;
   const bk=x=>0;
   const tot=t=>A.rows[t-1].cum+B.rows[t-1].cum+c.rcum(t),bb=t=>A.rows[t-1].X+B.rows[t-1].X,n=Math.min(A.rows.length,B.rows.length);

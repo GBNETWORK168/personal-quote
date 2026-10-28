@@ -22,11 +22,11 @@ const css=`#dg{background:#0f2340;color:#fff;border-radius:14px;margin:10px;padd
 #dg .ms b{display:block;font-size:20px;color:#f3d48a}#dg .ms .ic{font-size:24px}#dg .sub2{font-size:15px;color:#f3d48a;font-weight:700;margin:8px 0 4px}
 @media(min-width:900px){#dg .s3{grid-template-columns:1fr 1fr 1fr}}
 @media(min-width:900px){#dg .wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start}}`;
-function ensure(o){if(!document.getElementById('dgCss')){const s=document.createElement('style');s.id='dgCss';s.textContent=css;document.head.appendChild(s);}
+function ensure(o){D.o=o;if(!document.getElementById('dgCss')){const s=document.createElement('style');s.id='dgCss';s.textContent=css;document.head.appendChild(s);}
   const b=document.createElement('button');b.id='dgBtn';b.type='button';o.appendChild(b);const d=document.createElement('div');d.id='dg';o.appendChild(d);
-  b.onclick=()=>{open=!open;paint();};}
+  const dd=D;b.onclick=()=>{D=dd;open=!open;paint();};}
 function nz(k){return D.q.rows.some(r=>r[k]);}
-function paint(){const b=document.getElementById('dgBtn'),d=document.getElementById('dg');if(!b||!d)return;
+function paint(){const b=D&&D.o&&D.o.querySelector('#dgBtn'),d=D&&D.o&&D.o.querySelector('#dg');if(!b||!d)return;
   b.textContent=open?'▲ 收合保障示意圖':'📊 看保障示意圖';d.hidden=!open;if(!open)return;
   const {age,fx,C,q,code,T,be,cEnd}=D,N=D.N,PT=q.rows.reduce((m,r)=>r.py?r.t:m,0),PM=Math.max(T,PT);
   // SVG：上半時間軸＋下半身故保障／解約金曲線（美元）
@@ -54,7 +54,7 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   const ln=(k,v,ng)=>`<div class="ln"><span>${k}</span><b>${v}</b></div>`;
   const ud=v=>`${u(v)}<br><small>≈ ${t(v*fx)}</small>`;
   let c=`<div class="cd"><div class="hd"><span class="yr">第 ${sel} 年</span><span class="ag">${a} 歲</span>${tags.map(z=>`<span class="tag">${z}</span>`).join(' ')}</div>
-  <div class="sec">累計已繳</div>${ln('PFD',ud(pU))}${ln(code,t(cC))}${ln('兩張合計','<span class="bigv">'+t(tot)+'</span>')}
+  <div class="sec">累計已繳</div>${ln('PFD',ud(pU))}${ln(code,D.usd?ud(cC/fx):t(cC))}${ln('兩張合計','<span class="bigv">'+t(tot)+'</span>')}
   <div class="sec">當年 PFD 解約可領回</div>${ln('基本解約金',ud(r.b))}${nz('y')?ln('增額繳清解約金',ud(r.y),1):''}${nz('e')?ln('其他解約金',ud(r.e),1):''}${nz('c')?ln('累積金額',ud(r.c),1):''}
   ${ln('合計可領回','<span class="bigv">'+u(r.X)+'</span><br><small>≈ '+t(r.X*fx)+'</small>',nz('y')||nz('e'))}
   ${r.X*fx>=tot?'<div class="ok" style="margin:6px 0;line-height:1.6">可選擇：壽險保障繼續 '+u(r.W)+'（≈'+t(r.W*fx)+'）<br>或 可領回 '+u(r.X)+'（≈'+t(r.X*fx)+'）</div>':ln('對比兩張已繳','<span class="x">尚差 '+t(tot-r.X*fx)+'</span>')}
@@ -63,9 +63,9 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   const yP=q.rows[0].py,yC=C.rows[0].py,yT=yC+yP*fx,NG='';
   const sum=`<div class="s3"><div class="sc"><h4>① 繳費規劃</h4>
    <div><b>PFD</b> 繳 ${PT} 年（到 ${age+PT-1} 歲）</div><div class="bn" style="font-size:22px">${u(yP)}／年</div><div>≈ ${t(yP*fx)}</div>
-   <div style="margin-top:6px"><b>${code}</b> 繳 ${T} 年（到 ${age+T-1} 歲）</div><div class="bn" style="font-size:22px">${t(yC)}／年</div>
+   <div style="margin-top:6px"><b>${code}</b> 繳 ${T} 年（到 ${age+T-1} 歲）</div><div class="bn" style="font-size:22px">${D.usd?u(yC/fx)+'／年</div><div>≈ '+t(yC):t(yC)+'／年'}</div>
    <div style="margin-top:6px;border-top:1px solid #e3e8ef;padding-top:6px">兩張合計 <b class="bn" style="font-size:24px">${t(yT)}</b>／年<br>約每月 <b>${t(yT/12)}</b></div></div>
-   <div class="sc"><h4>② 保障內容</h4><div><b>${code} ${D.kn||'防癌險'}</b> 保額 ${D.S} 萬，保障到 <b>${cEnd||'—'} 歲</b></div><ul>${ben.map(z=>'<li>'+z+'</li>').join('')}</ul>
+   <div class="sc"><h4>② 保障內容</h4><div><b>${code} ${D.kn||'防癌險'}</b> 保額 ${D.S} 萬${D.usd?'美元':''}，保障到 <b>${cEnd||'—'} 歲</b></div><ul>${ben.map(z=>'<li>'+z+'</li>').join('')}</ul>
    <div style="margin-top:8px"><b>PFD 身故保障</b>（第 1 年）</div><div class="bn">${u(q.rows[0].W)}</div><div>≈ ${t(q.rows[0].W*fx)}，之後逐年增加${NG}</div></div>
    <div class="sc"><h4>③ 解約領回・保障延續</h4>${be?`<div class="bn">第 ${be} 年｜${ba} 歲 領回</div>
    <div style="margin-top:6px">總領回（PFD 解約）</div><div class="bn" style="font-size:32px;color:#1e7d3c">${u(rb.X)}</div><div style="font-size:18px;font-weight:700">≈ ${t(rb.X*fx)}</div>
@@ -77,9 +77,9 @@ function paint(){const b=document.getElementById('dgBtn'),d=document.getElementB
   <div class="lg"><span><i style="background:#f3d48a"></i>PFD 解約金</span><span><i style="background:#ff9b9b"></i>PFD 身故保障</span><span><i style="background:#9fc3ff"></i>PFD 累計已繳</span><span>（美元）</span></div>
   <div class="nav"><button type="button" id="dgP">◀</button><b>點選或拖動選年度</b><button type="button" id="dgN">▶</button></div></div>${c}</div>
   <div class="ft">台幣以 1 美元＝${fx} 換算。</div>`;
-  const sv=document.getElementById('dgSvg'),pick=e=>{const b=sv.getBoundingClientRect(),px=(e.clientX-b.left)*W/b.width;const y=Math.round((px-L)/((W-L-R)/(N-1)))+1;go(y);};
+  const sv=d.querySelector('#dgSvg'),pick=e=>{const b=sv.getBoundingClientRect(),px=(e.clientX-b.left)*W/b.width;const y=Math.round((px-L)/((W-L-R)/(N-1)))+1;go(y);};
   let drag=false;sv.onpointerdown=e=>{drag=true;sv.setPointerCapture&&sv.setPointerCapture(e.pointerId);pick(e);};sv.onpointermove=e=>{if(drag)pick(e);};sv.onpointerup=sv.onpointercancel=()=>{drag=false;};
-  document.getElementById('dgP').onclick=()=>go(sel-1);document.getElementById('dgN').onclick=()=>go(sel+1);}
+  d.querySelector('#dgP').onclick=()=>go(sel-1);d.querySelector('#dgN').onclick=()=>go(sel+1);}
 function go(y){y=Math.max(1,Math.min(D.N,y));if(y!==sel){sel=y;paint();}}
 window.ComboDiagram=function(o,d){D=d;const c=(window.CATALOG||[]).find(x=>x.code===d.code),m=c&&/(\d+)\s*歲/.exec(c.cover||'');D.cEnd=d.cEnd||(m?+m[1]:0);
   const lim=D.cEnd?D.cEnd-d.age+1:0;D.N=Math.min(d.q.rows.length,Math.max(30,d.Y,d.be,lim));
