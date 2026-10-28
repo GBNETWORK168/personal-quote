@@ -13,7 +13,7 @@ window.OCC = (() => {
     ['一般商業_軍火買賣','軍火商'],['娛樂業_特種營業','保鑣'],['公共事業_電信及電力','電力高壓電工程設施人員'],
     ['服務業_職業潛水夫','職業潛水夫'],['治安人員_警政相關','防爆小組'],['軍人_軍人','武器或彈藥製造人員']];
   // 投保規則載明「壽險或傷害險不承保之職業，本險種亦不承保」者（各商品最新投保規則 pdftotext 比對）
-  const CLAUSE = new Set('SDP SDG SDH SDN SDJ SDKA SDKB SWB5 SWD1 SWW XDZ FDC SIE SWI AJC1 AJI AJJ HJK HKR5 HLR2 SJR1 HSV HSY HTA SWZ UCR LTU ADH ADM ADN FDE FDF FDG WPH WP WPA WPF1 HAC HIY1 HIZ HJA4 HJB3 HJD HJE HJH HJI HJJ HJL HJM HSZ HTB LTP LTQ LTT LTV XDN2 XDP XDV XDW XDX'.split(' '));
+  const CLAUSE = new Set('SDP SDG SDH SDN SDJ SDKA SDKB SWB5 SWD1 SWW XDZ FDC SIE SWI AJC1 AJI AJJ HJK HKR5 HLR2 SJR1 HSV HSY HTA SWZ UCR LTU ADH ADM ADN FDE FDF FDG WPH WP WPA WPF1 LTS HAC HIY1 HIZ HJA4 HJB3 HJD HJE HJH HJI HJJ HJL HJM HSZ HTB LTP LTQ LTT LTV XDN2 XDP XDV XDW XDX'.split(' '));
   const ACC = new Set('ADG ADH ADM ADN TMR AJC1 AJI AJJ AJK ALA MPA MPB'.split(' '));
   let rows = [];
   const norm = s => (s||'').replace(/[\s、，,．.]/g,'').replace(/（/g,'(').replace(/）/g,')').replace(/鏢/g,'鑣').toLowerCase();
