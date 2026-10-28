@@ -19,7 +19,7 @@ function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'�
     const ex=[R.sp?{ic:'🎗️',t:`第 6 年確診${CXT(R.x)}（${c.age+5} 歲）`,calc:`重度：保額 ${F(c.S)} 與 已繳 ${n6} 年保費×1.06＝${F(p6)} 取高 ${F(sev)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:sev+c.S*0.5,note:'續期保費豁免'}
       :{ic:'🎗️',t:`第 6 年確診${R.x}（${c.age+5} 歲，重度癌症）`,calc:`重度：保額 ${F(c.S)} 與 已繳 ${n6} 年保費×1.06＝${F(p6)} 取高 ${F(sev)}`,pay:sev,note:`${R.x}不在特定癌症清單，不加碼；續期保費豁免`},
     {ic:'🔧',t:`${Math.max(60,c.age+1)} 歲${o.exOp}`,calc:`保額 ${c.sum} 萬 × 2%`,pay:c.S*0.02},
-    (()=>{const d=Math.max(c.age+10,30), x=sex==1?(d<55?'第一期大腸直腸癌':'第一期前列腺癌'):(d<40?'甲狀腺微乳頭狀癌':'第一期乳癌'); return {ic:'🔬',t:`${d} 歲確診${x}（輕度）`,calc:`保額 ${c.sum} 萬 × 10%`,pay:c.S*0.1,note:'之後若轉重度，再補到重度金額（扣已領，條款第十三、十四條）'};})()}];
+    (()=>{const d=Math.max(c.age+10,30), x=sex==1?(d<55?'第一期大腸直腸癌':'第一期前列腺癌'):(d<40?'甲狀腺微乳頭狀癌':'第一期乳癌'); return {ic:'🔬',t:`${d} 歲確診${x}（輕度）`,calc:`保額 ${c.sum} 萬 × 10%`,pay:c.S*0.1,note:'之後若轉重度，再補到重度金額（扣已領，條款第十三、十四條）'};})()];
     const net=c.tot*1.06-c.S*0.02;
     ex.push({ic:'🎁',t:'活到 95 歲（只領過特定手術）',calc:`${F(c.tot)} × 1.06 − ${F(c.S*0.02)}`,pay:Math.max(0,net),lbl:'領回'});
     return ex;},
