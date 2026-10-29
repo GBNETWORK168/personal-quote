@@ -1,6 +1,6 @@
 /* CLZ 豪愛無憂（男）／CLX 真馨相守（女）防癌定期健康保險 — 取自 CLZ DM 1150429、CLX DM 1150210、各條款／投保規則 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-const TALK=c=>`<section class="talk"><b>🗣️ 業務話術</b>
+const TALK=c=>`<details class="talk biz"><summary class="bizs">🔒 業務專用</summary>
 <details><summary>常見拒絕 7 題</summary><ol>
 <li><b>「54 歲了，繳 10 年到 64 歲，還要繼續繳？」</b><br>保費占資產的比例很小，保的是退休要用的大錢；退休後更不能生病。不是現在用，是退休時要用的。</li>
 <li><b>「以前的醫療險都沒用，這張會不會也沒用？」</b><br>以前多是實支、日額，要住院才賠；現在癌症治療很多在門診。這張是確診重度癌症就給一筆一次金，錢怎麼用你自己決定。</li>
@@ -17,7 +17,7 @@ const TALK=c=>`<section class="talk"><b>🗣️ 業務話術</b>
 <p>💡 新保單等待期間，舊保單先續繳一期，不留空窗。</p></details>
 <div class="tl"><b>理賠案例</b><br>碘131 治療要隔離、另外租屋，這筆要自己出；口服標靶藥實支實付沒賠。一次金拿到手，自己決定怎麼用。</div>
 <div class="tl"><b>豁免</b>：繳費期間等待期後確診重度癌症，或意外 180 日內致 1～6 級失能，後續保費免繳（不含附約）。</div>
-</section>`;
+</details>`;
 function mk(code,sex,o){return {talk:TALK, name:o.name, cat:'防癌', icon:sex==1?'💙':'💗', sexOnly:sex, tagline:o.tag, key30:c=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`罹患重度癌症，領 ${W(c.S)}（第 2 年起）`,1],[`特定癌症再加 ${W(c.S*0.5)}（第 6 年起）`,2],['沒用到，身故或 89 歲領回已繳保費 106%（扣除已領）',5]];}, terms:[10,20], defTerm:1, ageOf:t=>t==10?[18,60]:[18,50],
   input:{kind:'sum', label:'保額', unit:'萬', min:50, max:300, step:10, round:1, def:100},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
