@@ -1,6 +1,24 @@
 /* CLZ 豪愛無憂（男）／CLX 真馨相守（女）防癌定期健康保險 — 取自 CLZ DM 1150429、CLX DM 1150210、各條款／投保規則 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
-function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'💗', sexOnly:sex, tagline:o.tag, key30:c=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`罹患重度癌症，領 ${W(c.S)}（第 2 年起）`,1],[`特定癌症再加 ${W(c.S*0.5)}（第 6 年起）`,2],['沒用到，身故或 89 歲領回已繳保費 106%（扣除已領）',5]];}, terms:[10,20], defTerm:1, ageOf:t=>t==10?[18,60]:[18,50],
+const TALK=c=>`<section class="talk"><b>🗣️ 業務話術</b>
+<details><summary>常見拒絕 7 題</summary><ol>
+<li><b>「54 歲了，繳 10 年到 64 歲，還要繼續繳？」</b><br>保費占資產的比例很小，保的是退休要用的大錢；退休後更不能生病。不是現在用，是退休時要用的。</li>
+<li><b>「以前的醫療險都沒用，這張會不會也沒用？」</b><br>以前多是實支、日額，要住院才賠；現在癌症治療很多在門診。這張是確診重度癌症就給一筆一次金，錢怎麼用你自己決定。</li>
+<li><b>「我還年輕，不一定會得癌。」</b><br>只要活得夠久，任何人都會罹癌。</li>
+<li><b>「看了試算也沒多便宜，沒得癌只多拿一點點。」</b><br>講畫面：沒用到，身故或 89 歲領回已繳保費 106%（扣除已領），錢不會白繳。</li>
+<li><b>「不如拿去投資 ETF。」</b><br>投資要時間，確診不會等你。小保費先換一筆大保額；ETF 照放，這張當安全網。</li>
+<li><b>「真的得癌，我就不治療。」</b><br>真的遇到，家人不會讓你不治療。這筆錢不只治療，照顧、收入中斷都用得上。</li>
+<li><b>「89 歲還活著才領回，我不一定活那麼久。」</b><br>身故也有給付，一樣是已繳保費 106%（扣除已領），不用活到 89 歲。</li>
+</ol></details>
+<div class="tl"><b>開口重點</b><br>先畫面：讓客戶想像遇到時的樣子 → 急迫性：核保越來越嚴，先保先贏 → 懶人法：給幾個單位讓他自己選。<br>客戶說「想一想」先別走，處理完三次拒絕再離開。</div>
+<details><summary>約訪話術</summary>
+<p><b>檢視型</b>：「我在幫客戶檢視保障，你的癌症保障只有三個單位，擔心不夠。CLX／CLZ 可以補足，要不要看看？順便幫你整理保單。」</p>
+<p><b>到期型</b>：「你十月有張一年期癌症險要繳，CLX／CLZ 保障到 89 歲，要不要聊聊改成新的？聽完再決定也可以。」</p>
+<p>💡 新保單等待期間，舊保單先續繳一期，不留空窗。</p></details>
+<div class="tl"><b>理賠案例</b><br>碘131 治療要隔離、另外租屋，這筆要自己出；口服標靶藥實支實付沒賠。一次金拿到手，自己決定怎麼用。</div>
+<div class="tl"><b>豁免</b>：繳費期間等待期後確診重度癌症，或意外 180 日內致 1～6 級失能，後續保費免繳（不含附約）。</div>
+</section>`;
+function mk(code,sex,o){return {talk:TALK, name:o.name, cat:'防癌', icon:sex==1?'💙':'💗', sexOnly:sex, tagline:o.tag, key30:c=>{const W=v=>v%10000===0?`${(v/10000).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`;return [[`罹患重度癌症，領 ${W(c.S)}（第 2 年起）`,1],[`特定癌症再加 ${W(c.S*0.5)}（第 6 年起）`,2],['沒用到，身故或 89 歲領回已繳保費 106%（扣除已領）',5]];}, terms:[10,20], defTerm:1, ageOf:t=>t==10?[18,60]:[18,50],
   input:{kind:'sum', label:'保額', unit:'萬', min:50, max:300, step:10, round:1, def:100},
   prem:c=>{const r=c.H.rateMain(); return r?{annual:r*c.sum, txt:`${c.term} 年期・年繳 <b>NT$ ${F(r*c.sum)}</b>（未折扣）・共 ${F(r*c.sum*c.term)}`}:null;},
   cards:c=>[
@@ -9,7 +27,7 @@ function mk(code,sex,o){return {name:o.name, cat:'防癌', icon:sex==1?'💙':'�
     {ic:sex==1?'♂️':'♀️',t:'特定癌症加碼',big:`最高＋${F(c.S*0.5)} 元`,line:o.sc,sub:'第 2 年 10%，每年加 10%，第 6 年起 50%'},
     {ic:'🔧',t:'特定手術',big:`${F(c.S*0.02)} 元`,line:o.op,sub:'保額 2%（限 1 次）'},
     {ic:'🩺',t:'特定傷病',big:`${F(c.S*0.1)} 元`,line:o.ill,sub:'第 2 年起，保額 10%（限 1 次）'},
-    {ic:'💰',t:'身故或 89 歲滿期',big:`最高 ${F(c.tot*1.06)} 元`,line:`已繳年繳保費總和 × 1.06，扣掉已領保險金；隨繳費年數增加：第 1 年 ${F(c.annual*1.06)} → 繳費期滿 ${F(c.tot*1.06)}`,sub:'沒理賠就是保費拿回 106%（扣除已領保險金）'},
+    {ic:'💰',t:'身故或 89 歲滿期',big:`最高 ${F(c.tot*1.06)} 元`,line:`已繳年繳保費總和 × 1.06，扣掉已領保險金；隨繳費年數增加：第 1 年 ${F(c.annual*1.06)} → 繳費期滿 ${F(c.tot*1.06)}`,sub:'沒理賠就是領回保費 106%（扣除已領保險金）'},
     {ic:'🙌',t:'豁免保費',big:'後續保費免繳',line:'繳費期間等待期後確診重度癌症，或意外 180 日內致 1～6 級失能，保障照樣繼續',sub:'不含附約；輕度不適用'}],
   tl:c=>({title:'📈 保障到 89 歲',svg:EXPLAIN_TL(c,89,[{from:c.age,to:c.payEnd,label:`💰 繳費 ${c.term} 年（重度癌症可免繳）`},{from:c.age,to:c.age+1,label:'⏳ 第 1 年：給年繳總和×1.06',color:'#e8a33d'},{from:c.age+1,to:c.age+5,label:'📶 特定癌症加碼 10%→50%',color:'#c084fc'},{from:c.age+5,to:89,label:`🎗️ 重度癌症＋特定癌症＝${F(c.S*1.5)} 元`,color:'#9aa7b5'}],[[c.age,'投保'],[c.payEnd,'繳費期滿'],[89,'滿期']])}),
   examples:c=>{const R=CXR(sex,c.age+5); const ex=[R.sp?{ic:'🎗️',t:`第 6 年後確診${CXT(R.x)}`,calc:`重度 ${F(c.S)} ＋ 特定癌症 50% ${F(c.S*0.5)}`,pay:c.S*1.5,note:'續期保費豁免'}:{ic:'🎗️',t:`第 6 年後確診${R.x}（重度癌症）`,calc:`重度 ${F(c.S)}`,pay:c.S,note:`${R.x}不在特定癌症清單，不加碼；續期保費豁免`},
