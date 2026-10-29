@@ -1,7 +1,7 @@
 /* CLZ 豪愛無憂（男）／CLX 真馨相守（女）防癌定期健康保險 — 取自 CLZ DM 1150429、CLX DM 1150210、各條款／投保規則 */
 (function(){ const F=n=>Math.round(n).toLocaleString('zh-TW');
 const TALK=c=>`<details class="talk biz"><summary class="bizs">🔒</summary>
-<details><summary>大家的問題</summary><ol>
+<details><summary>常見疑問</summary><ol>
 <li><b>「54 歲了，繳 10 年到 64 歲，還要繼續繳？」</b><br>保費占資產的比例很小，保的是退休要用的大錢；退休後更不能生病。不是現在用，是退休時要用的。</li>
 <li><b>「以前的醫療險都沒用，這張會不會也沒用？」</b><br>以前多是實支、日額，要住院才賠；現在癌症治療很多在門診。這張是確診重度癌症就給一筆一次金，錢怎麼用你自己決定。</li>
 <li><b>「我還年輕，不一定會得癌。」</b><br>只要活得夠久，任何人都會罹癌。</li>
