@@ -311,3 +311,6 @@ input,button,select,textarea,table{font:inherit}
 .pcy{margin-left:auto;font-weight:700;color:#0a6b3a}
 .pcc.pcon>summary{background:#eef8f1}
 .cg.pcg .pcs{color:#888;font-size:12px;padding:2px 8px 6px}
+
+/* v1.76.1 新商品卡解說小連結 */
+.neww{display:flex;flex-direction:column;gap:4px}.neww .newi{flex:1}.newxs{display:block;text-align:center;font-size:13px;font-weight:700;padding:3px 0;border-radius:8px;background:#fff7e6;border:1px solid #e5c58a;color:#9a5b00;text-decoration:none}

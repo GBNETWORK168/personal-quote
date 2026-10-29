@@ -744,11 +744,10 @@ function render(){
   { const box = $('#newp'); if (box){ const td = twToday(), md = d => +d.slice(5,7)+'/'+ +d.slice(8,10);
     const list = NEW_PRODUCTS.filter(n => P.some(p=>p.code===n.code) && (Date.parse(td) - Date.parse(n.launch)) / 864e5 <= NEW_DAYS);
     box.hidden = !list.length;
-    // v1.41：新商品解說放最上面（先看解說，再點下方報價）
-    const xl = '<div class="newx"><div class="newxh">📖 先看新商品解說</div><div class="newxl">' + list.map(n => { const p = P.find(x=>x.code===n.code), sx = p.sex || st.sex;
-      return EXPL.includes(n.code) ? `<a class="newxa${p.sex===1?' m':p.sex===2?' f':''}" href="explain.html?code=${n.code}&age=${st.age}&sex=${sx}">📖 ${n.code} ${n.label}</a>` : ''; }).join('') + '</div></div>';
-    box.innerHTML = xl + '<div class="newhd">🆕 新商品上架</div><div class="newl">' + list.map(n => { const p = P.find(x=>x.code===n.code), e = pEl(p), on = st.mains.includes(n.code), pre = td < n.launch;
-      return `<button type="button" class="newi${p.sex===1?' m':p.sex===2?' f':''}${on?' on':''}" data-newp="${n.code}"${e.sexMis?` data-newsx="${p.sex}"`:''} ${e.ok||on||e.sexMis?'':'disabled'}><b>${n.code}</b> <span class="nn">${p.name}</span><span class="nd">${n.label}｜${md(n.launch)} ${pre?'上市':'起'}</span><span class="ng">${on?'✓ 已選，看報價':e.ok?'點我報價 ›':e.sexMis?`👉 切換為${p.sex===2?'女':'男'}性即可報價`:'⚠ 投保年齡 '+ageRangeText(p)}</span></button>`; }).join('') + '</div>';
+    // v1.76.1：解說改為每張新商品卡下方的小連結（移除重複的「先看新商品解說」列）
+    box.innerHTML = '<div class="newhd">🆕 新商品上架</div><div class="newl">' + list.map(n => { const p = P.find(x=>x.code===n.code), e = pEl(p), on = st.mains.includes(n.code), pre = td < n.launch;
+      const sx = p.sex || st.sex, xa = EXPL.includes(n.code) ? `<a class="newxs" href="explain.html?code=${n.code}&age=${st.age}&sex=${sx}">📖 解說</a>` : '';
+      return `<div class="neww"><button type="button" class="newi${p.sex===1?' m':p.sex===2?' f':''}${on?' on':''}" data-newp="${n.code}"${e.sexMis?` data-newsx="${p.sex}"`:''} ${e.ok||on||e.sexMis?'':'disabled'}><b>${n.code}</b> <span class="nn">${p.name}</span><span class="nd">${n.label}｜${md(n.launch)} ${pre?'上市':'起'}</span><span class="ng">${on?'✓ 已選，看報價':e.ok?'點我報價 ›':e.sexMis?`👉 切換為${p.sex===2?'女':'男'}性即可報價`:'⚠ 投保年齡 '+ageRangeText(p)}</span></button>${xa}</div>`; }).join('') + '</div>';
   } }
   // 常用快選（step2）
   // v1.15：常用快選只放公司主推：XWS5、OLA6、CLZ（男）、CLX（女）；SDG 仍在常用優先清單
