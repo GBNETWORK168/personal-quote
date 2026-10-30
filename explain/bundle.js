@@ -74,10 +74,16 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
     <div class="bprem">首年實繳合計 <b>NT$ ${F(yNT)}</b>${yUS?` ＋ US$ <b>${F(yUS)}</b>`:''}<small>≈ 每月約 ${F(yNT/12)} 元${pend?`｜另 ${pend} 項待試算`:''}${pcX?`｜富邦產物 ${pcX} 項另計`:''}</small></div>
     ${swapped.length?`<div class="warn">${swapped.map(([a,b])=>`${a} 限${E[a].sexOnly===1?'男':'女'}性投保，被保人為${sex==1?'男':'女'}性，以下改以 ${b} 解說；請回報價頁更換商品`).join('；')}</div>`:''}<div class="bchips">${L.map(x=>`<span class="bchip${x.h<0?' m':''}">${x.h<0?'':'└ '}${x.c}</span>`).join('')}${PCI.map(x=>`<span class="bchip m">${x.n}</span>`).join('')}</div></section>`;
   h+=`<h2 class="h2">🧭 保障總覽</h2><section class="needs">`+Object.keys(need).map(n=>`<div class="nd${need[n].length?'':' off'}"><div class="ndh"><span class="ic">${IC[n]}</span><b>${n}</b>${TT[n]?`<span class="ndt">${TT[n]}</span>`:''}</div>`+(n==='身故'?PTN:'')+(need[n].length?need[n].map(r=>`<div class="ndl"><span class="pc${r.pc?' pcx':''}">${r.k}</span>${r.v}</div>`).join(''):'<div class="ndl none">這組沒有這項保障</div>')+`</div>`).join('')+(other.length?`<div class="nd"><div class="ndh"><span class="ic">📝</span><b>其他保單</b><span class="ndt">解說製作中</span></div>`+other.map(x=>`<div class="ndl"><span class="pc">${x.c}</span>${x.n||''}${x.a?'｜'+x.a:''}</div>`).join('')+`</div>`:'')+`</section>`;
+  // v1.78：什麼情況賠哪張（t387u／t388u）；只列報價內有的類型
+  { const W2=[], pn=re=>PCI.some(x=>re.test(x.n)||re.test(x.p||''));
+    if(has('HSV').length||has('HSY').length) W2.push(['🏥','醫療實支','不管生病或意外都有']);
+    if(has('TMR').length||pn(/加選|加值/)&&pn(/兒童|十全大補/)) W2.push(['🩹','意外實支','一定要意外造成才有']);
+    if(['CLZ','CLX','CIA','CIB'].some(k=>has(k).length)||pn(/防癌|愛藥/)) W2.push(['🎗️','癌症','一定要癌症相關治療或住院才有']);
+    if(W2.length) h+=`<section class="card" style="padding:10px 14px"><b>🧩 什麼情況賠哪張</b>`+W2.map(([i,a,b])=>`<div style="font-size:14px;margin-top:4px">${i} <b>${a}</b>：${b}</div>`).join('')+`</section>`; }
   // ---------- 合併理賠範例 ----------
   const ex=[]; const note=[];
   { // v1.48：住院範例依年齡分段（SJR1 倍數僅用 repo 內有出處者：膽囊切除 20 倍＝條款附表第 764 項；其餘標「依附表倍數」不估算）
-    const ACC={t:'意外前臂（橈骨尺骨）骨折開刀，住院 3 天',room:2000,med:80000,days:3,op:'骨折開放性復位術',acc:1};
+    const ACC={t:'意外住院：前臂（橈骨尺骨）骨折開刀，住院 3 天',room:2000,med:80000,days:3,op:'骨折開放性復位術',acc:1};
     const HB0=age<=6?{t:'小兒肺炎住院 5 天（未開刀）',room:1500,med:20000,days:5,op:null}
       :age<=17?{t:'闌尾炎（盲腸炎）切除術，住院 4 天',room:2000,med:60000,days:4,op:'闌尾切除術'}
       :age<=39?ACC
@@ -105,7 +111,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
       if(/十全大補/.test(x.n)&&HB.acc){const d=[500,600,700,1200][i]; rows.push([s,`傷害住院 ${F(d)}×${days} 天`,d*days,1]);}
       if(/璀璨/.test(x.n)&&HB.acc){const d=[500,1500,1500][i]; rows.push([s,`傷害住院 ${F(d)}×${days} 天`,d*days,1]);}
     });
-    if(rows.some(r=>r[2]>0)||has('HSY').length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows}); }
+    if(rows.some(r=>r[2]>0)||has('HSY').length){ ex.push({ic:'🏥',t:HB.t,d:`病房差額每天 ${F(room)}、自費醫療 ${F(med)}`,rows,n:HB.acc&&has('HSV').length&&has('TMR').length?'意外受傷住院，醫療實支（HSV）和意外實支（TMR）都可以申請：同一張收據正本先由 HSV 賠，HSV 沒賠完的部分再由 TMR 賠，不重複賠。':''}); }
     };
     RUN(HB0); if(!HB0.acc&&['ADH','ADM','TMR'].some(k=>has(k).length)) RUN(ACC);   // v1.58：有意外附約就一定出意外骨折範例
     // v1.51：只有 HSY（沒有 HSV）時，加一個超過自負額的大額範例；自負額／限額取自 HSY 條款附表一（每次限額 30 萬）
@@ -125,7 +131,7 @@ window.EXPLAIN_BUNDLE=function(L,age,sex){
       if(/健康守護/.test(x.n)) rows.push([s,'若住院：癌症住院實支（範例未住院，未計入）',0,1]);});
     if(rows.length) ex.push({ic:'🎗️',t:`第 6 年確診${cxT}（${d6} 歲）`,d:'重度癌症＋取得健保重大傷病卡',rows});
   }
-  if(ex.length){ h+=`<h2 class="h2">💡 合併理賠範例</h2><section class="exs">`+ex.map(e=>{const s=e.rows.reduce((a,r)=>a+r[2],0); return `<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.d}</div>`+e.rows.map(r=>`<div class="exr"><span class="pc${r[3]?' pcx':''}">${r[0]}</span><span class="exd">${r[1]}</span><b>${r[2]>0?F(r[2]):'—'}</b></div>`).join('')+`<div class="ep">合計賠 ${F(s)} 元</div></div>`;}).join('')+`</section>`;
+  if(ex.length){ h+=`<h2 class="h2">💡 合併理賠範例</h2><section class="exs">`+ex.map(e=>{const s=e.rows.reduce((a,r)=>a+r[2],0); return `<div class="ex"><div class="et">${e.ic} ${e.t}</div><div class="ec">${e.d}</div>${e.n?`<div class="ec" style="color:#0b5f8a">${e.n}</div>`:''}`+e.rows.map(r=>`<div class="exr"><span class="pc${r[3]?' pcx':''}">${r[0]}</span><span class="exd">${r[1]}</span><b>${r[2]>0?F(r[2]):'—'}</b></div>`).join('')+`<div class="ep">合計賠 ${F(s)} 元</div></div>`;}).join('')+`</section>`;
     const A=[]; if(has('HSV').length) A.push('HSV 實支實付與住院日額二擇一，範例自動取較高者');
     if(has('HSV').length&&has('HSY').length) A.push('HSV＋HSY 同一筆：先由 HSV 憑收據正本理賠，HSY 再扣「自負額」與「HSV 已賠」較大者（依 HSY 條款／DM 推算，實際以理賠審核為準）');
     if(has('HSY').length&&!has('HSV').length) A.push('搭配 HSV 時，HSV 已依收據賠付的部分可抵 HSY 自負額');
